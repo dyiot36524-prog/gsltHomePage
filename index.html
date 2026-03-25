@@ -109,13 +109,21 @@
     style="animation-delay: 100ms;">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between h-16 relative">
       <!-- Left: Logo & Badge -->
-      <div class="flex items-center gap-2.5 z-10">
+      <div class="flex items-center gap-3 z-10">
         <a href="#" class="flex items-center h-8">
           <img id="nav-logo" src="img/gslt-logo.png" alt="GSLT"
             class="h-full w-auto object-contain transition-all duration-500">
         </a>
-        <img id="award-badge" src="img/forbes-badge-square.png" alt="Forbes 2026 Brand Award"
-          class="h-9 w-9 object-contain opacity-95 transition-all duration-500 hidden sm:block">
+        <!-- 구분선 + 포브스 배지 -->
+        <div id="award-area" class="hidden sm:flex items-center gap-2.5">
+          <div id="nav-divider" class="w-px h-5 bg-slate-300/70 transition-colors duration-500"></div>
+          <img id="award-badge" src="img/forbes-badge-square.png" alt="Forbes Award"
+            class="h-7 w-7 object-contain opacity-90 transition-all duration-500 shrink-0">
+          <div id="award-text" class="flex flex-col leading-tight transition-colors duration-500">
+            <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400">Forbes Korea · 2026</span>
+            <span class="text-[10px] font-semibold text-slate-500 whitespace-nowrap">'무선 IoT기반 스마트공간' 부문 대상</span>
+          </div>
+        </div>
       </div>
 
       <!-- Center: Links (Absolute Centering) -->
@@ -1575,18 +1583,27 @@
         // Reset nav base classes
         nav.className = "fixed top-0 left-0 w-full z-50 backdrop-blur-xl border-b transition-all duration-500 shadow-sm animate-fadeInUp";
 
+        const divider   = document.getElementById('nav-divider');
+        const awardText = document.getElementById('award-text');
+
         if (currentSection === 'siot' || currentSection === 'siot-content') {
           nav.classList.add('bg-[#0a0a09]/90', 'border-siot-800/50');
           navLinks.className = "absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-10 text-sm font-bold text-slate-300 transition-colors duration-500";
           navLogo.src = logos.siot;
+          if (divider)   divider.style.backgroundColor   = 'rgba(255,255,255,0.15)';
+          if (awardText) awardText.style.filter = 'brightness(1.8)';
         } else if (currentSection === 'dailo') {
           nav.classList.add('bg-white/90', 'border-dailo-200/50');
           navLinks.className = "absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-10 text-sm font-bold text-slate-600 transition-colors duration-500";
           navLogo.src = logos.dailo;
+          if (divider)   divider.style.backgroundColor   = 'rgba(100,80,200,0.25)';
+          if (awardText) awardText.style.filter = 'brightness(1)';
         } else {
           nav.classList.add('bg-white/90', 'border-slate-200/50');
           navLinks.className = "absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-10 text-sm font-bold text-slate-600 transition-colors duration-500";
           navLogo.src = logos.default;
+          if (divider)   divider.style.backgroundColor   = 'rgba(148,163,184,0.7)';
+          if (awardText) awardText.style.filter = 'brightness(1)';
         }
       });
     });
