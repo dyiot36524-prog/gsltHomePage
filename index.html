@@ -1734,7 +1734,8 @@
       const logos = {
         'default': 'img/gslt-logo.png',
         'siot': 'img/siot_logo_white.png',
-        'dailo': 'img/dailo-logo.png'
+        'dailo': 'img/dailo-logo.png',
+        'bizmoa': 'img/bizmoaLogo.png'
       };
 
       window.addEventListener('scroll', () => {
@@ -1771,6 +1772,13 @@
           if (divider)    divider.style.backgroundColor = 'rgba(100,80,200,0.25)';
           if (awardText)  awardText.style.filter = 'brightness(1)';
           if (brandLabel) { brandLabel.classList.remove('hidden'); brandLabel.classList.add('flex'); }
+        } else if (currentSection === 'bizmoa') {
+          nav.classList.add('bg-white/90', 'border-bizmoa-200/50');
+          navLinks.className = "absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-10 text-sm font-bold text-slate-600 transition-colors duration-500";
+          navLogo.src = logos.bizmoa;
+          if (divider)    divider.style.backgroundColor = 'rgba(59,130,246,0.25)';
+          if (awardText)  awardText.style.filter = 'brightness(1)';
+          if (brandLabel) brandLabel.classList.replace('flex', 'hidden');
         } else {
           nav.classList.add('bg-white/90', 'border-slate-200/50');
           navLinks.className = "absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-10 text-sm font-bold text-slate-600 transition-colors duration-500";
