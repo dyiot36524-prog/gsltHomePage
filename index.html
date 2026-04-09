@@ -25,7 +25,8 @@
           },
           colors: {
             dailo: { 50: '#f5f3ff', 100: '#ede9fe', 500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9' },
-            siot: { 50: '#fff7ed', 100: '#ffedd5', 500: '#f97316', 600: '#ea580c', 700: '#c2410c' }
+            siot: { 50: '#fff7ed', 100: '#ffedd5', 500: '#f97316', 600: '#ea580c', 700: '#c2410c' },
+            bizmoa: { 50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8' }
           },
           animation: {
             'float': 'float 6s ease-in-out infinite',
@@ -137,6 +138,7 @@
       <div id="nav-links"
         class="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-10 text-sm font-bold text-slate-600 transition-colors duration-500">
         <a href="#siot" class="hover:text-siot-600 transition-colors">Siot 솔루션</a>
+        <a href="#bizmoa" class="hover:text-bizmoa-600 transition-colors">BizMoa 자동화</a>
         <a href="#dailo" class="hover:text-dailo-600 transition-colors">Dailo 워크스페이스</a>
       </div>
 
@@ -503,6 +505,162 @@
       </div>
     </div>
 
+  </section>
+
+  <!-- BizMoa Section (B2B SaaS) -->
+  <section id="bizmoa" class="py-24 md:py-40 relative z-10 bg-white overflow-hidden border-t border-slate-200/50">
+    <!-- Background Accents -->
+    <div class="absolute top-0 right-0 w-[600px] h-[600px] bg-bizmoa-50/50 rounded-full blur-[120px] translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+      <!-- Section Header -->
+      <div class="text-center max-w-3xl mx-auto mb-20 animate-on-scroll">
+        <span
+          class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-bizmoa-50 text-[11px] uppercase tracking-[0.2em] font-bold text-bizmoa-600 border border-bizmoa-100 mb-8 backdrop-blur-sm shadow-sm">
+          <iconify-icon icon="solar:document-add-bold-duotone" class="text-xs"></iconify-icon>
+          All-in-One B2B SaaS
+        </span>
+        
+        <div class="flex justify-center mb-6">
+           <img src="img/bizmoaLogo.png" alt="BizMoa Logo" class="h-12 w-auto object-contain">
+        </div>
+
+        <h2 class="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight leading-tight mb-8 break-keep">
+          도면 위에서 끝내는,<br>
+          <span class="bg-gradient-to-r from-bizmoa-600 to-cyan-600 bg-clip-text text-transparent inline-block pb-2">견적 자동화 솔루션</span>
+        </h2>
+        <p class="text-slate-500 text-lg md:text-xl leading-relaxed break-keep font-medium">
+          도면 기반 IoT · 스마트홈 장비 배치부터 견적, 계약, 납품까지.<br>
+          시공업체와 설치업체를 위한 가장 완벽한 올인원 SaaS입니다.
+        </p>
+      </div>
+
+      <!-- Hero Image Showcase for BizMoa -->
+      <div class="animate-on-scroll mb-32 group" style="transition-delay: 100ms;">
+        <div class="relative max-w-6xl mx-auto px-2">
+          <div class="absolute inset-0 bg-bizmoa-500/10 blur-[80px] -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 scale-90"></div>
+          <div class="rounded-3xl overflow-hidden shadow-[0_50px_100px_-20px_rgba(59,130,246,0.15)] border border-slate-200/60 bg-white ring-1 ring-white/50 transition-all duration-700 hover:shadow-[0_60px_120px_-20px_rgba(59,130,246,0.25)] hover:-translate-y-2">
+            <div class="h-10 bg-slate-50/80 backdrop-blur-md border-b border-slate-200/50 flex items-center px-4 gap-2 shrink-0">
+               <div class="flex gap-1.5">
+                 <div class="w-3 h-3 rounded-full bg-rose-400/80"></div>
+                 <div class="w-3 h-3 rounded-full bg-amber-400/80"></div>
+                 <div class="w-3 h-3 rounded-full bg-emerald-400/80"></div>
+               </div>
+               <div class="mx-auto w-1/3 h-5 bg-white rounded-md border border-slate-200/50 opacity-50 flex items-center justify-center">
+                 <span class="text-[10px] text-slate-400 font-medium font-sans">bizmoa.com</span>
+               </div>
+            </div>
+            <img src="img/bizmoa1.JPG" alt="BizMoa Dashboard" class="w-full h-auto block" loading="lazy" decoding="async">
+          </div>
+          <!-- Floating badge 1 -->
+          <div class="absolute -top-10 -left-4 hidden lg:block animate-on-scroll" style="transition-delay: 400ms;">
+             <div class="bg-white/90 backdrop-blur-2xl p-4 rounded-2xl shadow-2xl border border-white/50 flex items-center gap-4 hover:scale-105 transition-transform cursor-default">
+               <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-bizmoa-500 to-cyan-600 flex items-center justify-center text-white shadow-lg shadow-bizmoa-200">
+                 <iconify-icon icon="solar:calculator-minimalistic-bold-duotone" class="text-2xl"></iconify-icon>
+               </div>
+               <div>
+                 <p class="text-[10px] text-bizmoa-600 font-black uppercase tracking-widest leading-none mb-1.5">Auto Calculation</p>
+                 <p class="text-sm font-black text-slate-800 leading-none">자동 견적 및 인건비 산출</p>
+               </div>
+             </div>
+          </div>
+          <!-- Floating badge 2 -->
+          <div class="absolute -bottom-10 -right-6 hidden lg:block animate-on-scroll" style="transition-delay: 600ms;">
+             <div class="bg-white/90 backdrop-blur-2xl p-4 rounded-2xl shadow-2xl border border-white/50 flex items-center gap-4 hover:scale-105 transition-transform cursor-default">
+               <div class="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center text-white shadow-lg shadow-slate-200">
+                 <iconify-icon icon="solar:map-point-wave-bold-duotone" class="text-2xl"></iconify-icon>
+               </div>
+               <div>
+                 <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none mb-1.5">Drag & Drop</p>
+                 <p class="text-sm font-black text-slate-800 leading-none text-right">도면 위 장비 직접 배치</p>
+               </div>
+             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detail Features Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-20">
+        <div class="animate-on-scroll" style="transition-delay: 100ms;">
+          <div class="w-12 h-12 rounded-[1rem] bg-bizmoa-50 flex items-center justify-center text-bizmoa-600 text-2xl mb-5 border border-bizmoa-100">
+            <iconify-icon icon="solar:pen-new-square-bold-duotone"></iconify-icon>
+          </div>
+          <h3 class="text-xl font-bold text-slate-900 mb-3">도면 위 직관적 배치</h3>
+          <p class="text-slate-500 leading-relaxed text-sm break-keep">
+            평면도(PNG/PDF) 위에 드래그&amp;드롭으로 장비 마커를 배치하며, 대규모 건물의 층별 관리도 손쉽게 지원합니다.
+          </p>
+        </div>
+        <div class="animate-on-scroll" style="transition-delay: 200ms;">
+          <div class="w-12 h-12 rounded-[1rem] bg-bizmoa-50 flex items-center justify-center text-bizmoa-600 text-2xl mb-5 border border-bizmoa-100">
+            <iconify-icon icon="solar:database-bold-duotone"></iconify-icon>
+          </div>
+          <h3 class="text-xl font-bold text-slate-900 mb-3">통합 DB &amp; 인건비 산출</h3>
+          <p class="text-slate-500 leading-relaxed text-sm break-keep">
+            원가·단가·규격을 기업 맞춤 커스텀 필드로 관리하며, 장비 설치시간 기반으로 직종별 노무단가를 자동 계산합니다.
+          </p>
+        </div>
+        <div class="animate-on-scroll" style="transition-delay: 300ms;">
+          <div class="w-12 h-12 rounded-[1rem] bg-bizmoa-50 flex items-center justify-center text-bizmoa-600 text-2xl mb-5 border border-bizmoa-100">
+            <iconify-icon icon="solar:document-text-bold-duotone"></iconify-icon>
+          </div>
+          <h3 class="text-xl font-bold text-slate-900 mb-3">서류 작업 자동화</h3>
+          <p class="text-slate-500 leading-relaxed text-sm break-keep">
+            배치된 장비를 바탕으로 섹션별 견적서, 계약서, 납품확인서 등 필수 문서가 자동 산출되어 엑셀/PDF로 제공됩니다.
+          </p>
+        </div>
+        <div class="animate-on-scroll" style="transition-delay: 400ms;">
+          <div class="w-12 h-12 rounded-[1rem] bg-bizmoa-50 flex items-center justify-center text-bizmoa-600 text-2xl mb-5 border border-bizmoa-100">
+            <iconify-icon icon="solar:users-group-two-rounded-bold-duotone"></iconify-icon>
+          </div>
+          <h3 class="text-xl font-bold text-slate-900 mb-3">팀 협업 &amp; 프로젝트 관리</h3>
+          <p class="text-slate-500 leading-relaxed text-sm break-keep">
+            팀 멤버 초대 및 세밀한 역할 권한(OWNER/MANAGER/MEMBER/VIEWER) 관리는 물론 프로젝트 일괄 관리, 복제를 지원합니다.
+          </p>
+        </div>
+      </div>
+
+      <!-- Additional UI Images Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-20 animate-on-scroll">
+         <div class="bg-slate-50 rounded-[2.5rem] p-8 lg:p-12 border border-slate-200 transition-all duration-500 hover:shadow-xl hover:border-slate-300 group h-full flex flex-col">
+            <div class="mb-8">
+               <span class="text-bizmoa-600 text-xs font-bold uppercase tracking-widest mb-2 block">Differentiated Point 1</span>
+               <h3 class="text-2xl font-black text-slate-900 mb-4">엑셀 견적의 한계를 넘다</h3>
+               <p class="text-slate-500 break-keep">수기로 인한 오차, 복잡한 엑셀 산식에서 벗어나세요. 도면 위 시각적 배치만으로 견적-계약-납품 사이클이 원스톱 자동화되어 별도의 문서 작업이 필요 없습니다.</p>
+            </div>
+            <div class="mt-auto relative rounded-2xl overflow-hidden shadow-md group-hover:shadow-lg transition-transform duration-500 group-hover:-translate-y-1 border border-slate-200/60">
+               <img src="img/bizmoa2.JPG" alt="BizMoa UI Workflow" class="w-full object-cover">
+            </div>
+         </div>
+         <div class="bg-slate-50 rounded-[2.5rem] p-8 lg:p-12 border border-slate-200 transition-all duration-500 hover:shadow-xl hover:border-slate-300 group h-full flex flex-col" style="transition-delay: 200ms;">
+            <div class="mb-8">
+               <span class="text-bizmoa-600 text-xs font-bold uppercase tracking-widest mb-2 block">Differentiated Point 2</span>
+               <h3 class="text-2xl font-black text-slate-900 mb-4">기업 맞춤 확장 &amp; 호환성</h3>
+               <p class="text-slate-500 break-keep">우리 회사만의 커스텀 필드로 견적 항목을 자유롭게 구성하세요. 기존에 사용 중이던 장비 목록과 자재 내역을 엑셀로 원클릭 연동할 수 있습니다.</p>
+            </div>
+            <div class="mt-auto relative rounded-2xl overflow-hidden shadow-md group-hover:shadow-lg transition-transform duration-500 group-hover:-translate-y-1 border border-slate-200/60">
+               <img src="img/bizmoa3.JPG" alt="BizMoa UI Custom DB" class="w-full object-cover">
+            </div>
+         </div>
+      </div>
+
+      <div class="text-center animate-on-scroll mt-12 bg-slate-50/50 rounded-3xl p-8 border border-slate-200/50">
+         <p class="text-sm font-extrabold text-slate-800 uppercase tracking-widest mb-6">BizMoa 추천 고객</p>
+         <div class="flex flex-wrap justify-center gap-4">
+             <span class="px-5 py-2.5 rounded-full bg-white border border-slate-200 text-slate-700 font-bold text-sm shadow-sm flex items-center gap-2">
+                <iconify-icon icon="solar:smart-home-angle-bold-duotone" class="text-bizmoa-500 text-lg"></iconify-icon> IoT / 스마트홈 시공업체
+             </span>
+             <span class="px-5 py-2.5 rounded-full bg-white border border-slate-200 text-slate-700 font-bold text-sm shadow-sm flex items-center gap-2">
+                <iconify-icon icon="solar:camera-square-bold-duotone" class="text-bizmoa-500 text-lg"></iconify-icon> 보안 / CCTV 설치업체
+             </span>
+             <span class="px-5 py-2.5 rounded-full bg-white border border-slate-200 text-slate-700 font-bold text-sm shadow-sm flex items-center gap-2">
+                <iconify-icon icon="solar:router-bold-duotone" class="text-bizmoa-500 text-lg"></iconify-icon> 네트워크 인프라 업체
+             </span>
+             <span class="px-5 py-2.5 rounded-full bg-white border border-slate-200 text-slate-700 font-bold text-sm shadow-sm flex items-center gap-2">
+                <iconify-icon icon="solar:plug-circle-bold-duotone" class="text-bizmoa-500 text-lg"></iconify-icon> 전기 / 통신 설비 시공사
+             </span>
+         </div>
+      </div>
+    </div>
   </section>
 
   <!-- Dailo Section (Digital) -->
