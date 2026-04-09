@@ -1678,11 +1678,21 @@
           const radius = DOT_BASE + prox * 3.5;
           const alpha = 0.3 + prox * 0.6;
 
-          // Color Transition (Dailo Purple <-> Siot Orange)
-          const phase = (Math.sin(time * d.speed + d.offset) + 1) / 2;
-          const r = Math.round(139 + (249 - 139) * phase);
-          const g = Math.round(92 + (115 - 92) * phase);
-          const b = Math.round(246 + (22 - 246) * phase);
+          // Color Transition (Dailo Purple <-> Bizmoa Blue <-> Siot Orange)
+          const t = (Math.sin(time * d.speed + d.offset) + 1) / 2 * 2; // 0~2
+          let r, g, b;
+          if (t < 1) {
+            // Dailo(139,92,246) → Bizmoa(37,99,235)
+            r = Math.round(139 + (37 - 139) * t);
+            g = Math.round(92 + (99 - 92) * t);
+            b = Math.round(246 + (235 - 246) * t);
+          } else {
+            // Bizmoa(37,99,235) → Siot(249,115,22)
+            const t2 = t - 1;
+            r = Math.round(37 + (249 - 37) * t2);
+            g = Math.round(99 + (115 - 99) * t2);
+            b = Math.round(235 + (22 - 235) * t2);
+          }
 
           ctx.beginPath();
           ctx.arc(d.x, d.y, radius, 0, Math.PI * 2);
