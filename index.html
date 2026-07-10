@@ -182,11 +182,9 @@
       }
     }
 
-    /* 터치 기기: fluid 캔버스가 터치 스크롤을 가로채지 않도록 차단 */
-    @media (hover: none) and (pointer: coarse) {
-      #hero-canvas {
-        pointer-events: none;
-      }
+    /* 히어로 텍스트: 밝은 물감 위에서도 가독성 확보 */
+    .hero-shadow {
+      text-shadow: 0 1px 3px rgba(4, 6, 12, 0.55), 0 6px 28px rgba(4, 6, 12, 0.6);
     }
 
     /* Selection Color */
@@ -263,7 +261,7 @@
     class="relative min-h-[100dvh] flex flex-col justify-center bg-[#0a0a0f] overflow-hidden pt-32 pb-28 px-4 sm:px-6 lg:px-8">
     <div class="absolute inset-0 z-0">
       <!-- Geometric particle canvas -->
-      <canvas id="hero-canvas" class="absolute inset-0 w-full h-full"></canvas>
+      <canvas id="hero-canvas" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
       <div
         class="absolute -top-40 -left-40 w-[38rem] h-[38rem] bg-dailo-600 rounded-full blur-[160px] opacity-[0.13] pointer-events-none">
       </div>
@@ -275,7 +273,7 @@
       </div>
     </div>
 
-    <div class="max-w-6xl mx-auto w-full relative z-10 pointer-events-none">
+    <div class="max-w-6xl mx-auto w-full relative z-10 hero-shadow">
       <div class="hero-reveal flex items-center gap-4 mb-10" style="--d:.15s">
         <span class="block w-12 h-px bg-gslt-400"></span>
         <span class="text-[11px] md:text-xs font-semibold tracking-[0.35em] uppercase text-gslt-300/80">GSLT · Smart
@@ -299,7 +297,7 @@
 
       <div class="hero-reveal" style="--d:.9s">
         <a href="#siot"
-          class="group pointer-events-auto flex items-center justify-between gap-4 py-5 md:py-6 border-t border-white/10">
+          class="group flex items-center justify-between gap-4 py-5 md:py-6 border-t border-white/10">
           <div class="flex items-baseline gap-4 md:gap-6 min-w-0">
             <span class="text-xs font-semibold tracking-widest text-white/30">01</span>
             <span
@@ -311,7 +309,7 @@
             class="text-xl md:text-2xl text-white/30 group-hover:text-siot-500 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-300 shrink-0"></iconify-icon>
         </a>
         <a href="#bizmoa"
-          class="group pointer-events-auto flex items-center justify-between gap-4 py-5 md:py-6 border-t border-white/10">
+          class="group flex items-center justify-between gap-4 py-5 md:py-6 border-t border-white/10">
           <div class="flex items-baseline gap-4 md:gap-6 min-w-0">
             <span class="text-xs font-semibold tracking-widest text-white/30">02</span>
             <span
@@ -323,7 +321,7 @@
             class="text-xl md:text-2xl text-white/30 group-hover:text-bizmoa-500 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-300 shrink-0"></iconify-icon>
         </a>
         <a href="#dailo"
-          class="group pointer-events-auto flex items-center justify-between gap-4 py-5 md:py-6 border-t border-b border-white/10">
+          class="group flex items-center justify-between gap-4 py-5 md:py-6 border-t border-b border-white/10">
           <div class="flex items-baseline gap-4 md:gap-6 min-w-0">
             <span class="text-xs font-semibold tracking-widest text-white/30">03</span>
             <span
@@ -337,7 +335,7 @@
       </div>
     </div>
 
-    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 hero-shadow pointer-events-none">
       <div class="hero-reveal flex flex-col items-center gap-3" style="--d:1.4s">
         <span class="text-[10px] font-semibold tracking-[0.35em] uppercase text-white/35">Scroll</span>
         <span class="relative block w-px h-12 bg-white/15 overflow-hidden"><span class="scroll-dash"></span></span>
@@ -2181,6 +2179,31 @@
       mq.addEventListener('change', e => e.matches ? start() : stop());
     })();
 
+    /* ─── 앵커 이동 보정 ───
+       lazy 이미지가 로드되며 레이아웃이 밀리면 앵커 도착 위치가 어긋난다.
+       이동 완료 후 목표 섹션 상단으로 위치를 재보정한다. */
+    (function () {
+      document.querySelectorAll('a[href^="#"]').forEach(a => {
+        const id = (a.getAttribute('href') || '').slice(1);
+        if (!id) return; // href="#"는 기본 동작(맨 위로) 유지
+        const target = document.getElementById(id);
+        if (!target) return;
+        a.addEventListener('click', e => {
+          e.preventDefault();
+          window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' });
+          // 스무스 스크롤이 끝난 뒤 이미지 로드로 밀린 만큼 재보정 (2회)
+          const fix = () => {
+            const drift = target.getBoundingClientRect().top;
+            if (Math.abs(drift) > 8) {
+              window.scrollTo({ top: drift + window.scrollY, behavior: 'smooth' });
+            }
+          };
+          setTimeout(fix, 900);
+          setTimeout(fix, 1800);
+        });
+      });
+    })();
+
     /* ─── 이미지 라이트박스 (클릭 확대) ─── */
     (function () {
       const box = document.getElementById('lightbox');
@@ -2258,11 +2281,23 @@
         BACK_COLOR: { r: 10, g: 10, b: 15 },
         TRANSPARENT: true,
         BLOOM: true,
-        BLOOM_INTENSITY: 0.25,
-        BLOOM_THRESHOLD: 0.8,
+        BLOOM_INTENSITY: 0.12,
+        BLOOM_THRESHOLD: 0.88,
         SUNRAYS: true,
-        SUNRAYS_WEIGHT: 0.4
+        SUNRAYS_WEIGHT: 0.3
       });
+
+      // 캔버스는 pointer-events:none — 버튼 위에서도 물감이 끊기지 않도록
+      // 히어로 전체에서 받은 마우스 이동을 캔버스로 전달한다
+      const hero = document.getElementById('hero');
+      if (hero) {
+        hero.addEventListener('mousemove', e => {
+          canvas.dispatchEvent(new MouseEvent('mousemove', {
+            clientX: e.clientX,
+            clientY: e.clientY
+          }));
+        });
+      }
     })();
   </script>
   <script>
