@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GSLT - 차세대 워크스페이스 & 스마트 공간 솔루션</title>
+  <link rel="icon" type="image/png" href="img/gslt-symbol.png">
   <meta name="description"
     content="문서와 채팅의 완벽한 결합 다일로(Dailo)와 미니 IoT 장비로 완성하는 스마트 오피스 솔루션 시옷(Siot). 지에스엘티가 제안하는 새로운 업무 환경을 경험하세요.">
 
@@ -13,6 +14,9 @@
 
   <!-- Iconify -->
   <script src="https://code.iconify.design/iconify-icon/2.3.0/iconify-icon.min.js"></script>
+
+  <!-- WebGL Fluid Simulation (paint-flow hero effect) -->
+  <script src="https://cdn.jsdelivr.net/npm/webgl-fluid@0.4"></script>
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -24,6 +28,7 @@
             sans: ['Pretendard', 'system-ui', 'sans-serif'],
           },
           colors: {
+            gslt: { 50: '#effbfc', 100: '#d7f4f7', 200: '#b0e8ee', 300: '#7dd6e0', 400: '#4cc3d2', 500: '#28b8c5', 600: '#1e93a0', 700: '#1c7682' },
             dailo: { 50: '#f5f3ff', 100: '#ede9fe', 500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9' },
             siot: { 50: '#fff7ed', 100: '#ffedd5', 500: '#f97316', 600: '#ea580c', 700: '#c2410c' },
             bizmoa: { 50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8' }
@@ -89,9 +94,104 @@
       opacity: 0;
     }
 
+    /* Smooth anchor scrolling */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* ─── Hero: line-mask reveal (craftedbygc style) ─── */
+    .hero-line {
+      display: block;
+      overflow: hidden;
+    }
+
+    .hero-line-inner {
+      display: block;
+      transform: translateY(120%);
+      animation: heroLineUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation-delay: var(--d, 0s);
+    }
+
+    @keyframes heroLineUp {
+      to { transform: translateY(0); }
+    }
+
+    .hero-reveal {
+      opacity: 0;
+      animation: heroFade 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation-delay: var(--d, 0s);
+    }
+
+    @keyframes heroFade {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Scroll indicator */
+    .scroll-dash {
+      position: absolute;
+      inset: 0;
+      background: rgba(40, 184, 197, 0.9);
+      transform: translateY(-100%);
+      animation: scrollDash 2.2s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+    }
+
+    @keyframes scrollDash {
+      0% { transform: translateY(-100%); }
+      55% { transform: translateY(100%); }
+      100% { transform: translateY(100%); }
+    }
+
+    /* BizMoa 횡스크롤: 아웃라인 타이포 */
+    .bz-outline {
+      -webkit-text-stroke: 2px rgba(37, 99, 235, 0.15);
+      color: transparent;
+    }
+
+    /* Siot scroll-pin: line-mask reveal (JS-driven) */
+    .siot-line {
+      display: block;
+      overflow: hidden;
+    }
+
+    .siot-line-inner {
+      display: block;
+      transform: translateY(120%);
+    }
+
+    /* Infinite marquee */
+    .marquee-track {
+      width: max-content;
+      animation: marquee 28s linear infinite;
+    }
+
+    @keyframes marquee {
+      to { transform: translateX(-50%); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .hero-line-inner,
+      .hero-reveal {
+        animation: none;
+        transform: none;
+        opacity: 1;
+      }
+      .scroll-dash,
+      .marquee-track {
+        animation: none;
+      }
+    }
+
+    /* 터치 기기: fluid 캔버스가 터치 스크롤을 가로채지 않도록 차단 */
+    @media (hover: none) and (pointer: coarse) {
+      #hero-canvas {
+        pointer-events: none;
+      }
+    }
+
     /* Selection Color */
     ::selection {
-      background: #f1f5f9;
+      background: #d7f4f7;
       color: #0f172a;
     }
   </style>
@@ -106,13 +206,13 @@
 
   <!-- Navigation -->
   <nav id="main-nav"
-    class="fixed top-0 left-0 w-full z-50 animate-on-scroll bg-white/90 backdrop-blur-xl border-b border-slate-200/50 shadow-sm transition-all duration-500"
+    class="fixed top-0 left-0 w-full z-50 animate-on-scroll bg-transparent border-b border-transparent transition-all duration-500"
     style="animation-delay: 100ms;">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between h-16 relative">
       <!-- Left: Logo & Badge -->
       <div class="flex items-center gap-3 z-10">
         <a href="#" class="flex items-center h-8">
-          <img id="nav-logo" src="img/gslt-logo.png" alt="GSLT"
+          <img id="nav-logo" src="img/gslt-logo-white.png" alt="GSLT"
             class="h-full w-auto object-contain transition-all duration-500">
         </a>
 
@@ -129,10 +229,12 @@
 
         <!-- 구분선 + 포브스 배지 -->
         <div id="award-area" class="hidden sm:flex items-center gap-2.5">
-          <div id="nav-divider" class="w-px h-5 bg-slate-300/70 transition-colors duration-500"></div>
+          <div id="nav-divider" class="w-px h-5 bg-slate-300/70 transition-colors duration-500"
+            style="background-color:rgba(255,255,255,0.15)"></div>
           <img id="award-badge" src="img/forbes-badge-square.png" alt="Forbes Award"
             class="h-7 w-7 object-contain opacity-90 transition-all duration-500 shrink-0">
-          <div id="award-text" class="flex flex-col leading-tight transition-colors duration-500">
+          <div id="award-text" class="flex flex-col leading-tight transition-colors duration-500"
+            style="filter:brightness(1.8)">
             <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400">Forbes Korea · 2026</span>
             <span class="text-[10px] font-semibold text-slate-500 whitespace-nowrap">'무선 IoT기반 스마트공간' 부문 대상</span>
           </div>
@@ -141,15 +243,15 @@
 
       <!-- Center: Links (Absolute Centering) -->
       <div id="nav-links"
-        class="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-10 text-sm font-bold text-slate-600 transition-colors duration-500">
+        class="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-10 text-sm font-bold text-slate-300 transition-colors duration-500">
         <a href="#siot" class="hover:text-siot-600 transition-colors">Siot 솔루션</a>
         <a href="#bizmoa" class="hover:text-bizmoa-600 transition-colors">BizMoa 자동화</a>
         <a href="#dailo" class="hover:text-dailo-600 transition-colors">Dailo 워크스페이스</a>
       </div>
 
       <!-- Right: Button -->
-      <a href="#contact"
-        class="hidden md:flex items-center gap-2 bg-slate-900 text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:scale-[1.02] active:scale-[0.98] transition-all duration-500 z-10">
+      <a href="#contact" id="nav-cta"
+        class="hidden md:flex items-center gap-2 bg-gslt-500 hover:bg-gslt-600 text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:scale-[1.02] active:scale-[0.98] transition-all duration-500 z-10">
         <span>도입 문의</span>
         <iconify-icon icon="solar:arrow-right-linear" class="text-base"></iconify-icon>
       </a>
@@ -157,87 +259,123 @@
   </nav>
 
   <!-- Hero Section -->
-  <section
-    class="relative min-h-[100dvh] flex items-center justify-center pt-32 pb-20 overflow-hidden px-4 sm:px-6 lg:px-8">
+  <section id="hero"
+    class="relative min-h-[100dvh] flex flex-col justify-center bg-[#0a0a0f] overflow-hidden pt-32 pb-28 px-4 sm:px-6 lg:px-8">
     <div class="absolute inset-0 z-0">
       <!-- Geometric particle canvas -->
       <canvas id="hero-canvas" class="absolute inset-0 w-full h-full"></canvas>
       <div
-        class="absolute top-1/4 left-1/4 w-96 h-96 bg-dailo-100 rounded-full mix-blend-multiply filter blur-[100px] opacity-70 animate-float">
+        class="absolute -top-40 -left-40 w-[38rem] h-[38rem] bg-dailo-600 rounded-full blur-[160px] opacity-[0.13] pointer-events-none">
       </div>
       <div
-        class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-siot-100 rounded-full mix-blend-multiply filter blur-[100px] opacity-70 animate-float"
-        style="animation-delay: -3s;"></div>
+        class="absolute -bottom-48 -right-40 w-[38rem] h-[38rem] bg-siot-600 rounded-full blur-[160px] opacity-[0.10] pointer-events-none">
+      </div>
+      <div
+        class="absolute top-1/3 left-1/2 w-[30rem] h-[30rem] bg-gslt-500 rounded-full blur-[150px] opacity-[0.10] pointer-events-none">
+      </div>
     </div>
 
-    <div class="max-w-5xl mx-auto w-full relative z-10 text-center">
-      <div class="animate-on-scroll" style="animation-delay: 200ms;">
-        <span
-          class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs font-semibold tracking-wide text-slate-600 mb-8 uppercase">
-          <iconify-icon icon="solar:star-fall-bold-duotone" class="text-slate-400"></iconify-icon>
-          디지털과 물리적 공간의 완성
-        </span>
+    <div class="max-w-6xl mx-auto w-full relative z-10 pointer-events-none">
+      <div class="hero-reveal flex items-center gap-4 mb-10" style="--d:.15s">
+        <span class="block w-12 h-px bg-gslt-400"></span>
+        <span class="text-[11px] md:text-xs font-semibold tracking-[0.35em] uppercase text-gslt-300/80">GSLT · Smart
+          Space & AI Workspace</span>
       </div>
+
       <h1
-        class="text-5xl md:text-7xl lg:text-[5.5rem] font-bold tracking-tight leading-snug break-keep mb-8 animate-on-scroll"
-        style="animation-delay: 300ms;">
-        대화는 지식이 되고,<br>
-        <span class="text-slate-400">공간은 지능을 갖습니다.</span>
+        class="font-black tracking-tight leading-[1.08] break-keep text-white text-[2.5rem] sm:text-6xl md:text-7xl lg:text-8xl xl:text-[6.75rem] mb-10">
+        <span class="hero-line"><span class="hero-line-inner" style="--d:.3s">대화는 지식이 되고,</span></span>
+        <span class="hero-line"><span class="hero-line-inner text-gslt-400" style="--d:.45s">공간은 지능을
+            갖습니다.</span></span>
       </h1>
-      <p class="text-lg md:text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed break-keep mb-12 animate-on-scroll"
-        style="animation-delay: 400ms;">
-        정교한 제어로 공간의 가치를 높이는 <strong class="text-slate-800 font-semibold">시옷</strong>,
-        소통을 지식으로 바꾸는 <strong class="text-slate-800 font-semibold">다일로</strong>,
-        견적을 자동화하는 <strong class="text-slate-800 font-semibold">비즈모아</strong>.
+
+      <p class="hero-reveal max-w-2xl text-base md:text-lg text-white/50 leading-relaxed break-keep mb-16"
+        style="--d:.7s">
+        정교한 제어로 공간의 가치를 높이는 <strong class="text-white font-semibold">시옷</strong>,
+        소통을 지식으로 바꾸는 <strong class="text-white font-semibold">다일로</strong>,
+        견적을 자동화하는 <strong class="text-white font-semibold">비즈모아</strong>.
         지에스엘티가 일하는 방식과 머무는 공간을 완전히 재정의합니다.
       </p>
 
-      <div class="flex flex-col sm:flex-row items-center justify-center gap-6 animate-on-scroll"
-        style="animation-delay: 500ms;">
+      <div class="hero-reveal" style="--d:.9s">
         <a href="#siot"
-          class="w-full sm:w-auto flex items-center justify-center gap-4 bg-white text-slate-800 border-2 border-slate-200 px-8 py-4 rounded-full text-lg font-bold hover:border-siot-400 hover:text-siot-600 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-500 group whitespace-nowrap">
-          <img src="img/siot-logo.png" alt="Siot"
-            class="h-7 w-auto object-contain transition-transform group-hover:scale-110">
-          <span>시옷 솔루션</span>
+          class="group pointer-events-auto flex items-center justify-between gap-4 py-5 md:py-6 border-t border-white/10">
+          <div class="flex items-baseline gap-4 md:gap-6 min-w-0">
+            <span class="text-xs font-semibold tracking-widest text-white/30">01</span>
+            <span
+              class="text-xl md:text-3xl font-bold text-white group-hover:text-siot-500 transition-colors duration-300">시옷
+              솔루션</span>
+            <span class="hidden sm:inline text-sm text-white/35 truncate">무선 IoT 스마트 공간 제어</span>
+          </div>
+          <iconify-icon icon="solar:arrow-right-up-linear"
+            class="text-xl md:text-2xl text-white/30 group-hover:text-siot-500 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-300 shrink-0"></iconify-icon>
         </a>
         <a href="#bizmoa"
-          class="w-full sm:w-auto flex items-center justify-center gap-4 bg-white text-slate-800 border-2 border-slate-200 px-8 py-4 rounded-full text-lg font-bold hover:border-bizmoa-400 hover:text-bizmoa-600 hover:shadow-[0_0_30px_rgba(59,130,246,0.15)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-500 group whitespace-nowrap">
-          <img src="img/bizmoaLogo2.png" alt="BizMoa"
-            class="h-7 w-auto object-contain transition-transform group-hover:scale-110">
-          <span>비즈모아 자동화</span>
+          class="group pointer-events-auto flex items-center justify-between gap-4 py-5 md:py-6 border-t border-white/10">
+          <div class="flex items-baseline gap-4 md:gap-6 min-w-0">
+            <span class="text-xs font-semibold tracking-widest text-white/30">02</span>
+            <span
+              class="text-xl md:text-3xl font-bold text-white group-hover:text-bizmoa-500 transition-colors duration-300">비즈모아
+              자동화</span>
+            <span class="hidden sm:inline text-sm text-white/35 truncate">견적서 자동화 · 영업 관리</span>
+          </div>
+          <iconify-icon icon="solar:arrow-right-up-linear"
+            class="text-xl md:text-2xl text-white/30 group-hover:text-bizmoa-500 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-300 shrink-0"></iconify-icon>
         </a>
         <a href="#dailo"
-          class="w-full sm:w-auto flex items-center justify-center gap-4 bg-white text-slate-800 border-2 border-slate-200 px-8 py-4 rounded-full text-lg font-bold hover:border-dailo-400 hover:text-dailo-600 hover:shadow-[0_0_30px_rgba(124,58,237,0.15)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-500 group whitespace-nowrap">
-          <img src="img/dailo-logo.png" alt="Dailo"
-            class="h-7 w-auto object-contain transition-transform group-hover:scale-110">
-          <span>다일로 워크스페이스</span>
+          class="group pointer-events-auto flex items-center justify-between gap-4 py-5 md:py-6 border-t border-b border-white/10">
+          <div class="flex items-baseline gap-4 md:gap-6 min-w-0">
+            <span class="text-xs font-semibold tracking-widest text-white/30">03</span>
+            <span
+              class="text-xl md:text-3xl font-bold text-white group-hover:text-dailo-500 transition-colors duration-300">다일로
+              워크스페이스</span>
+            <span class="hidden sm:inline text-sm text-white/35 truncate">문서와 채팅의 결합, AI 지식 관리</span>
+          </div>
+          <iconify-icon icon="solar:arrow-right-up-linear"
+            class="text-xl md:text-2xl text-white/30 group-hover:text-dailo-500 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-300 shrink-0"></iconify-icon>
         </a>
+      </div>
+    </div>
+
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
+      <div class="hero-reveal flex flex-col items-center gap-3" style="--d:1.4s">
+        <span class="text-[10px] font-semibold tracking-[0.35em] uppercase text-white/35">Scroll</span>
+        <span class="relative block w-px h-12 bg-white/15 overflow-hidden"><span class="scroll-dash"></span></span>
       </div>
     </div>
   </section>
 
   <!-- Social Proof Strip -->
-  <section class="py-12 border-y border-slate-200/50 bg-white/50 relative z-10">
+  <section id="metrics" class="py-12 bg-[#0a0a0f] border-t border-white/10 relative z-10">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex flex-col md:flex-row items-center justify-between gap-8 md:gap-16">
         <div class="flex-shrink-0 text-center md:text-left animate-on-scroll">
-          <p class="text-3xl font-bold tracking-tight text-slate-900 mb-1">47,200+</p>
-          <p class="text-sm font-medium tracking-wide text-slate-500 uppercase">생성된 지식 토픽</p>
+          <p class="text-3xl font-bold tracking-tight text-white mb-1">47,200+</p>
+          <p class="text-sm font-medium tracking-wide text-white/40 uppercase">생성된 지식 토픽</p>
         </div>
-        <div class="w-px h-12 bg-slate-200 hidden md:block animate-on-scroll"></div>
+        <div class="w-px h-12 bg-white/10 hidden md:block animate-on-scroll"></div>
         <div class="flex-shrink-0 text-center md:text-left animate-on-scroll">
-          <p class="text-3xl font-bold tracking-tight text-slate-900 mb-1">99.9%</p>
-          <p class="text-sm font-medium tracking-wide text-slate-500 uppercase">IoT 제어 안정성</p>
+          <p class="text-3xl font-bold tracking-tight text-white mb-1">99.9%</p>
+          <p class="text-sm font-medium tracking-wide text-white/40 uppercase">IoT 제어 안정성</p>
         </div>
-        <div class="w-px h-12 bg-slate-200 hidden md:block animate-on-scroll"></div>
-        <div class="flex-1 overflow-hidden w-full relative h-[40px] flex items-center fade-edges animate-on-scroll">
-          <div
-            class="flex gap-12 items-center opacity-40 grayscale hover:grayscale-0 transition-all duration-700 w-max whitespace-nowrap mask-image-[linear-gradient(to_right,transparent,black_20%,black_80%,transparent)]">
-            <h3 class="text-xl font-bold font-sans tracking-tighter">STELLAR<span class="font-light">LABS</span></h3>
-            <h3 class="text-xl font-bold font-serif italic tracking-tight">Luminary</h3>
-            <h3 class="text-xl font-extrabold font-sans tracking-widest uppercase">Verify</h3>
-            <h3 class="text-xl font-semibold font-sans tracking-tight">FlowCanvas</h3>
-            <h3 class="text-xl font-bold font-sans tracking-tighter text-slate-800">NEXVISION</h3>
+        <div class="w-px h-12 bg-white/10 hidden md:block animate-on-scroll"></div>
+        <div class="flex-1 overflow-hidden w-full relative h-[40px] flex items-center animate-on-scroll"
+          style="mask-image:linear-gradient(to right,transparent,black 15%,black 85%,transparent);-webkit-mask-image:linear-gradient(to right,transparent,black 15%,black 85%,transparent);">
+          <div class="marquee-track flex items-center text-white/30 whitespace-nowrap">
+            <div class="flex gap-12 items-center pr-12">
+              <h3 class="text-xl font-bold font-sans tracking-tighter">STELLAR<span class="font-light">LABS</span></h3>
+              <h3 class="text-xl font-bold font-serif italic tracking-tight">Luminary</h3>
+              <h3 class="text-xl font-extrabold font-sans tracking-widest uppercase">Verify</h3>
+              <h3 class="text-xl font-semibold font-sans tracking-tight">FlowCanvas</h3>
+              <h3 class="text-xl font-bold font-sans tracking-tighter">NEXVISION</h3>
+            </div>
+            <div class="flex gap-12 items-center pr-12" aria-hidden="true">
+              <h3 class="text-xl font-bold font-sans tracking-tighter">STELLAR<span class="font-light">LABS</span></h3>
+              <h3 class="text-xl font-bold font-serif italic tracking-tight">Luminary</h3>
+              <h3 class="text-xl font-extrabold font-sans tracking-widest uppercase">Verify</h3>
+              <h3 class="text-xl font-semibold font-sans tracking-tight">FlowCanvas</h3>
+              <h3 class="text-xl font-bold font-sans tracking-tighter">NEXVISION</h3>
+            </div>
           </div>
         </div>
       </div>
@@ -264,18 +402,18 @@
       <div class="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-siot-800 to-transparent z-10">
       </div>
 
-      <!-- 타이틀 -->
+      <!-- 타이틀 (phase 1) -->
       <div id="siot-title" class="absolute inset-0 flex flex-col items-center justify-center z-10 px-6 text-center"
-        style="opacity:0; transform:translateY(2rem);">
+        style="opacity:0;">
         <span
           class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-siot-900/80 border border-siot-700/50 text-[11px] uppercase tracking-[0.15em] font-bold text-siot-400 mb-8">
           <iconify-icon icon="solar:cpu-bold-duotone"></iconify-icon>
           Physical Workspace
         </span>
         <h2 class="text-5xl md:text-7xl lg:text-[5.5rem] font-bold tracking-tight leading-snug break-keep text-white">
-          공간을 지배하는 디테일,<br>
-          스마트 솔루션 <span
-            style="background:linear-gradient(90deg,#f97316,#f5a21c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">시옷</span>.
+          <span class="siot-line"><span id="siot-line-1" class="siot-line-inner">공간을 지배하는 디테일,</span></span>
+          <span class="siot-line"><span id="siot-line-2" class="siot-line-inner">스마트 솔루션 <span
+                style="background:linear-gradient(90deg,#f97316,#f5a21c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">시옷</span>.</span></span>
         </h2>
         <!-- 스크롤 유도 -->
         <div id="siot-scroll-hint" class="mt-16 flex flex-col items-center gap-2 text-slate-400"
@@ -283,6 +421,19 @@
           <span class="text-xs uppercase tracking-widest font-semibold">Scroll</span>
           <div class="w-px h-12 bg-gradient-to-b from-slate-400 to-transparent animate-pulse"></div>
         </div>
+      </div>
+
+      <!-- 타이틀 (phase 2) -->
+      <div id="siot-title-2" class="absolute inset-0 flex flex-col items-center justify-center z-10 px-6 text-center"
+        style="opacity:0;">
+        <h2 class="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-snug break-keep text-white">
+          설치는 미니멀하게,<br>
+          <span
+            style="background:linear-gradient(90deg,#f97316,#f5a21c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">제어는
+            완벽하게.</span>
+        </h2>
+        <p class="mt-6 text-base md:text-lg text-slate-300 break-keep max-w-xl">배선 공사 없는 무선 IoT로,
+          공간의 모든 디테일이 손끝에 들어옵니다.</p>
       </div>
 
     </div>
@@ -310,10 +461,29 @@
           중앙 집중식 관제</h3>
         <div class="animate-on-scroll relative" style="transition-delay:270ms;">
           <div class="absolute inset-x-[10%] bottom-0 h-1/3 bg-siot-500/10 blur-[60px] pointer-events-none"></div>
-          <div class="relative card-outer-dark">
+          <div class="relative card-outer-dark tilt-card">
             <div class="card-inner-dark p-2 md:p-3">
               <img src="img/siot3.png" alt="시옷 메인 관제 페이지" class="w-full h-auto object-contain block rounded-2xl"
                 loading="lazy">
+            </div>
+          </div>
+          <!-- 플로팅 통계 배지 -->
+          <div
+            class="hidden md:flex absolute -top-5 right-8 z-10 items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-siot-900/80 border border-siot-700/50 backdrop-blur-md shadow-lg animate-float">
+            <iconify-icon icon="solar:shield-check-bold-duotone" class="text-siot-400 text-xl"></iconify-icon>
+            <div class="text-left leading-tight">
+              <p class="text-white font-black text-base"><span class="count-up" data-target="99.9"
+                  data-decimals="1">0</span>%</p>
+              <p class="text-slate-400 text-[10px] font-semibold uppercase tracking-wide">제어 안정성</p>
+            </div>
+          </div>
+          <div
+            class="hidden md:flex absolute -bottom-5 left-8 z-10 items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-siot-900/80 border border-siot-700/50 backdrop-blur-md shadow-lg animate-float"
+            style="animation-delay:-2.5s;">
+            <iconify-icon icon="solar:pulse-bold-duotone" class="text-siot-400 text-xl"></iconify-icon>
+            <div class="text-left leading-tight">
+              <p class="text-white font-black text-base">1초 단위</p>
+              <p class="text-slate-400 text-[10px] font-semibold uppercase tracking-wide">실시간 모니터링</p>
             </div>
           </div>
         </div>
@@ -322,17 +492,17 @@
             감지합니다. 다운타임 제로를 목표로 한 완전한 공간 관리 체계입니다.</p>
           <div class="flex flex-wrap justify-center gap-2">
             <span
-              class="px-3 py-1.5 rounded-full bg-siot-900/60 border border-siot-700/50 text-siot-400 text-sm font-semibold">실시간
-              전체 현황</span>
+              class="px-3 py-1.5 rounded-full bg-siot-900/60 border border-siot-700/50 text-siot-400 text-sm font-semibold">99.9%
+              제어 안정성</span>
             <span
-              class="px-3 py-1.5 rounded-full bg-siot-900/60 border border-siot-700/50 text-siot-400 text-sm font-semibold">이상
-              신호 즉시 감지</span>
+              class="px-3 py-1.5 rounded-full bg-siot-900/60 border border-siot-700/50 text-siot-400 text-sm font-semibold">1초
+              단위 실시간 모니터링</span>
             <span
-              class="px-3 py-1.5 rounded-full bg-siot-900/60 border border-siot-700/50 text-siot-400 text-sm font-semibold">다운타임
-              제로</span>
+              class="px-3 py-1.5 rounded-full bg-siot-900/60 border border-siot-700/50 text-siot-400 text-sm font-semibold">배선
+              공사 0 · 무선 설치</span>
             <span
-              class="px-3 py-1.5 rounded-full bg-siot-900/60 border border-siot-700/50 text-siot-400 text-sm font-semibold">중앙
-              집중 제어</span>
+              class="px-3 py-1.5 rounded-full bg-siot-900/60 border border-siot-700/50 text-siot-400 text-sm font-semibold">장치
+              무제한 확장</span>
           </div>
         </div>
       </div>
@@ -395,7 +565,7 @@
           <div class="animate-on-scroll" style="transition-delay:150ms;">
             <div class="relative">
               <div class="absolute inset-x-[10%] bottom-0 h-1/3 bg-siot-500/8 blur-[60px] pointer-events-none"></div>
-              <div class="relative card-outer-dark">
+              <div class="relative card-outer-dark tilt-card">
                 <div class="card-inner-dark p-2 md:p-3">
                   <img src="img/siot1.png" alt="시옷 통합 제어 대시보드" class="w-full h-auto object-contain block rounded-2xl"
                     loading="lazy">
@@ -417,7 +587,7 @@
           <div class="animate-on-scroll order-2 lg:order-1">
             <div class="relative">
               <div class="absolute inset-x-[10%] bottom-0 h-1/3 bg-siot-500/8 blur-[60px] pointer-events-none"></div>
-              <div class="relative card-outer-dark">
+              <div class="relative card-outer-dark tilt-card">
                 <div class="card-inner-dark p-2 md:p-3">
                   <img src="img/siot2.png" alt="시옷 장면 모드 프리셋" class="w-full h-auto object-contain block rounded-2xl"
                     loading="lazy">
@@ -517,246 +687,426 @@
       </div>
     </div>
 
+    <div class="w-full h-px bg-gradient-to-r from-transparent via-siot-800/40 to-transparent"></div>
+
+    <!-- ── 시옷 마무리 CTA ── -->
+    <div class="py-16 px-4 sm:px-6 lg:px-8">
+      <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
+        <div class="animate-on-scroll text-center md:text-left">
+          <h3 class="text-2xl md:text-3xl font-black text-white mb-2 break-keep">우리 사무실에 시옷을 들인다면?</h3>
+          <p class="text-slate-400 break-keep">배선 공사 없이, 지금 쓰는 공간 그대로 스마트해집니다.</p>
+        </div>
+        <button onclick="openContactModal()"
+          class="animate-on-scroll flex items-center gap-3 bg-siot-500 hover:bg-siot-600 text-white px-8 py-4 rounded-full text-lg font-bold hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 whitespace-nowrap shrink-0"
+          style="transition-delay:120ms;">
+          시옷 도입 문의
+          <iconify-icon icon="solar:arrow-right-linear"></iconify-icon>
+        </button>
+      </div>
+    </div>
+
   </section>
 
-  <!-- BizMoa Section (B2B SaaS) -->
-  <section id="bizmoa" class="py-24 md:py-40 relative z-10 bg-white overflow-hidden border-t border-slate-200/50">
-    <!-- Background Accents -->
-    <div class="absolute top-0 right-0 w-[600px] h-[600px] bg-bizmoa-50/50 rounded-full blur-[120px] translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
-
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-      <!-- Section Header -->
-      <div class="text-center max-w-3xl mx-auto mb-20 animate-on-scroll">
-        <span
-          class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-bizmoa-50 text-[11px] uppercase tracking-[0.2em] font-bold text-bizmoa-600 border border-bizmoa-100 mb-8 backdrop-blur-sm shadow-sm">
-          <iconify-icon icon="solar:document-add-bold-duotone" class="text-xs"></iconify-icon>
-          All-in-One B2B SaaS
-        </span>
-        
-
+  <!-- BizMoa Section (B2B SaaS) — 횡스크롤 쇼케이스 -->
+  <section id="bizmoa" class="relative z-10 bg-white border-t border-slate-200/50">
+    <!-- Section Header (세로 흐름) -->
+    <div class="pt-24 md:pt-40 pb-10 lg:pb-0 px-4 sm:px-6 lg:px-8 overflow-hidden relative">
+      <div
+        class="absolute top-0 right-0 w-[600px] h-[600px] bg-bizmoa-50/50 rounded-full blur-[120px] translate-x-1/2 -translate-y-1/2 pointer-events-none">
+      </div>
+      <div class="text-center max-w-3xl mx-auto animate-on-scroll relative">
+        <div class="flex items-center justify-center gap-4 mb-8">
+          <span class="block w-10 h-px bg-bizmoa-400"></span>
+          <span class="text-[11px] uppercase tracking-[0.3em] font-bold text-bizmoa-600">All-in-One B2B SaaS</span>
+          <span class="block w-10 h-px bg-bizmoa-400"></span>
+        </div>
         <h2 class="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight leading-tight mb-8 break-keep">
           도면 위에서 끝내는,<br>
-          <span class="bg-gradient-to-r from-bizmoa-600 to-cyan-600 bg-clip-text text-transparent inline-block pb-2">견적 자동화 솔루션</span>
+          <span class="bg-gradient-to-r from-bizmoa-600 to-cyan-600 bg-clip-text text-transparent inline-block pb-2">견적
+            자동화 솔루션</span>
         </h2>
         <p class="text-slate-500 text-lg md:text-xl leading-relaxed break-keep font-medium">
           도면 기반 IoT · 스마트홈 장비 배치부터 견적, 계약, 납품까지.<br>
           시공업체와 설치업체를 위한 가장 완벽한 올인원 SaaS입니다.
         </p>
+        <p class="hidden lg:block mt-10 text-[11px] uppercase tracking-[0.35em] text-slate-400 font-semibold">Scroll to
+          explore</p>
       </div>
+    </div>
 
-      <!-- Hero Image Showcase for BizMoa -->
-      <div class="animate-on-scroll mb-32 group" style="transition-delay: 100ms;">
-        <div class="relative max-w-6xl mx-auto px-2">
-          <div class="absolute inset-0 bg-bizmoa-500/10 blur-[80px] -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 scale-90"></div>
-          <div class="rounded-3xl overflow-hidden shadow-[0_50px_100px_-20px_rgba(59,130,246,0.15)] border border-slate-200/60 bg-white ring-1 ring-white/50 transition-all duration-700 hover:shadow-[0_60px_120px_-20px_rgba(59,130,246,0.25)] hover:-translate-y-2">
-            <div class="h-10 bg-slate-50/80 backdrop-blur-md border-b border-slate-200/50 flex items-center px-4 gap-2 shrink-0">
-               <div class="flex gap-1.5">
-                 <div class="w-3 h-3 rounded-full bg-rose-400/80"></div>
-                 <div class="w-3 h-3 rounded-full bg-amber-400/80"></div>
-                 <div class="w-3 h-3 rounded-full bg-emerald-400/80"></div>
-               </div>
-               <div class="mx-auto w-1/3 h-5 bg-white rounded-md border border-slate-200/50 opacity-50 flex items-center justify-center">
-                 <span class="text-[10px] text-slate-400 font-medium font-sans">bizmoa.com</span>
-               </div>
-            </div>
-            <img src="img/bizmoa1.JPG" alt="BizMoa Dashboard" class="w-full h-auto block" loading="lazy" decoding="async">
-          </div>
-          <!-- Floating badge 1 -->
-          <div class="absolute -top-10 -left-4 hidden lg:block animate-on-scroll" style="transition-delay: 400ms;">
-             <div class="bg-white/90 backdrop-blur-2xl p-4 rounded-2xl shadow-2xl border border-white/50 flex items-center gap-4 hover:scale-105 transition-transform cursor-default">
-               <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-bizmoa-500 to-cyan-600 flex items-center justify-center text-white shadow-lg shadow-bizmoa-200">
-                 <iconify-icon icon="solar:calculator-minimalistic-bold-duotone" class="text-2xl"></iconify-icon>
-               </div>
-               <div>
-                 <p class="text-[10px] text-bizmoa-600 font-black uppercase tracking-widest leading-none mb-1.5">Auto Calculation</p>
-                 <p class="text-sm font-black text-slate-800 leading-none">자동 견적 및 인건비 산출</p>
-               </div>
-             </div>
-          </div>
-          <!-- Floating badge 2 -->
-          <div class="absolute -bottom-10 -right-6 hidden lg:block animate-on-scroll" style="transition-delay: 600ms;">
-             <div class="bg-white/90 backdrop-blur-2xl p-4 rounded-2xl shadow-2xl border border-white/50 flex items-center gap-4 hover:scale-105 transition-transform cursor-default">
-               <div class="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center text-white shadow-lg shadow-slate-200">
-                 <iconify-icon icon="solar:map-point-wave-bold-duotone" class="text-2xl"></iconify-icon>
-               </div>
-               <div>
-                 <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none mb-1.5">Drag & Drop</p>
-                 <p class="text-sm font-black text-slate-800 leading-none text-right">도면 위 장비 직접 배치</p>
-               </div>
-             </div>
-          </div>
-        </div>
-      </div>
+    <!-- 횡스크롤 핀 (데스크톱) / 세로 스택 (모바일) -->
+    <div id="bizmoa-h" class="relative lg:h-[1060vh]">
+      <div id="bizmoa-viewport" class="lg:sticky lg:top-0 lg:h-screen lg:overflow-hidden">
+        <div id="bizmoa-track" class="flex flex-col lg:flex-row lg:h-full lg:w-max will-change-transform">
 
-      <!-- ── 핵심 기능 4그리드 ── -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-24">
-        <div class="animate-on-scroll" style="transition-delay: 100ms;">
-          <div class="w-12 h-12 rounded-[1rem] bg-bizmoa-50 flex items-center justify-center text-bizmoa-600 text-2xl mb-5 border border-bizmoa-100">
-            <iconify-icon icon="solar:pen-new-square-bold-duotone"></iconify-icon>
-          </div>
-          <h3 class="text-xl font-bold text-slate-900 mb-3">도면 위 직관적 배치</h3>
-          <p class="text-slate-500 leading-relaxed text-sm break-keep">평면도 위에 드래그&amp;드롭으로 장비를 배치하고, AI 자동배치로 최적 위치를 추천받으세요.</p>
-        </div>
-        <div class="animate-on-scroll" style="transition-delay: 200ms;">
-          <div class="w-12 h-12 rounded-[1rem] bg-bizmoa-50 flex items-center justify-center text-bizmoa-600 text-2xl mb-5 border border-bizmoa-100">
-            <iconify-icon icon="solar:database-bold-duotone"></iconify-icon>
-          </div>
-          <h3 class="text-xl font-bold text-slate-900 mb-3">통합 DB &amp; 인건비 산출</h3>
-          <p class="text-slate-500 leading-relaxed text-sm break-keep">직급별 단가를 등록하면 견적 작성 시 노무비가 자동으로 계산됩니다.</p>
-        </div>
-        <div class="animate-on-scroll" style="transition-delay: 300ms;">
-          <div class="w-12 h-12 rounded-[1rem] bg-bizmoa-50 flex items-center justify-center text-bizmoa-600 text-2xl mb-5 border border-bizmoa-100">
-            <iconify-icon icon="solar:document-text-bold-duotone"></iconify-icon>
-          </div>
-          <h3 class="text-xl font-bold text-slate-900 mb-3">서류 자동 생성</h3>
-          <p class="text-slate-500 leading-relaxed text-sm break-keep">견적서·계약서·납품확인서까지 필수 문서가 자동 산출되어 엑셀/PDF로 제공됩니다.</p>
-        </div>
-        <div class="animate-on-scroll" style="transition-delay: 400ms;">
-          <div class="w-12 h-12 rounded-[1rem] bg-bizmoa-50 flex items-center justify-center text-bizmoa-600 text-2xl mb-5 border border-bizmoa-100">
-            <iconify-icon icon="solar:users-group-two-rounded-bold-duotone"></iconify-icon>
-          </div>
-          <h3 class="text-xl font-bold text-slate-900 mb-3">팀 협업 &amp; 권한 관리</h3>
-          <p class="text-slate-500 leading-relaxed text-sm break-keep">팀 멤버 초대 및 역할별 권한 관리로 프로젝트 데이터를 안전하게 운영합니다.</p>
-        </div>
-      </div>
-
-      <!-- ── Feature 01: 도면 편집기 (bizmoa5) ── -->
-      <div class="mb-20 animate-on-scroll">
-        <div class="grid grid-cols-1 lg:grid-cols-5 gap-10 items-center">
-          <div class="lg:col-span-3">
-            <div class="rounded-2xl overflow-hidden shadow-xl border border-slate-200/60 bg-white">
-              <img src="img/bizmoa5.JPG" alt="BizMoa 도면 편집기" class="w-full h-auto block" loading="lazy">
-            </div>
-          </div>
-          <div class="lg:col-span-2">
-            <span class="text-bizmoa-600 text-xs font-bold uppercase tracking-widest mb-3 block">Blueprint Editor</span>
-            <h3 class="text-3xl md:text-4xl font-black text-slate-900 mb-4 break-keep leading-tight">도면 위에 장비를<br>드래그하여 배치</h3>
-            <p class="text-slate-500 leading-relaxed break-keep mb-6">건축 도면 위에 IoT 장비를 컬러 마커로 직관적으로 배치합니다. 층별 관리, 장비 카테고리 트리, AI 자동배치 기능으로 대규모 건물도 빠르게 설계하세요.</p>
-            <div class="flex flex-wrap gap-2">
-              <span class="px-3 py-1.5 rounded-full bg-bizmoa-50 border border-bizmoa-100 text-bizmoa-600 text-xs font-semibold">층별 관리</span>
-              <span class="px-3 py-1.5 rounded-full bg-bizmoa-50 border border-bizmoa-100 text-bizmoa-600 text-xs font-semibold">AI 자동배치</span>
-              <span class="px-3 py-1.5 rounded-full bg-bizmoa-50 border border-bizmoa-100 text-bizmoa-600 text-xs font-semibold">장비 카테고리 트리</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── Feature 02: 견적서 자동 생성 (bizmoa6) ── -->
-      <div class="mb-20 animate-on-scroll">
-        <div class="grid grid-cols-1 lg:grid-cols-5 gap-10 items-center">
-          <div class="lg:col-span-2 order-1 lg:order-1">
-            <span class="text-bizmoa-600 text-xs font-bold uppercase tracking-widest mb-3 block">Auto Quotation</span>
-            <h3 class="text-3xl md:text-4xl font-black text-slate-900 mb-4 break-keep leading-tight">장비 + 노무비 결합<br>견적서 자동 생성</h3>
-            <p class="text-slate-500 leading-relaxed break-keep mb-6">배치된 장비 단가와 직종별 인건비를 결합하여 견적서가 즉시 생성됩니다. 소비자용·관리자용으로 구분하여 할인율 적용 및 Excel 내보내기까지 한 번에.</p>
-            <div class="flex flex-wrap gap-2">
-              <span class="px-3 py-1.5 rounded-full bg-bizmoa-50 border border-bizmoa-100 text-bizmoa-600 text-xs font-semibold">할인율 관리</span>
-              <span class="px-3 py-1.5 rounded-full bg-bizmoa-50 border border-bizmoa-100 text-bizmoa-600 text-xs font-semibold">Excel 내보내기</span>
-              <span class="px-3 py-1.5 rounded-full bg-bizmoa-50 border border-bizmoa-100 text-bizmoa-600 text-xs font-semibold">소비자/관리자 뷰</span>
-            </div>
-          </div>
-          <div class="lg:col-span-3 order-2 lg:order-2">
-            <div class="rounded-2xl overflow-hidden shadow-xl border border-slate-200/60 bg-white">
-              <img src="img/bizmoa6.JPG" alt="BizMoa 견적서" class="w-full h-auto block" loading="lazy">
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── Feature 03: 프로젝트 관리 (bizmoa3 + bizmoa4) ── -->
-      <div class="mb-20 animate-on-scroll">
-        <div class="grid grid-cols-1 lg:grid-cols-5 gap-10 items-center">
-          <div class="lg:col-span-3">
-            <div class="grid grid-cols-2 gap-4">
-              <div class="rounded-2xl overflow-hidden shadow-lg border border-slate-200/60 bg-white">
-                <img src="img/bizmoa3.JPG" alt="BizMoa 프로젝트 카드" class="w-full h-auto block" loading="lazy">
+          <!-- ── Panel · 인트로 쇼케이스 ── -->
+          <div
+            class="relative w-full lg:w-screen lg:h-full lg:shrink-0 flex items-center px-4 sm:px-6 lg:px-14 py-14 lg:py-0">
+            <span
+              class="bz-outline hidden lg:block absolute left-6 top-1/2 -translate-y-1/2 text-[15vw] font-black tracking-tighter leading-none select-none pointer-events-none">BIZMOA</span>
+            <div class="relative w-full max-w-[78rem] mx-auto animate-on-scroll">
+              <div class="absolute inset-0 bg-bizmoa-500/10 blur-[80px] -z-10 scale-90"></div>
+              <div data-lightbox
+                class="rounded-3xl overflow-hidden shadow-[0_50px_100px_-20px_rgba(59,130,246,0.15)] border border-slate-200/60 bg-white ring-1 ring-white/50 cursor-zoom-in"
+                data-parallax="0.8">
+                <div
+                  class="h-10 bg-slate-50/80 backdrop-blur-md border-b border-slate-200/50 flex items-center px-4 gap-2 shrink-0">
+                  <div class="flex gap-1.5">
+                    <div class="w-3 h-3 rounded-full bg-rose-400/80"></div>
+                    <div class="w-3 h-3 rounded-full bg-amber-400/80"></div>
+                    <div class="w-3 h-3 rounded-full bg-emerald-400/80"></div>
+                  </div>
+                  <div
+                    class="mx-auto w-1/3 h-5 bg-white rounded-md border border-slate-200/50 opacity-50 flex items-center justify-center">
+                    <span class="text-[10px] text-slate-400 font-medium font-sans">bizmoa.com</span>
+                  </div>
+                </div>
+                <img src="img/bizmoa1.JPG" alt="BizMoa Dashboard" class="w-full h-auto block max-h-[72vh] object-cover object-top"
+                  loading="lazy" decoding="async">
               </div>
-              <div class="rounded-2xl overflow-hidden shadow-lg border border-slate-200/60 bg-white">
-                <img src="img/bizmoa4.JPG" alt="BizMoa 견적 이력" class="w-full h-auto block" loading="lazy">
+              <!-- 5단계 워크플로우 스트립 -->
+              <div
+                class="flex flex-wrap items-center justify-center gap-3 lg:gap-4 mt-8 text-[11px] font-bold uppercase tracking-[0.2em]">
+                <span class="text-bizmoa-600">01 배치</span>
+                <span class="w-8 h-px bg-slate-300"></span>
+                <span class="text-slate-400">02 견적</span>
+                <span class="w-8 h-px bg-slate-300"></span>
+                <span class="text-slate-400">03 계약</span>
+                <span class="w-8 h-px bg-slate-300"></span>
+                <span class="text-slate-400">04 관리</span>
+                <span class="w-8 h-px bg-slate-300"></span>
+                <span class="text-slate-400">05 운영</span>
               </div>
             </div>
           </div>
-          <div class="lg:col-span-2">
-            <span class="text-bizmoa-600 text-xs font-bold uppercase tracking-widest mb-3 block">Project Management</span>
-            <h3 class="text-3xl md:text-4xl font-black text-slate-900 mb-4 break-keep leading-tight">프로젝트 한눈에,<br>견적 이력까지</h3>
-            <p class="text-slate-500 leading-relaxed break-keep mb-6">모든 프로젝트의 진행 상태, 투입 인력, 금액을 카드 형태로 한눈에 파악합니다. 프로젝트별 견적 버전 관리로 수정 이력을 놓치지 마세요.</p>
-            <div class="flex flex-wrap gap-2">
-              <span class="px-3 py-1.5 rounded-full bg-bizmoa-50 border border-bizmoa-100 text-bizmoa-600 text-xs font-semibold">카드형 대시보드</span>
-              <span class="px-3 py-1.5 rounded-full bg-bizmoa-50 border border-bizmoa-100 text-bizmoa-600 text-xs font-semibold">견적 버전 관리</span>
-              <span class="px-3 py-1.5 rounded-full bg-bizmoa-50 border border-bizmoa-100 text-bizmoa-600 text-xs font-semibold">진행률 추적</span>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <!-- ── Feature 04: 계약서 + 납품확인서 (bizmoa7 + bizmoa8) ── -->
-      <div class="mb-20 animate-on-scroll">
-        <div class="grid grid-cols-1 lg:grid-cols-5 gap-10 items-center">
-          <div class="lg:col-span-2 order-1 lg:order-1">
-            <span class="text-bizmoa-600 text-xs font-bold uppercase tracking-widest mb-3 block">Document Automation</span>
-            <h3 class="text-3xl md:text-4xl font-black text-slate-900 mb-4 break-keep leading-tight">계약서부터 납품까지<br>원클릭 자동 생성</h3>
-            <p class="text-slate-500 leading-relaxed break-keep mb-6">견적 데이터를 기반으로 정식 계약서와 납품확인서가 자동 작성됩니다. 품목별 납품 검수 체크리스트로 현장 관리까지 완결하세요.</p>
-            <div class="flex flex-wrap gap-2">
-              <span class="px-3 py-1.5 rounded-full bg-bizmoa-50 border border-bizmoa-100 text-bizmoa-600 text-xs font-semibold">계약서 자동 작성</span>
-              <span class="px-3 py-1.5 rounded-full bg-bizmoa-50 border border-bizmoa-100 text-bizmoa-600 text-xs font-semibold">납품 검수 체크</span>
-              <span class="px-3 py-1.5 rounded-full bg-bizmoa-50 border border-bizmoa-100 text-bizmoa-600 text-xs font-semibold">PDF 출력</span>
-            </div>
-          </div>
-          <div class="lg:col-span-3 order-2 lg:order-2">
-            <div class="grid grid-cols-2 gap-4">
-              <div class="rounded-2xl overflow-hidden shadow-lg border border-slate-200/60 bg-white">
-                <img src="img/bizmoa7.JPG" alt="BizMoa 계약서" class="w-full h-auto block" loading="lazy">
+          <!-- ── Panel · STEP 01: 도면 배치 (bizmoa5) ── -->
+          <div
+            class="relative w-full lg:w-screen lg:h-full lg:shrink-0 flex items-center px-4 sm:px-6 lg:px-14 py-14 lg:py-0">
+            <div class="relative w-full max-w-[88rem] mx-auto">
+              <span
+                class="bz-outline absolute -top-10 lg:-top-24 left-0 text-7xl lg:text-[10rem] font-black leading-none select-none pointer-events-none">01</span>
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center relative">
+                <div class="lg:col-span-8 animate-on-scroll" data-parallax="1">
+                  <div data-lightbox
+                    class="rounded-2xl overflow-hidden shadow-xl border border-slate-200/60 bg-white cursor-zoom-in">
+                    <img src="img/bizmoa5.JPG" alt="BizMoa 도면 편집기"
+                      class="w-full h-auto block max-h-[74vh] object-cover object-top" loading="lazy">
+                  </div>
+                </div>
+                <div class="lg:col-span-4 animate-on-scroll">
+                  <div class="flex items-center gap-3 mb-3">
+                    <span class="block w-8 h-px bg-bizmoa-400"></span>
+                    <span class="text-bizmoa-600 text-xs font-bold uppercase tracking-widest">Step 01 — Blueprint</span>
+                  </div>
+                  <h3 class="text-3xl md:text-4xl font-black text-slate-900 mb-4 break-keep leading-tight">도면 위에
+                    장비를<br>드래그하여 배치</h3>
+                  <p class="text-slate-500 leading-relaxed break-keep mb-7">건축 도면 위에 IoT 장비를 컬러 마커로 직관적으로 배치합니다.
+                    대규모 건물도 층 단위로 빠르게 설계할 수 있습니다.</p>
+                  <div class="space-y-4 mb-8">
+                    <div class="flex items-start gap-4">
+                      <span class="text-bizmoa-600 text-xs font-black tracking-widest pt-1 shrink-0">01</span>
+                      <div>
+                        <p class="font-bold text-slate-900 text-sm mb-0.5">층별 도면 관리</p>
+                        <p class="text-slate-500 text-sm break-keep">건물의 층마다 도면을 등록해 오가며 배치</p>
+                      </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                      <span class="text-bizmoa-600 text-xs font-black tracking-widest pt-1 shrink-0">02</span>
+                      <div>
+                        <p class="font-bold text-slate-900 text-sm mb-0.5">AI 자동배치 추천</p>
+                        <p class="text-slate-500 text-sm break-keep">최적 위치를 자동 추천받아 설계 시간 단축</p>
+                      </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                      <span class="text-bizmoa-600 text-xs font-black tracking-widest pt-1 shrink-0">03</span>
+                      <div>
+                        <p class="font-bold text-slate-900 text-sm mb-0.5">장비 카테고리 트리</p>
+                        <p class="text-slate-500 text-sm break-keep">품목별 트리에서 장비를 골라 바로 도면 위로</p>
+                      </div>
+                    </div>
+                  </div>
+                  <p class="text-xl font-black text-bizmoa-600 tracking-tight break-keep">드래그 한 번으로 배치 완료.</p>
+                </div>
               </div>
-              <div class="rounded-2xl overflow-hidden shadow-lg border border-slate-200/60 bg-white">
-                <img src="img/bizmoa8.JPG" alt="BizMoa 납품확인서" class="w-full h-auto block" loading="lazy">
+            </div>
+          </div>
+
+          <!-- ── Panel · STEP 02: 견적 자동 생성 (bizmoa6) ── -->
+          <div
+            class="relative w-full lg:w-screen lg:h-full lg:shrink-0 flex items-center px-4 sm:px-6 lg:px-14 py-14 lg:py-0">
+            <div class="relative w-full max-w-[88rem] mx-auto">
+              <span
+                class="bz-outline absolute -top-10 lg:-top-24 right-0 text-7xl lg:text-[10rem] font-black leading-none select-none pointer-events-none">02</span>
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center relative">
+                <div class="lg:col-span-4 order-1 animate-on-scroll">
+                  <div class="flex items-center gap-3 mb-3">
+                    <span class="block w-8 h-px bg-bizmoa-400"></span>
+                    <span class="text-bizmoa-600 text-xs font-bold uppercase tracking-widest">Step 02 — Quotation</span>
+                  </div>
+                  <h3 class="text-3xl md:text-4xl font-black text-slate-900 mb-4 break-keep leading-tight">장비 + 노무비
+                    결합<br>견적서 자동 생성</h3>
+                  <p class="text-slate-500 leading-relaxed break-keep mb-7">배치를 마치는 순간, 장비 단가와 직종별 인건비가 결합된 견적서가
+                    즉시 만들어집니다.</p>
+                  <div class="space-y-4 mb-8">
+                    <div class="flex items-start gap-4">
+                      <span class="text-bizmoa-600 text-xs font-black tracking-widest pt-1 shrink-0">01</span>
+                      <div>
+                        <p class="font-bold text-slate-900 text-sm mb-0.5">장비 + 노무비 자동 합산</p>
+                        <p class="text-slate-500 text-sm break-keep">배치된 장비 단가와 직종별 인건비가 즉시 합산</p>
+                      </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                      <span class="text-bizmoa-600 text-xs font-black tracking-widest pt-1 shrink-0">02</span>
+                      <div>
+                        <p class="font-bold text-slate-900 text-sm mb-0.5">소비자용 · 관리자용 분리</p>
+                        <p class="text-slate-500 text-sm break-keep">뷰를 구분하고 할인율을 견적별로 적용</p>
+                      </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                      <span class="text-bizmoa-600 text-xs font-black tracking-widest pt-1 shrink-0">03</span>
+                      <div>
+                        <p class="font-bold text-slate-900 text-sm mb-0.5">Excel · PDF 내보내기</p>
+                        <p class="text-slate-500 text-sm break-keep">완성된 견적서를 고객에게 바로 전달</p>
+                      </div>
+                    </div>
+                  </div>
+                  <p class="text-xl font-black text-bizmoa-600 tracking-tight break-keep">견적서, 배치 즉시 생성.</p>
+                </div>
+                <div class="lg:col-span-8 order-2 animate-on-scroll" data-parallax="1">
+                  <div data-lightbox
+                    class="rounded-2xl overflow-hidden shadow-xl border border-slate-200/60 bg-white cursor-zoom-in">
+                    <img src="img/bizmoa6.JPG" alt="BizMoa 견적서"
+                      class="w-full h-auto block max-h-[74vh] object-cover object-top" loading="lazy">
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- ── Feature 05: 인건비 단가 + 사용자 관리 (bizmoa2 + bizmoa9) ── -->
-      <div class="mb-20 animate-on-scroll">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div class="bg-slate-50 rounded-[2rem] p-8 lg:p-10 border border-slate-200 transition-all duration-500 hover:shadow-xl hover:border-slate-300 group flex flex-col">
-            <div class="mb-6">
-              <span class="text-bizmoa-600 text-xs font-bold uppercase tracking-widest mb-2 block">Labor Cost</span>
-              <h3 class="text-2xl font-black text-slate-900 mb-3">인건비 단가 자동 산출</h3>
-              <p class="text-slate-500 text-sm break-keep leading-relaxed">직급별 인건비 단가를 등록하면 시급·일급·월급이 공식에 따라 자동 계산됩니다. 견적서 작성 시 노무비가 자동 반영됩니다.</p>
-            </div>
-            <div class="mt-auto rounded-2xl overflow-hidden shadow-md group-hover:shadow-lg transition-all duration-500 group-hover:-translate-y-1 border border-slate-200/60">
-              <img src="img/bizmoa2.JPG" alt="BizMoa 인건비 단가표" class="w-full h-auto block" loading="lazy">
+          <!-- ── Panel · STEP 03: 계약 · 납품 (bizmoa7 + bizmoa8) ── -->
+          <div
+            class="relative w-full lg:w-screen lg:h-full lg:shrink-0 flex items-center px-4 sm:px-6 lg:px-14 py-14 lg:py-0">
+            <div class="relative w-full max-w-[88rem] mx-auto">
+              <span
+                class="bz-outline absolute -top-10 lg:-top-24 left-0 text-7xl lg:text-[10rem] font-black leading-none select-none pointer-events-none">03</span>
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center relative">
+                <div class="lg:col-span-8 animate-on-scroll">
+                  <div class="relative lg:pb-20 lg:pr-16">
+                    <div data-lightbox data-parallax="1"
+                      class="w-full lg:w-[88%] rounded-2xl overflow-hidden shadow-xl border border-slate-200/60 bg-white cursor-zoom-in">
+                      <img src="img/bizmoa7.JPG" alt="BizMoa 계약서"
+                        class="w-full h-auto block max-h-[64vh] object-cover object-top" loading="lazy">
+                    </div>
+                    <div data-lightbox data-parallax="1.4"
+                      class="relative lg:absolute lg:right-0 lg:bottom-0 w-full lg:w-[52%] mt-4 lg:mt-0 rounded-2xl overflow-hidden shadow-2xl border border-slate-200/80 bg-white cursor-zoom-in lg:z-10">
+                      <img src="img/bizmoa8.JPG" alt="BizMoa 납품확인서"
+                        class="w-full h-auto block max-h-[46vh] object-cover object-top" loading="lazy">
+                    </div>
+                  </div>
+                </div>
+                <div class="lg:col-span-4 animate-on-scroll">
+                  <div class="flex items-center gap-3 mb-3">
+                    <span class="block w-8 h-px bg-bizmoa-400"></span>
+                    <span class="text-bizmoa-600 text-xs font-bold uppercase tracking-widest">Step 03 — Contract</span>
+                  </div>
+                  <h3 class="text-3xl md:text-4xl font-black text-slate-900 mb-4 break-keep leading-tight">계약서부터
+                    납품까지<br>원클릭 자동 생성</h3>
+                  <p class="text-slate-500 leading-relaxed break-keep mb-7">견적이 확정되면 정식 계약서와 납품확인서가 자동으로 작성됩니다.
+                    현장 검수까지 시스템 안에서 끝납니다.</p>
+                  <div class="space-y-4 mb-8">
+                    <div class="flex items-start gap-4">
+                      <span class="text-bizmoa-600 text-xs font-black tracking-widest pt-1 shrink-0">01</span>
+                      <div>
+                        <p class="font-bold text-slate-900 text-sm mb-0.5">계약서 자동 작성</p>
+                        <p class="text-slate-500 text-sm break-keep">견적 데이터가 그대로 정식 계약서로 변환</p>
+                      </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                      <span class="text-bizmoa-600 text-xs font-black tracking-widest pt-1 shrink-0">02</span>
+                      <div>
+                        <p class="font-bold text-slate-900 text-sm mb-0.5">납품 검수 체크리스트</p>
+                        <p class="text-slate-500 text-sm break-keep">품목별 납품 확인으로 현장 관리 완결</p>
+                      </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                      <span class="text-bizmoa-600 text-xs font-black tracking-widest pt-1 shrink-0">03</span>
+                      <div>
+                        <p class="font-bold text-slate-900 text-sm mb-0.5">PDF 정식 문서 출력</p>
+                        <p class="text-slate-500 text-sm break-keep">서명만 하면 되는 문서로 바로 출력</p>
+                      </div>
+                    </div>
+                  </div>
+                  <p class="text-xl font-black text-bizmoa-600 tracking-tight break-keep">계약·납품 서류, 원클릭.</p>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="bg-slate-50 rounded-[2rem] p-8 lg:p-10 border border-slate-200 transition-all duration-500 hover:shadow-xl hover:border-slate-300 group flex flex-col">
-            <div class="mb-6">
-              <span class="text-bizmoa-600 text-xs font-bold uppercase tracking-widest mb-2 block">Team &amp; Security</span>
-              <h3 class="text-2xl font-black text-slate-900 mb-3">팀원 권한 관리</h3>
-              <p class="text-slate-500 text-sm break-keep leading-relaxed">관리자·매니저·관리담당 역할별 접근 권한을 세밀하게 설정하여 프로젝트 데이터를 안전하게 보호합니다.</p>
-            </div>
-            <div class="mt-auto rounded-2xl overflow-hidden shadow-md group-hover:shadow-lg transition-all duration-500 group-hover:-translate-y-1 border border-slate-200/60">
-              <img src="img/bizmoa9.JPG" alt="BizMoa 사용자 관리" class="w-full h-auto block" loading="lazy">
+
+          <!-- ── Panel · STEP 04: 프로젝트 관리 (bizmoa3 + bizmoa4) ── -->
+          <div
+            class="relative w-full lg:w-screen lg:h-full lg:shrink-0 flex items-center px-4 sm:px-6 lg:px-14 py-14 lg:py-0">
+            <div class="relative w-full max-w-[88rem] mx-auto">
+              <span
+                class="bz-outline absolute -top-10 lg:-top-24 right-0 text-7xl lg:text-[10rem] font-black leading-none select-none pointer-events-none">04</span>
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center relative">
+                <div class="lg:col-span-4 order-1 animate-on-scroll">
+                  <div class="flex items-center gap-3 mb-3">
+                    <span class="block w-8 h-px bg-bizmoa-400"></span>
+                    <span class="text-bizmoa-600 text-xs font-bold uppercase tracking-widest">Step 04 — Manage</span>
+                  </div>
+                  <h3 class="text-3xl md:text-4xl font-black text-slate-900 mb-4 break-keep leading-tight">프로젝트
+                    한눈에,<br>견적 이력까지</h3>
+                  <p class="text-slate-500 leading-relaxed break-keep mb-7">진행 중인 모든 현장의 상태와 금액을 카드 한 장씩으로 파악하고,
+                    견적 수정 이력은 버전으로 남습니다.</p>
+                  <div class="space-y-4 mb-8">
+                    <div class="flex items-start gap-4">
+                      <span class="text-bizmoa-600 text-xs font-black tracking-widest pt-1 shrink-0">01</span>
+                      <div>
+                        <p class="font-bold text-slate-900 text-sm mb-0.5">카드형 프로젝트 대시보드</p>
+                        <p class="text-slate-500 text-sm break-keep">진행 상태 · 투입 인력 · 금액을 카드로 요약</p>
+                      </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                      <span class="text-bizmoa-600 text-xs font-black tracking-widest pt-1 shrink-0">02</span>
+                      <div>
+                        <p class="font-bold text-slate-900 text-sm mb-0.5">견적 버전 이력 관리</p>
+                        <p class="text-slate-500 text-sm break-keep">수정할 때마다 버전으로 보존, 이력 추적</p>
+                      </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                      <span class="text-bizmoa-600 text-xs font-black tracking-widest pt-1 shrink-0">03</span>
+                      <div>
+                        <p class="font-bold text-slate-900 text-sm mb-0.5">진행률 추적</p>
+                        <p class="text-slate-500 text-sm break-keep">프로젝트별 진척도를 숫자로 확인</p>
+                      </div>
+                    </div>
+                  </div>
+                  <p class="text-xl font-black text-bizmoa-600 tracking-tight break-keep">모든 프로젝트, 한 화면.</p>
+                </div>
+                <div class="lg:col-span-8 order-2 animate-on-scroll">
+                  <div class="relative lg:pb-20 lg:pl-16">
+                    <div data-lightbox data-parallax="1"
+                      class="w-full lg:w-[88%] lg:ml-auto rounded-2xl overflow-hidden shadow-xl border border-slate-200/60 bg-white cursor-zoom-in">
+                      <img src="img/bizmoa3.JPG" alt="BizMoa 프로젝트 카드"
+                        class="w-full h-auto block max-h-[64vh] object-cover object-top" loading="lazy">
+                    </div>
+                    <div data-lightbox data-parallax="1.4"
+                      class="relative lg:absolute lg:left-0 lg:bottom-0 w-full lg:w-[52%] mt-4 lg:mt-0 rounded-2xl overflow-hidden shadow-2xl border border-slate-200/80 bg-white cursor-zoom-in lg:z-10">
+                      <img src="img/bizmoa4.JPG" alt="BizMoa 견적 이력"
+                        class="w-full h-auto block max-h-[46vh] object-cover object-top" loading="lazy">
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- ── 추천 고객 ── -->
-      <div class="text-center animate-on-scroll bg-slate-50/50 rounded-3xl p-8 border border-slate-200/50">
-         <p class="text-sm font-extrabold text-slate-800 uppercase tracking-widest mb-6">BizMoa 추천 고객</p>
-         <div class="flex flex-wrap justify-center gap-4">
-             <span class="px-5 py-2.5 rounded-full bg-white border border-slate-200 text-slate-700 font-bold text-sm shadow-sm flex items-center gap-2">
-                <iconify-icon icon="solar:smart-home-angle-bold-duotone" class="text-bizmoa-500 text-lg"></iconify-icon> IoT / 스마트홈 시공업체
-             </span>
-             <span class="px-5 py-2.5 rounded-full bg-white border border-slate-200 text-slate-700 font-bold text-sm shadow-sm flex items-center gap-2">
-                <iconify-icon icon="solar:camera-square-bold-duotone" class="text-bizmoa-500 text-lg"></iconify-icon> 보안 / CCTV 설치업체
-             </span>
-             <span class="px-5 py-2.5 rounded-full bg-white border border-slate-200 text-slate-700 font-bold text-sm shadow-sm flex items-center gap-2">
-                <iconify-icon icon="solar:router-bold-duotone" class="text-bizmoa-500 text-lg"></iconify-icon> 네트워크 인프라 업체
-             </span>
-             <span class="px-5 py-2.5 rounded-full bg-white border border-slate-200 text-slate-700 font-bold text-sm shadow-sm flex items-center gap-2">
-                <iconify-icon icon="solar:plug-circle-bold-duotone" class="text-bizmoa-500 text-lg"></iconify-icon> 전기 / 통신 설비 시공사
-             </span>
-         </div>
+          <!-- ── Panel · STEP 05: 운영 — 인건비 단가 + 권한 관리 (bizmoa2 + bizmoa9) ── -->
+          <div
+            class="relative w-full lg:w-screen lg:h-full lg:shrink-0 flex items-center px-4 sm:px-6 lg:px-14 py-14 lg:py-0">
+            <div class="relative w-full max-w-[88rem] mx-auto">
+              <span
+                class="bz-outline absolute -top-10 lg:-top-24 left-0 text-7xl lg:text-[10rem] font-black leading-none select-none pointer-events-none">05</span>
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center relative">
+                <div class="lg:col-span-8 animate-on-scroll">
+                  <div class="relative lg:pb-20 lg:pr-16">
+                    <div data-lightbox data-parallax="1"
+                      class="w-full lg:w-[88%] rounded-2xl overflow-hidden shadow-xl border border-slate-200/60 bg-white cursor-zoom-in">
+                      <img src="img/bizmoa2.JPG" alt="BizMoa 인건비 단가표"
+                        class="w-full h-auto block max-h-[64vh] object-cover object-top" loading="lazy">
+                    </div>
+                    <div data-lightbox data-parallax="1.4"
+                      class="relative lg:absolute lg:right-0 lg:bottom-0 w-full lg:w-[52%] mt-4 lg:mt-0 rounded-2xl overflow-hidden shadow-2xl border border-slate-200/80 bg-white cursor-zoom-in lg:z-10">
+                      <img src="img/bizmoa9.JPG" alt="BizMoa 사용자 관리"
+                        class="w-full h-auto block max-h-[46vh] object-cover object-top" loading="lazy">
+                    </div>
+                  </div>
+                </div>
+                <div class="lg:col-span-4 animate-on-scroll">
+                  <div class="flex items-center gap-3 mb-3">
+                    <span class="block w-8 h-px bg-bizmoa-400"></span>
+                    <span class="text-bizmoa-600 text-xs font-bold uppercase tracking-widest">Step 05 — Operate</span>
+                  </div>
+                  <h3 class="text-3xl md:text-4xl font-black text-slate-900 mb-4 break-keep leading-tight">인건비 산출부터<br>
+                    권한 관리까지</h3>
+                  <p class="text-slate-500 leading-relaxed break-keep mb-7">단가 체계와 팀 권한을 한 번 세팅하면,
+                    모든 프로젝트가 같은 기준으로 운영됩니다.</p>
+                  <div class="space-y-4 mb-8">
+                    <div class="flex items-start gap-4">
+                      <span class="text-bizmoa-600 text-xs font-black tracking-widest pt-1 shrink-0">01</span>
+                      <div>
+                        <p class="font-bold text-slate-900 text-sm mb-0.5">직급별 단가 자동 계산</p>
+                        <p class="text-slate-500 text-sm break-keep">시급 · 일급 · 월급이 공식에 따라 산출</p>
+                      </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                      <span class="text-bizmoa-600 text-xs font-black tracking-widest pt-1 shrink-0">02</span>
+                      <div>
+                        <p class="font-bold text-slate-900 text-sm mb-0.5">견적서 노무비 자동 반영</p>
+                        <p class="text-slate-500 text-sm break-keep">견적 작성 시 인건비가 자동으로 포함</p>
+                      </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                      <span class="text-bizmoa-600 text-xs font-black tracking-widest pt-1 shrink-0">03</span>
+                      <div>
+                        <p class="font-bold text-slate-900 text-sm mb-0.5">3단계 접근 권한</p>
+                        <p class="text-slate-500 text-sm break-keep">관리자 · 매니저 · 관리담당 역할별 제어</p>
+                      </div>
+                    </div>
+                  </div>
+                  <p class="text-xl font-black text-bizmoa-600 tracking-tight break-keep">권한 3단계, 데이터는 안전하게.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Panel · 피날레: 추천 고객 ── -->
+          <div
+            class="relative w-full lg:w-screen lg:h-full lg:shrink-0 flex items-center px-4 sm:px-6 lg:px-20 py-14 lg:py-0 pb-24 lg:pb-0">
+            <div class="relative w-full max-w-4xl mx-auto text-center">
+              <span
+                class="bz-outline hidden lg:block absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 text-[13vw] font-black tracking-tighter leading-none select-none pointer-events-none whitespace-nowrap">BIZMOA</span>
+              <div class="relative animate-on-scroll">
+                <h3 class="text-4xl md:text-6xl font-black text-slate-900 tracking-tight mb-6 break-keep">도면 위에서,
+                  <span class="bg-gradient-to-r from-bizmoa-600 to-cyan-600 bg-clip-text text-transparent">끝.</span>
+                </h3>
+                <p class="text-sm font-extrabold text-slate-800 uppercase tracking-widest mb-6">BizMoa 추천 고객</p>
+                <div class="flex flex-wrap justify-center gap-4 mb-10">
+                  <span
+                    class="px-5 py-2.5 rounded-full bg-white border border-slate-200 text-slate-700 font-bold text-sm shadow-sm">IoT
+                    / 스마트홈 시공업체</span>
+                  <span
+                    class="px-5 py-2.5 rounded-full bg-white border border-slate-200 text-slate-700 font-bold text-sm shadow-sm">보안
+                    / CCTV 설치업체</span>
+                  <span
+                    class="px-5 py-2.5 rounded-full bg-white border border-slate-200 text-slate-700 font-bold text-sm shadow-sm">네트워크
+                    인프라 업체</span>
+                  <span
+                    class="px-5 py-2.5 rounded-full bg-white border border-slate-200 text-slate-700 font-bold text-sm shadow-sm">전기
+                    / 통신 설비 시공사</span>
+                </div>
+                <button onclick="openContactModal()"
+                  class="inline-flex items-center gap-3 bg-bizmoa-600 hover:bg-bizmoa-700 text-white px-8 py-4 rounded-full text-lg font-bold hover:scale-[1.02] active:scale-[0.98] transition-all duration-300">
+                  비즈모아 도입 문의
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 진행 바 -->
+        <div
+          class="hidden lg:block absolute bottom-10 left-1/2 -translate-x-1/2 w-72 h-[3px] bg-slate-200 rounded-full overflow-hidden">
+          <div id="bizmoa-progress" class="h-full w-full bg-gradient-to-r from-bizmoa-500 to-cyan-500 origin-left"
+            style="transform:scaleX(0)"></div>
+        </div>
+
+        <!-- 커스텀 커서 -->
+        <div id="bizmoa-cursor"
+          class="hidden lg:flex items-center justify-center pointer-events-none absolute top-0 left-0 w-20 h-20 rounded-full bg-bizmoa-600/90 text-white text-[10px] font-bold tracking-[0.2em] uppercase z-30"
+          style="opacity:0; transition:opacity 0.3s;">Scroll</div>
       </div>
     </div>
   </section>
@@ -1145,8 +1495,9 @@
                 <div
                   class="p-4 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 relative overflow-hidden">
                   <div
-                    class="absolute top-0 right-0 opacity-5 text-[7rem] leading-none pointer-events-none select-none font-black text-amber-400">
-                    ★</div>
+                    class="absolute top-0 right-0 opacity-5 leading-none pointer-events-none select-none text-amber-400">
+                    <iconify-icon icon="solar:star-bold" style="font-size:7rem"></iconify-icon>
+                  </div>
                   <div class="flex items-start gap-3 relative z-10">
                     <div
                       class="w-9 h-9 rounded-xl bg-amber-100 border border-amber-200 flex items-center justify-center shrink-0">
@@ -1199,10 +1550,10 @@
       <div class="flex flex-col sm:flex-row items-center justify-center gap-6 animate-on-scroll"
         style="transition-delay: 200ms;">
         <button onclick="openContactModal()"
-          class="w-full sm:w-auto flex items-center gap-4 bg-white text-slate-900 px-10 py-5 rounded-full text-xl font-bold hover:scale-[1.02] active:scale-[0.98] transition-all duration-500 shadow-[0_0_40px_rgba(255,255,255,0.2)] group">
+          class="w-full sm:w-auto flex items-center gap-4 bg-gslt-500 text-white px-10 py-5 rounded-full text-xl font-bold hover:bg-gslt-600 hover:scale-[1.02] active:scale-[0.98] transition-all duration-500 shadow-[0_0_40px_rgba(40,184,197,0.35)] group">
           <span>무료 상담 신청하기</span>
           <div
-            class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-slate-200 transition-colors">
+            class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
             <iconify-icon icon="solar:arrow-right-linear"
               class="group-hover:translate-x-0.5 transition-transform"></iconify-icon>
           </div>
@@ -1226,7 +1577,7 @@
         <!-- 브랜드 -->
         <div>
           <div class="flex items-center gap-3 mb-3">
-            <span class="font-black text-white text-2xl tracking-tighter">GSLT</span>
+            <img src="img/gslt-logo-white.png" alt="GSLT" class="h-7 w-auto object-contain">
             <span
               class="text-xs font-medium border-l border-white/10 pl-3 text-slate-500 uppercase tracking-widest">Workspace
               Evolution</span>
@@ -1279,6 +1630,11 @@
 
     </div>
   </footer>
+
+  <!-- 이미지 라이트박스 (클릭 확대) -->
+  <div id="lightbox" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/90 p-6 cursor-zoom-out">
+    <img id="lightbox-img" src="" alt="확대 보기" class="max-w-[92vw] max-h-[92vh] object-contain rounded-lg shadow-2xl">
+  </div>
 
   <!-- Contact Modal -->
   <div id="contact-modal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 hidden" role="dialog"
@@ -1344,7 +1700,7 @@
         <div id="cf-status" class="hidden text-sm font-medium px-4 py-3 rounded-xl"></div>
 
         <button type="submit" id="cf-submit"
-          class="w-full flex items-center justify-center gap-3 bg-slate-900 text-white py-4 rounded-xl font-bold text-base hover:bg-slate-700 active:scale-[0.98] transition-all duration-300">
+          class="w-full flex items-center justify-center gap-3 bg-gslt-500 text-white py-4 rounded-xl font-bold text-base hover:bg-gslt-600 active:scale-[0.98] transition-all duration-300">
           <iconify-icon icon="solar:letter-bold" class="text-lg"></iconify-icon>
           <span id="cf-submit-text">상담 신청 보내기</span>
         </button>
@@ -1527,7 +1883,7 @@
         </div>
 
         <button onclick="closeSupportModal(); setTimeout(openContactModal, 200);"
-          class="w-full flex items-center justify-center gap-3 bg-slate-900 text-white py-4 rounded-xl font-bold text-sm hover:bg-slate-700 transition-all">
+          class="w-full flex items-center justify-center gap-3 bg-gslt-500 text-white py-4 rounded-xl font-bold text-sm hover:bg-gslt-600 transition-all">
           <iconify-icon icon="solar:chat-round-dots-bold-duotone"></iconify-icon>
           무료 상담 신청하기
         </button>
@@ -1615,7 +1971,7 @@
 
         const data = await res.json();
         if (data.success === true) {
-          status.textContent = '✓ 상담 신청이 접수되었습니다. 24시간 내에 연락드리겠습니다.';
+          status.textContent = '상담 신청이 접수되었습니다. 24시간 내에 연락드리겠습니다.';
           status.className = 'text-sm font-medium px-4 py-3 rounded-xl bg-green-50 text-green-700 border border-green-200';
           form.reset();
         } else {
@@ -1640,25 +1996,48 @@
       const bg = document.getElementById('siot-bg');
       const overlay = document.getElementById('siot-overlay');
       const title = document.getElementById('siot-title');
+      const title2 = document.getElementById('siot-title-2');
+      const line1 = document.getElementById('siot-line-1');
+      const line2 = document.getElementById('siot-line-2');
       const hint = document.getElementById('siot-scroll-hint');
       if (!container) return;
 
       function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
       function lerp(a, b, t) { return a + (b - a) * t; }
       function ease(t) { return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t; }
+      // progress 구간 [a,b]를 0~1로 정규화 + easing
+      function seg(raw, a, b) { return ease(clamp((raw - a) / (b - a), 0, 1)); }
+
+      // 타임라인 상수 (phase 1: 라인 리빌 타이틀 / phase 2: 전환 카피)
+      const T = {
+        L1_IN: [0.05, 0.15],   // 1번 라인 마스크 리빌
+        L2_IN: [0.10, 0.20],   // 2번 라인 (스태거)
+        T1_OUT: [0.38, 0.48],  // phase1 페이드아웃
+        T2_IN: [0.50, 0.60],   // phase2 페이드인
+        T2_OUT: [0.78, 0.88]   // phase2 페이드아웃
+      };
 
       function update() {
         const rect = container.getBoundingClientRect();
         const travel = container.offsetHeight - window.innerHeight;
         const raw = clamp(-rect.top / travel, 0, 1);
 
-        // 타이틀: 0→0.2 페이드인, 0.75→1 페이드아웃
-        const fadeIn = ease(clamp(raw / 0.2, 0, 1));
-        const fadeOut = ease(clamp((raw - 0.75) / 0.25, 0, 1));
-        const titleOpa = fadeIn * (1 - fadeOut);
-        const titleY = lerp(2.5, 0, fadeIn) + lerp(0, -1.5, fadeOut);
-        title.style.opacity = titleOpa;
-        title.style.transform = `translateY(${titleY}rem)`;
+        // phase 1: 라인 마스크 리빌 + 컨테이너 페이드
+        const l1 = seg(raw, T.L1_IN[0], T.L1_IN[1]);
+        const l2 = seg(raw, T.L2_IN[0], T.L2_IN[1]);
+        line1.style.transform = `translateY(${lerp(120, 0, l1)}%)`;
+        line2.style.transform = `translateY(${lerp(120, 0, l2)}%)`;
+
+        const t1In = seg(raw, T.L1_IN[0], T.L1_IN[1]);
+        const t1Out = seg(raw, T.T1_OUT[0], T.T1_OUT[1]);
+        title.style.opacity = t1In * (1 - t1Out);
+        title.style.transform = `translateY(${lerp(0, -1.5, t1Out)}rem)`;
+
+        // phase 2: 전환 카피
+        const t2In = seg(raw, T.T2_IN[0], T.T2_IN[1]);
+        const t2Out = seg(raw, T.T2_OUT[0], T.T2_OUT[1]);
+        title2.style.opacity = t2In * (1 - t2Out);
+        title2.style.transform = `translateY(${lerp(2, 0, t2In) + lerp(0, -1.5, t2Out)}rem)`;
 
         // 스크롤 힌트: 타이틀 나온 뒤 사라짐
         hint.style.opacity = clamp(1 - (raw - 0.15) / 0.15, 0, 1);
@@ -1676,139 +2055,214 @@
       window.addEventListener('scroll', update, { passive: true });
       update();
     })();
+
+    /* ─── 피처 카드 3D 틸트 (데스크톱 전용) ─── */
+    (function () {
+      if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      document.querySelectorAll('.tilt-card').forEach(card => {
+        card.style.willChange = 'transform';
+        card.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+        card.addEventListener('mousemove', e => {
+          const r = card.getBoundingClientRect();
+          const px = (e.clientX - r.left) / r.width - 0.5;
+          const py = (e.clientY - r.top) / r.height - 0.5;
+          card.style.transform = `perspective(1200px) rotateX(${(-py * 3).toFixed(2)}deg) rotateY(${(px * 3).toFixed(2)}deg)`;
+        });
+        card.addEventListener('mouseleave', () => {
+          card.style.transform = 'perspective(1200px) rotateX(0deg) rotateY(0deg)';
+        });
+      });
+    })();
+
+    /* ─── 숫자 카운트업 (뷰포트 진입 시 1회) ─── */
+    (function () {
+      const counters = document.querySelectorAll('.count-up');
+      if (!counters.length || !('IntersectionObserver' in window)) return;
+      const obs = new IntersectionObserver(entries => {
+        entries.forEach(en => {
+          if (!en.isIntersecting) return;
+          obs.unobserve(en.target);
+          const el = en.target;
+          const target = parseFloat(el.dataset.target);
+          const dec = parseInt(el.dataset.decimals || '0', 10);
+          const dur = 1200;
+          let start = null;
+          function step(ts) {
+            if (start === null) start = ts;
+            const p = Math.min((ts - start) / dur, 1);
+            const eased = 1 - Math.pow(1 - p, 3);
+            el.textContent = (target * eased).toFixed(dec);
+            if (p < 1) requestAnimationFrame(step);
+          }
+          requestAnimationFrame(step);
+        });
+      }, { threshold: 0.4 });
+      counters.forEach(c => obs.observe(c));
+    })();
+
+    /* ─── BizMoa 횡스크롤 엔진 (lerp 관성 + 속도 skew + 패럴랙스 + 커서) ─── */
+    (function () {
+      const wrap = document.getElementById('bizmoa-h');
+      const viewport = document.getElementById('bizmoa-viewport');
+      const track = document.getElementById('bizmoa-track');
+      const progress = document.getElementById('bizmoa-progress');
+      const cursor = document.getElementById('bizmoa-cursor');
+      if (!wrap || !track) return;
+
+      const mq = window.matchMedia('(min-width: 1024px)');
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      let current = 0, rafId = null;
+      let cx = 0, cy = 0, tx = 0, ty = 0, cursorOn = false;
+
+      function loop() {
+        rafId = requestAnimationFrame(loop);
+        const rect = wrap.getBoundingClientRect();
+        // 화면에서 멀면 연산 생략
+        if (rect.bottom < -300 || rect.top > window.innerHeight + 300) return;
+
+        const travel = wrap.offsetHeight - window.innerHeight;
+        const raw = Math.max(0, Math.min(1, -rect.top / travel));
+        const max = Math.max(0, track.scrollWidth - window.innerWidth);
+        const target = raw * max;
+
+        const prev = current;
+        current += (target - current) * (reduced ? 1 : 0.075); // lerp 관성
+        const vel = current - prev;
+        const skew = reduced ? 0 : Math.max(-5, Math.min(5, vel * 0.015)); // 속도 기반 왜곡
+        track.style.transform = `translate3d(${-current.toFixed(1)}px,0,0) skewX(${-skew.toFixed(2)}deg)`;
+
+        if (progress) progress.style.transform = `scaleX(${raw.toFixed(3)})`;
+
+        // 이미지 패럴랙스: 패널 중앙 대비 오프셋만큼 이동
+        if (!reduced) {
+          track.querySelectorAll('[data-parallax]').forEach(el => {
+            const sp = parseFloat(el.dataset.parallax) || 1;
+            const r = el.getBoundingClientRect();
+            const c = (r.left + r.width / 2 - window.innerWidth / 2) / window.innerWidth;
+            el.style.translate = `${(c * sp * 60).toFixed(1)}px 0`;
+          });
+        }
+
+        // 커스텀 커서 follower
+        if (cursor && cursorOn) {
+          cx += (tx - cx) * 0.15;
+          cy += (ty - cy) * 0.15;
+          cursor.style.transform = `translate(${cx.toFixed(1)}px, ${cy.toFixed(1)}px) translate(-50%,-50%)`;
+        }
+      }
+
+      function start() { if (!rafId) rafId = requestAnimationFrame(loop); }
+      function stop() {
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = null;
+        current = 0;
+        track.style.transform = '';
+        track.querySelectorAll('[data-parallax]').forEach(el => el.style.translate = '');
+      }
+
+      if (viewport && cursor) {
+        viewport.addEventListener('mousemove', e => {
+          const r = viewport.getBoundingClientRect();
+          tx = e.clientX - r.left;
+          ty = e.clientY - r.top;
+          if (!cursorOn) { cursorOn = true; cx = tx; cy = ty; cursor.style.opacity = '1'; }
+          // 이미지 위에서는 VIEW 커서로 전환
+          const overImage = e.target.closest && e.target.closest('[data-lightbox]');
+          cursor.textContent = overImage ? 'View' : 'Scroll';
+        });
+        viewport.addEventListener('mouseleave', () => {
+          cursorOn = false;
+          cursor.style.opacity = '0';
+        });
+      }
+
+      if (mq.matches) start();
+      mq.addEventListener('change', e => e.matches ? start() : stop());
+    })();
+
+    /* ─── 이미지 라이트박스 (클릭 확대) ─── */
+    (function () {
+      const box = document.getElementById('lightbox');
+      const img = document.getElementById('lightbox-img');
+      if (!box || !img) return;
+
+      function open(srcImg) {
+        img.src = srcImg.src;
+        img.alt = srcImg.alt || '확대 보기';
+        box.classList.remove('hidden');
+        box.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+      }
+      function close() {
+        box.classList.add('hidden');
+        box.classList.remove('flex');
+        img.src = '';
+        document.body.style.overflow = '';
+      }
+
+      document.addEventListener('click', e => {
+        if (!box.classList.contains('hidden')) { close(); return; }
+        const t = e.target.closest('[data-lightbox]');
+        if (t) {
+          const srcImg = t.querySelector('img');
+          if (srcImg) open(srcImg);
+        }
+      });
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && !box.classList.contains('hidden')) close();
+      });
+    })();
+
+    /* ─── 화면 밖 영상 자동 일시정지 (CPU/배터리 절약) ─── */
+    (function () {
+      const vids = document.querySelectorAll('video[autoplay]');
+      if (!vids.length || !('IntersectionObserver' in window)) return;
+      const obs = new IntersectionObserver(entries => {
+        entries.forEach(en => {
+          const v = en.target;
+          if (en.isIntersecting) {
+            if (v.paused) v.play().catch(() => { });
+          } else {
+            v.pause();
+          }
+        });
+      }, { rootMargin: '200px 0px', threshold: 0.05 });
+      vids.forEach(v => obs.observe(v));
+    })();
   </script>
 
   <!-- Scroll Animation Script -->
   <script>
-    /* ─── Hero Geometric Canvas ─── */
+    /* ─── Hero Fluid Canvas (paint-flow effect) ─── */
     (function () {
       const canvas = document.getElementById('hero-canvas');
-      const ctx = canvas.getContext('2d');
-      let W, H, cols, rows, dots;
-      const SPACING = 48;
-      const MOUSE_RADIUS = 280; // Widen the mouse effect radius (~10 dots)
-      const DOT_BASE = 0.1;
-      const LINE_THRESH = 0;
-      let mouse = { x: -9999, y: -9999 };
-
-      function resize() {
-        W = canvas.width = canvas.offsetWidth;
-        H = canvas.height = canvas.offsetHeight;
-        buildGrid();
-      }
-
-      function buildGrid() {
-        dots = [];
-        cols = Math.ceil(W / SPACING) + 1;
-        rows = Math.ceil(H / SPACING) + 1;
-        for (let r = 0; r < rows; r++) {
-          for (let c = 0; c < cols; c++) {
-            dots.push({
-              ox: c * SPACING,
-              oy: r * SPACING,
-              x: c * SPACING,
-              y: r * SPACING,
-              vx: 0, vy: 0,
-              speed: 0.8 + Math.random() * 2.2,
-              offset: Math.random() * Math.PI * 2
-            });
-          }
-        }
-      }
-
-      function tick() {
-        ctx.clearRect(0, 0, W, H);
-        // Update positions — dots flee from mouse
-        dots.forEach(d => {
-          const dx = d.ox - mouse.x;
-          const dy = d.oy - mouse.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < MOUSE_RADIUS) {
-            const force = (MOUSE_RADIUS - dist) / MOUSE_RADIUS;
-            const angle = Math.atan2(dy, dx);
-            d.x += Math.cos(angle) * force * 6;
-            d.y += Math.sin(angle) * force * 6;
-          }
-          // Spring back
-          d.vx += (d.ox - d.x) * 0.08;
-          d.vy += (d.oy - d.y) * 0.08;
-          d.vx *= 0.75;
-          d.vy *= 0.75;
-          d.x += d.vx;
-          d.y += d.vy;
-        });
-
-        // Draw connecting lines first
-        dots.forEach((d, i) => {
-          dots.forEach((e, j) => {
-            if (j <= i) return;
-            const dx = d.x - e.x;
-            const dy = d.y - e.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < LINE_THRESH) {
-              const alpha = (1 - dist / LINE_THRESH) * 0.2;
-              ctx.beginPath();
-              ctx.moveTo(d.x, d.y);
-              ctx.lineTo(e.x, e.y);
-              ctx.strokeStyle = `rgba(71, 85, 105, ${alpha})`; // Charcoal lines
-              ctx.lineWidth = 0.8;
-              ctx.stroke();
-            }
-          });
-        });
-
-        // Draw dots
-        const time = Date.now() * 0.001;
-        dots.forEach(d => {
-          const dx = d.x - mouse.x;
-          const dy = d.y - mouse.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          const prox = Math.max(0, 1 - dist / MOUSE_RADIUS);
-          const radius = DOT_BASE + prox * 3.5;
-          const alpha = 0.3 + prox * 0.6;
-
-          // Color Transition (Dailo Purple <-> Bizmoa Blue <-> Siot Orange)
-          const t = (Math.sin(time * d.speed + d.offset) + 1) / 2 * 2; // 0~2
-          let r, g, b;
-          if (t < 1) {
-            // Dailo(139,92,246) → Bizmoa(37,99,235)
-            r = Math.round(139 + (37 - 139) * t);
-            g = Math.round(92 + (99 - 92) * t);
-            b = Math.round(246 + (235 - 246) * t);
-          } else {
-            // Bizmoa(37,99,235) → Siot(249,115,22)
-            const t2 = t - 1;
-            r = Math.round(37 + (249 - 37) * t2);
-            g = Math.round(99 + (115 - 99) * t2);
-            b = Math.round(235 + (22 - 235) * t2);
-          }
-
-          ctx.beginPath();
-          ctx.arc(d.x, d.y, radius, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
-
-          if (prox > 0.4) {
-            ctx.shadowBlur = 8 * prox;
-            ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.5)`;
-          } else {
-            ctx.shadowBlur = 0;
-          }
-
-          ctx.fill();
-        });
-
-        requestAnimationFrame(tick);
-      }
-
-      window.addEventListener('mousemove', e => {
-        const rect = canvas.getBoundingClientRect();
-        mouse.x = e.clientX - rect.left;
-        mouse.y = e.clientY - rect.top;
+      if (!canvas || typeof WebGLFluid === 'undefined') return;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      WebGLFluid(canvas, {
+        TRIGGER: 'hover',
+        IMMEDIATE: true,
+        AUTO: false,
+        SPLAT_COUNT: 4,
+        SIM_RESOLUTION: 128,
+        DYE_RESOLUTION: 512,
+        DENSITY_DISSIPATION: 0.35,
+        VELOCITY_DISSIPATION: 1.2,
+        PRESSURE: 0.8,
+        CURL: 20,
+        SPLAT_RADIUS: 0.3,
+        SPLAT_FORCE: 1600,
+        SHADING: true,
+        COLORFUL: false,
+        SPLAT_COLOR: { r: 0.07, g: 0.36, b: 0.40 },
+        BACK_COLOR: { r: 10, g: 10, b: 15 },
+        TRANSPARENT: true,
+        BLOOM: true,
+        BLOOM_INTENSITY: 0.25,
+        BLOOM_THRESHOLD: 0.8,
+        SUNRAYS: true,
+        SUNRAYS_WEIGHT: 0.4
       });
-      window.addEventListener('mouseleave', () => { mouse.x = -9999; mouse.y = -9999; });
-      window.addEventListener('resize', resize);
-      resize();
-      tick();
     })();
   </script>
   <script>
@@ -1840,7 +2294,8 @@
       const sections = [...document.querySelectorAll('section[id]'), document.getElementById('siot')].filter(Boolean);
 
       const logos = {
-        'default': 'img/gslt-logo.png',
+        'default': 'img/gslt-logo-color.png',
+        'hero': 'img/gslt-logo-white.png',
         'siot': 'img/siot_logo_white.png',
         'dailo': 'img/dailo-logo.png',
         'bizmoa': 'img/bizmoaLogo2.png'
@@ -1860,50 +2315,67 @@
         });
 
         // Reset nav base classes
-        nav.className = "fixed top-0 left-0 w-full z-50 backdrop-blur-xl border-b transition-all duration-500 shadow-sm animate-fadeInUp";
+        nav.className = "fixed top-0 left-0 w-full z-50 border-b transition-all duration-500 animate-fadeInUp";
 
         const divider     = document.getElementById('nav-divider');
         const awardText   = document.getElementById('award-text');
         const brandDailo  = document.getElementById('nav-brand-dailo');
         const brandBizmoa = document.getElementById('nav-brand-bizmoa');
+        const navCta      = document.getElementById('nav-cta');
+        const ctaBase = "hidden md:flex items-center gap-2 bg-gslt-500 hover:bg-gslt-600 text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:scale-[1.02] active:scale-[0.98] transition-all duration-500 z-10";
 
         function hideAllBrands() {
           if (brandDailo)  brandDailo.classList.replace('flex', 'hidden');
           if (brandBizmoa) brandBizmoa.classList.replace('flex', 'hidden');
         }
 
-        if (currentSection === 'siot' || currentSection === 'siot-content') {
-          nav.classList.add('bg-[#0a0a09]/90', 'border-siot-800/50');
+        if (currentSection === 'hero' || currentSection === 'metrics') {
+          nav.classList.add('bg-transparent', 'border-transparent');
+          navLinks.className = "absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-10 text-sm font-bold text-slate-300 transition-colors duration-500";
+          navLogo.src = logos.hero;
+          if (divider)    divider.style.backgroundColor = 'rgba(255,255,255,0.15)';
+          if (awardText)  awardText.style.filter = 'brightness(1.8)';
+          if (navCta)     navCta.className = ctaBase;
+          hideAllBrands();
+        } else if (currentSection === 'siot' || currentSection === 'siot-content') {
+          nav.classList.add('bg-[#0a0a09]/90', 'border-siot-800/50', 'backdrop-blur-xl', 'shadow-sm');
           navLinks.className = "absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-10 text-sm font-bold text-slate-300 transition-colors duration-500";
           navLogo.src = logos.siot;
           if (divider)    divider.style.backgroundColor = 'rgba(255,255,255,0.15)';
           if (awardText)  awardText.style.filter = 'brightness(1.8)';
+          if (navCta)     navCta.className = ctaBase;
           hideAllBrands();
         } else if (currentSection === 'dailo') {
-          nav.classList.add('bg-white/90', 'border-dailo-200/50');
+          nav.classList.add('bg-white/90', 'border-dailo-200/50', 'backdrop-blur-xl', 'shadow-sm');
           navLinks.className = "absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-10 text-sm font-bold text-slate-600 transition-colors duration-500";
           navLogo.src = logos.dailo;
           if (divider)    divider.style.backgroundColor = 'rgba(100,80,200,0.25)';
           if (awardText)  awardText.style.filter = 'brightness(1)';
+          if (navCta)     navCta.className = ctaBase;
           hideAllBrands();
           if (brandDailo) { brandDailo.classList.remove('hidden'); brandDailo.classList.add('flex'); }
         } else if (currentSection === 'bizmoa') {
-          nav.classList.add('bg-white/90', 'border-bizmoa-200/50');
+          nav.classList.add('bg-white/90', 'border-bizmoa-200/50', 'backdrop-blur-xl', 'shadow-sm');
           navLinks.className = "absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-10 text-sm font-bold text-slate-600 transition-colors duration-500";
           navLogo.src = logos.bizmoa;
           if (divider)    divider.style.backgroundColor = 'rgba(59,130,246,0.25)';
           if (awardText)  awardText.style.filter = 'brightness(1)';
+          if (navCta)     navCta.className = ctaBase;
           hideAllBrands();
           if (brandBizmoa) { brandBizmoa.classList.remove('hidden'); brandBizmoa.classList.add('flex'); }
         } else {
-          nav.classList.add('bg-white/90', 'border-slate-200/50');
+          nav.classList.add('bg-white/90', 'border-slate-200/50', 'backdrop-blur-xl', 'shadow-sm');
           navLinks.className = "absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-10 text-sm font-bold text-slate-600 transition-colors duration-500";
           navLogo.src = logos.default;
           if (divider)    divider.style.backgroundColor = 'rgba(148,163,184,0.7)';
           if (awardText)  awardText.style.filter = 'brightness(1)';
+          if (navCta)     navCta.className = ctaBase;
           hideAllBrands();
         }
       });
+
+      // Apply correct nav state on initial load
+      window.dispatchEvent(new Event('scroll'));
     });
   </script>
 </body>
