@@ -92,6 +92,14 @@
               class="px-5 py-2.5 rounded-full bg-gslt-500 hover:bg-gslt-600 text-white text-sm font-bold transition-all">새 글 작성</button>
           </div>
         </div>
+        <div class="flex items-center gap-2 mb-4">
+          <input id="list-search" class="field" style="max-width:280px" placeholder="제목 검색">
+          <select id="list-filter" class="field" style="max-width:130px">
+            <option value="all">전체</option>
+            <option value="pub">게시중</option>
+            <option value="draft">비공개</option>
+          </select>
+        </div>
         <div id="post-list" class="space-y-3"></div>
         <p id="list-empty" class="hidden py-16 text-center text-slate-400 text-sm">글이 없습니다. "새 글 작성" 또는 "샘플 글 생성"으로 시작하세요.</p>
       </div>
@@ -133,15 +141,21 @@
             <label class="block text-xs font-bold text-slate-500 mb-1.5">첨부 파일 (다운로드 제공)</label>
             <div id="file-list" class="space-y-2 mb-2"></div>
             <label class="inline-block px-4 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold cursor-pointer hover:bg-slate-700 transition-all">
-              파일 업로드<input id="attach-file" type="file" class="hidden">
+              파일 업로드 (여러 개 선택 가능)<input id="attach-file" type="file" multiple class="hidden">
             </label>
             <p id="attach-status" class="text-xs text-slate-400 mt-1.5"></p>
           </div>
           <div class="flex items-center justify-between pt-3 border-t border-slate-100">
-            <label class="flex items-center gap-2.5 cursor-pointer select-none">
-              <input id="f-published" type="checkbox" checked class="w-4 h-4 accent-[#28b8c5]">
-              <span class="text-sm font-bold text-slate-700">게시 (끄면 비공개)</span>
-            </label>
+            <div class="flex items-center gap-5">
+              <label class="flex items-center gap-2.5 cursor-pointer select-none">
+                <input id="f-published" type="checkbox" checked class="w-4 h-4 accent-[#28b8c5]">
+                <span class="text-sm font-bold text-slate-700">게시 (끄면 비공개)</span>
+              </label>
+              <label class="flex items-center gap-2.5 cursor-pointer select-none">
+                <input id="f-pinned" type="checkbox" class="w-4 h-4 accent-[#28b8c5]">
+                <span class="text-sm font-bold text-slate-700">상단 고정</span>
+              </label>
+            </div>
             <div class="flex gap-2">
               <button id="delete-btn" class="hidden px-5 py-2.5 rounded-xl border border-rose-200 text-rose-600 text-sm font-bold hover:bg-rose-50 transition-all">삭제</button>
               <button id="save-btn" class="px-6 py-2.5 rounded-xl bg-gslt-500 hover:bg-gslt-600 text-white text-sm font-bold transition-all">저장</button>
@@ -277,6 +291,8 @@
     }
 
     /* ══ 글 목록 ══ */
+    let cachedPosts = [];
+
     async function loadList() {
       const listEl = $('post-list');
       listEl.innerHTML = '<p class="py-8 text-center text-slate-400 text-sm">불러오는 중...</p>';
@@ -287,14 +303,30 @@
         listEl.innerHTML = `<p class="py-8 text-center text-rose-600 text-sm">목록을 불러오지 못했습니다: ${e.code || e.message}<br><span class="text-slate-400">관리자 계정으로 로그인했는지 확인하세요.</span></p>`;
         return;
       }
-      const posts = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-        .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+      cachedPosts = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) =>
+          (b.pinned === true) - (a.pinned === true) ||
+          (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+      renderList();
+    }
+
+    function renderList() {
+      const listEl = $('post-list');
+      const q = $('list-search').value.trim().toLowerCase();
+      const f = $('list-filter').value;
+      const posts = cachedPosts.filter(p => {
+        if (q && !(p.title || '').toLowerCase().includes(q)) return false;
+        if (f === 'pub' && p.published === false) return false;
+        if (f === 'draft' && p.published !== false) return false;
+        return true;
+      });
       $('list-empty').classList.toggle('hidden', posts.length > 0);
       listEl.innerHTML = posts.map(p => `
         <div class="flex items-center gap-4 bg-white rounded-xl border border-slate-200 px-5 py-4">
           <span class="shrink-0 px-2.5 py-1 rounded-md text-[11px] font-black ${p.published !== false ? 'bg-gslt-100 text-gslt-700' : 'bg-slate-200 text-slate-500'}">
             ${p.published !== false ? '게시중' : '비공개'}
           </span>
+          ${p.pinned ? '<span class="shrink-0 px-2.5 py-1 rounded-md text-[11px] font-black bg-amber-100 text-amber-700">고정</span>' : ''}
           <p class="flex-1 font-bold text-sm truncate">${p.title ? p.title.replace(/</g, '&lt;') : '(제목 없음)'}</p>
           <p class="shrink-0 text-xs text-slate-400 hidden sm:block">${p.createdAt?.seconds ? new Date(p.createdAt.seconds * 1000).toLocaleDateString('ko-KR') : ''}</p>
           ${currentTab !== 'downloads' ? `<a href="post.html?id=${p.id}" target="_blank" class="shrink-0 text-sm font-bold text-slate-400 hover:text-slate-700 hover:underline">보기</a>` : ''}
@@ -305,6 +337,9 @@
       });
     }
 
+    $('list-search').addEventListener('input', renderList);
+    $('list-filter').addEventListener('change', renderList);
+
     /* ══ 에디터 ══ */
     $('new-btn').addEventListener('click', () => openEditor(null));
     $('editor-close').addEventListener('click', () => switchTab(currentTab));
@@ -314,7 +349,7 @@
       editingCategory = currentTab;
       attachments = [];
       $('attach-status').textContent = '';
-      let p = { title: '', excerpt: '', body: '', thumbnail: '', attachments: [], published: true };
+      let p = { title: '', excerpt: '', body: '', thumbnail: '', attachments: [], published: true, pinned: false };
       if (id) {
         const snap = await getDoc(doc(db, 'posts', id));
         if (snap.exists()) p = snap.data();
@@ -326,6 +361,7 @@
       $('f-thumbnail').value = p.thumbnail || '';
       updateThumbPreview();
       $('f-published').checked = p.published !== false;
+      $('f-pinned').checked = p.pinned === true;
       $('delete-btn').classList.toggle('hidden', !id);
       $('save-status').textContent = '';
       $('thumb-status').textContent = '';
@@ -384,12 +420,18 @@
     });
 
     $('attach-file').addEventListener('change', async e => {
-      const f = e.target.files[0];
-      if (!f) return;
-      const r = await uploadToCloudinary(f, $('attach-status'));
-      if (r) {
-        attachments.push({ name: f.name, url: r.secure_url, size: f.size });
+      const files = [...e.target.files];
+      if (!files.length) return;
+      const status = $('attach-status');
+      for (let i = 0; i < files.length; i++) {
+        status.textContent = `업로드 중... (${i + 1}/${files.length})`;
+        const r = await uploadToCloudinary(files[i], status);
+        if (!r) break; // 실패 메시지는 uploadToCloudinary가 표시
+        attachments.push({ name: files[i].name, url: r.secure_url, size: files[i].size });
         renderFileList();
+      }
+      if (attachments.length && status.textContent.startsWith('업로드 완료')) {
+        status.textContent = `업로드 완료 (${files.length}개)`;
       }
       e.target.value = '';
     });
@@ -421,6 +463,7 @@
         thumbnail: $('f-thumbnail').value.trim(),
         attachments,
         published: $('f-published').checked,
+        pinned: $('f-pinned').checked,
         updatedAt: serverTimestamp()
       };
       try {

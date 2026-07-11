@@ -126,7 +126,7 @@
         <div class="p-8 md:p-12 flex flex-col justify-center">
           <div class="flex items-center gap-3 mb-4">
             <span class="block w-6 h-px bg-gslt-400"></span>
-            <span class="text-[11px] uppercase tracking-[0.25em] font-bold text-gslt-600">Latest</span>
+            <span class="text-[11px] uppercase tracking-[0.25em] font-bold text-gslt-600">${p.pinned ? '고정된 소식' : 'Latest'}</span>
           </div>
           <p class="text-xs font-semibold text-slate-400 mb-3">${formatDate(p.createdAt)}</p>
           <h2 class="font-black text-2xl md:text-3xl leading-snug break-keep mb-4 group-hover:text-gslt-600 transition-colors">${escapeHtml(p.title)}</h2>

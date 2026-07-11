@@ -60,7 +60,10 @@ export async function fetchPosts(category) {
   );
   const snap = await getDocs(q);
   const posts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  posts.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+  // 고정 글 우선, 이후 최신순
+  posts.sort((a, b) =>
+    (b.pinned === true) - (a.pinned === true) ||
+    (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
   return posts;
 }
 

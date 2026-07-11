@@ -108,8 +108,9 @@
   <div id="site-footer"></div>
 
   <script type="module">
-    import { db, renderHeader, renderFooter, fetchPosts, formatDate, escapeHtml, CATEGORY_LABEL } from './assets/site.js';
+    import { app, db, renderHeader, renderFooter, fetchPosts, formatDate, escapeHtml, CATEGORY_LABEL } from './assets/site.js';
     import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
     renderFooter();
 
@@ -133,12 +134,29 @@
 
     (async () => {
       if (!id) return notFound();
+      // 관리자 세션이 반영된 뒤에 조회해야 비공개 글 미리보기가 가능하다
+      const auth = getAuth(app);
+      await new Promise(resolve => {
+        const stop = onAuthStateChanged(auth, () => { stop(); resolve(); });
+      });
       let post = null;
       try {
         const snap = await getDoc(doc(db, 'posts', id));
         if (snap.exists()) post = { id: snap.id, ...snap.data() };
-      } catch (e) { /* 미게시 글은 규칙에서 거부됨 */ }
-      if (!post || post.published === false) return notFound();
+      } catch (e) { /* 미게시 글은 규칙에서 익명 접근이 거부됨 */ }
+      if (!post) return notFound();
+
+      // 비공개 글: 보안 규칙상 관리자만 여기까지 도달 — 미리보기 배너 표시
+      if (post.published === false) {
+        const robots = document.createElement('meta');
+        robots.name = 'robots';
+        robots.content = 'noindex';
+        document.head.appendChild(robots);
+        const banner = document.createElement('div');
+        banner.className = 'rounded-xl bg-amber-50 border border-amber-300 text-amber-800 text-sm font-bold px-4 py-3 mb-8';
+        banner.textContent = '비공개 미리보기 — 방문자에게는 보이지 않는 글입니다.';
+        document.getElementById('article').prepend(banner);
+      }
 
       const listPage = post.category === 'portfolio' ? 'portfolio.html'
         : post.category === 'downloads' ? 'downloads.html' : 'news.html';
@@ -214,9 +232,10 @@
         }
       });
 
-      // 이전/다음 글
+      // 이전/다음 글 (고정 여부와 무관하게 시간순)
       try {
-        const siblings = await fetchPosts(post.category);
+        const siblings = (await fetchPosts(post.category))
+          .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
         const idx = siblings.findIndex(p => p.id === post.id);
         if (idx === -1) return; // 목록에 없으면(비공개 등) 내비 생략
         const prev = siblings[idx + 1]; // 더 오래된 글
