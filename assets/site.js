@@ -166,6 +166,7 @@ export function renderFooter() {
               <li><a href="siot.html" class="hover:text-white transition-colors">시옷 (Siot)</a></li>
               <li><a href="bizmoa.html" class="hover:text-white transition-colors">비즈모아 (BizMoa)</a></li>
               <li><a href="dailo.html" class="hover:text-white transition-colors">다일로 (Dailo)</a></li>
+              <li><a href="morak.html" class="hover:text-white transition-colors">모락 (Morak)</a></li>
             </ul>
           </div>
           <div>

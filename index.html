@@ -22,7 +22,7 @@
     "@type": "Organization",
     "name": "지에스엘티(GSLT)",
     "alternateName": "GSLT",
-    "description": "무선 IoT 구축 전문기업. 배선 공사 없이 오피스·주거·빌딩을 스마트 공간으로 완성한다. IoT 통합 제어 솔루션 시옷(Siot), IoT 시공업체용 견적 자동화 SaaS 비즈모아(BizMoa), AI 워크스페이스 다일로(Dailo)를 개발·공급한다.",
+    "description": "무선 IoT 구축 전문기업. 배선 공사 없이 오피스·주거·빌딩을 스마트 공간으로 완성한다. IoT 통합 제어 솔루션 시옷(Siot), IoT 시공업체용 견적 자동화 SaaS 비즈모아(BizMoa), AI 워크스페이스 다일로(Dailo), 모임 커뮤니티 플랫폼 모락(Morak)을 개발·공급한다.",
     "knowsAbout": ["IoT 구축", "무선 IoT", "스마트오피스", "스마트홈", "빌딩 자동화", "IoT 통합 제어", "스마트 공간"],
     "founder": { "@type": "Person", "name": "최광수" },
     "url": "https://dyiot36524-prog.github.io/gsltHomePage/",
@@ -59,6 +59,15 @@
         "applicationCategory": "BusinessApplication",
         "operatingSystem": "Web",
         "description": "건축 도면 위에 장비를 배치하면 견적서·계약서·납품확인서가 자동 생성되는 시공·설치업체용 올인원 B2B SaaS. 인건비 자동 산출과 프로젝트·권한 관리 포함.",
+        "provider": { "@type": "Organization", "name": "지에스엘티(GSLT)" }
+      },
+      {
+        "@type": "SoftwareApplication",
+        "name": "모락 (Morak)",
+        "url": "https://morac.gslt.kr",
+        "applicationCategory": "SocialNetworkingApplication",
+        "operatingSystem": "Web, Android",
+        "description": "기수제 모임(원우회·동문회)을 위한 모바일 커뮤니티 플랫폼. 디지털 명함 QR 교환, 기수·직책 관리, 일정·참석 관리, 원우수첩을 제공한다.",
         "provider": { "@type": "Organization", "name": "지에스엘티(GSLT)" }
       },
       {
@@ -101,7 +110,8 @@
             gslt: { 50: '#effbfc', 100: '#d7f4f7', 200: '#b0e8ee', 300: '#7dd6e0', 400: '#4cc3d2', 500: '#28b8c5', 600: '#1e93a0', 700: '#1c7682' },
             dailo: { 50: '#f5f3ff', 100: '#ede9fe', 500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9' },
             siot: { 50: '#fff7ed', 100: '#ffedd5', 500: '#f97316', 600: '#ea580c', 700: '#c2410c' },
-            bizmoa: { 50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8' }
+            bizmoa: { 50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8' },
+            morak: { 50: '#e6fafa', 100: '#c6f3f3', 400: '#2bd4d4', 500: '#00c2c2', 600: '#00a3a3', 700: '#008585' }
           },
           animation: {
             'float': 'float 6s ease-in-out infinite',
@@ -226,6 +236,27 @@
       color: transparent;
     }
 
+    /* 모락 오빗 비주얼 */
+    .orbit-ring { animation: orbitSpin 26s linear infinite; }
+    .orbit-ring-r { animation: orbitSpin 18s linear infinite reverse; }
+
+    @keyframes orbitSpin {
+      to { transform: rotate(360deg); }
+    }
+
+    .orbit-dot {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      background: #00c2c2;
+      box-shadow: 0 0 12px rgba(0, 194, 194, 0.5);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .orbit-ring, .orbit-ring-r { animation: none; }
+    }
+
     /* 연혁 타임라인: 현재 연도 노드 펄스 */
     .tl-now::after {
       content: '';
@@ -330,6 +361,11 @@
           <div class="w-px h-5 bg-bizmoa-200"></div>
           <span class="font-black bg-gradient-to-r from-bizmoa-600 to-cyan-600 bg-clip-text text-transparent tracking-tight inline-block pr-1" style="font-size:25px;">비즈모아 </span>
         </div>
+        <!-- 모락 구간 전용 브랜드 텍스트 -->
+        <div id="nav-brand-morak" class="hidden items-center gap-2">
+          <div class="w-px h-5 bg-morak-100"></div>
+          <span class="font-black bg-gradient-to-r from-morak-600 to-morak-400 bg-clip-text text-transparent tracking-tight inline-block pr-1" style="font-size:25px;">모락 </span>
+        </div>
 
         <!-- 구분선 + 포브스 배지 -->
         <div id="award-area" class="hidden sm:flex items-center gap-2.5">
@@ -408,7 +444,8 @@
         style="--d:.7s">
         배선 공사 없는 무선 IoT 구축 <strong class="text-white font-semibold">시옷</strong>,
         IoT 시공 견적 자동화 <strong class="text-white font-semibold">비즈모아</strong>,
-        대화를 지식으로 바꾸는 <strong class="text-white font-semibold">다일로</strong>.
+        대화를 지식으로 바꾸는 <strong class="text-white font-semibold">다일로</strong>,
+        모임을 연결하는 <strong class="text-white font-semibold">모락</strong>.
         지에스엘티는 오피스·주거·빌딩, 모든 공간을 스마트 공간으로 완성하는 IoT 구축 전문기업입니다.
       </p>
 
@@ -438,7 +475,7 @@
             class="text-xl md:text-2xl text-white/30 group-hover:text-bizmoa-500 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-300 shrink-0"></iconify-icon>
         </a>
         <a href="#dailo"
-          class="group flex items-center justify-between gap-4 py-5 md:py-6 border-t border-b border-white/10">
+          class="group flex items-center justify-between gap-4 py-5 md:py-6 border-t border-white/10">
           <div class="flex items-baseline gap-4 md:gap-6 min-w-0">
             <span class="text-xs font-semibold tracking-widest text-white/30">03</span>
             <span
@@ -448,6 +485,18 @@
           </div>
           <iconify-icon icon="solar:arrow-right-up-linear"
             class="text-xl md:text-2xl text-white/30 group-hover:text-dailo-500 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-300 shrink-0"></iconify-icon>
+        </a>
+        <a href="#morak"
+          class="group flex items-center justify-between gap-4 py-5 md:py-6 border-t border-b border-white/10">
+          <div class="flex items-baseline gap-4 md:gap-6 min-w-0">
+            <span class="text-xs font-semibold tracking-widest text-white/30">04</span>
+            <span
+              class="text-xl md:text-3xl font-bold text-white group-hover:text-morak-400 transition-colors duration-300">모락
+              커뮤니티</span>
+            <span class="hidden sm:inline text-sm text-white/35 truncate">기수제 모임 플랫폼 · 디지털 명함</span>
+          </div>
+          <iconify-icon icon="solar:arrow-right-up-linear"
+            class="text-xl md:text-2xl text-white/30 group-hover:text-morak-400 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-300 shrink-0"></iconify-icon>
         </a>
       </div>
     </div>
@@ -1402,6 +1451,67 @@
   </section>
 
   <!-- Testimonials & Trust -->
+  <!-- Morak Section (Community Platform) -->
+  <section id="morak" class="py-24 md:py-40 relative z-10 bg-white overflow-hidden border-t border-slate-200/50">
+    <div
+      class="absolute top-0 right-0 w-[600px] h-[600px] bg-morak-50 rounded-full blur-[120px] translate-x-1/2 -translate-y-1/2 pointer-events-none">
+    </div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
+        <!-- 카피 -->
+        <div class="animate-on-scroll">
+          <div class="flex items-center gap-4 mb-8">
+            <span class="block w-10 h-px bg-morak-500"></span>
+            <span class="text-[11px] uppercase tracking-[0.3em] font-bold text-morak-600">Morak · Community
+              Platform</span>
+          </div>
+          <h2 class="text-4xl md:text-6xl font-black tracking-tight leading-tight mb-6 break-keep">
+            기수제 모임을<br><span class="text-morak-500">한곳에서.</span>
+          </h2>
+          <p class="text-slate-500 text-lg leading-relaxed break-keep mb-8">
+            흩어진 단톡방과 엑셀 명부, 종이 명함은 이제 그만. 원우회·동문회를 위한 모임 커뮤니티
+            <strong class="text-slate-800 font-semibold">모락</strong>에서 디지털 명함으로 만나고,
+            일정과 명부를 한곳에서 관리하세요.
+          </p>
+          <div class="flex flex-wrap gap-2 mb-10">
+            <span class="px-3 py-1.5 rounded-full bg-morak-50 border border-morak-100 text-morak-700 text-xs font-semibold">디지털 명함 · QR 교환</span>
+            <span class="px-3 py-1.5 rounded-full bg-morak-50 border border-morak-100 text-morak-700 text-xs font-semibold">기수 · 직책 관리</span>
+            <span class="px-3 py-1.5 rounded-full bg-morak-50 border border-morak-100 text-morak-700 text-xs font-semibold">일정 · 참석 관리</span>
+            <span class="px-3 py-1.5 rounded-full bg-morak-50 border border-morak-100 text-morak-700 text-xs font-semibold">원우수첩(명부)</span>
+          </div>
+          <div class="flex flex-wrap gap-4">
+            <a href="https://morac.gslt.kr" target="_blank" rel="noopener"
+              class="px-7 py-3.5 rounded-full bg-morak-500 hover:bg-morak-600 text-white font-bold transition-all">모락 바로가기</a>
+            <a href="morak.html"
+              class="px-7 py-3.5 rounded-full border-2 border-slate-200 text-slate-600 font-bold hover:border-morak-400 hover:text-morak-600 transition-all">자세히 보기</a>
+          </div>
+        </div>
+        <!-- 비주얼: 오빗 -->
+        <div class="animate-on-scroll relative flex items-center justify-center min-h-[380px] lg:min-h-[460px]"
+          style="transition-delay:150ms;">
+          <div class="relative w-[320px] h-[320px] md:w-[420px] md:h-[420px]">
+            <div class="absolute inset-0 rounded-full border border-morak-100"></div>
+            <div class="absolute inset-[18%] rounded-full border border-morak-100"></div>
+            <div class="orbit-ring absolute inset-0">
+              <span class="orbit-dot" style="top:-7px; left:50%; margin-left:-7px;"></span>
+              <span class="orbit-dot" style="bottom:-5px; left:22%; width:10px; height:10px;"></span>
+              <span class="orbit-dot" style="top:30%; right:-6px; width:12px; height:12px;"></span>
+            </div>
+            <div class="orbit-ring-r absolute inset-[18%]">
+              <span class="orbit-dot" style="top:-6px; left:50%; margin-left:-6px; width:12px; height:12px;"></span>
+              <span class="orbit-dot" style="bottom:8%; left:-4px; width:9px; height:9px;"></span>
+            </div>
+            <div class="absolute inset-0 flex items-center justify-center">
+              <div class="w-32 h-32 md:w-36 md:h-36 rounded-[2.2rem] bg-white shadow-2xl border border-slate-100 flex items-center justify-center">
+                <img width="2271" height="1121" src="img/morak-logo.png" alt="모락(Morak) 로고" class="w-20 md:w-24 h-auto">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="py-24 bg-white relative z-10">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-16 animate-on-scroll">
@@ -1513,7 +1623,7 @@
               <p class="text-sm text-slate-500 font-medium">설립</p>
             </div>
             <div>
-              <p class="text-3xl font-black text-slate-900 mb-1">3<span
+              <p class="text-3xl font-black text-slate-900 mb-1">4<span
                   class="text-base font-medium text-slate-400 ml-1">개</span></p>
               <p class="text-sm text-slate-500 font-medium">핵심 솔루션</p>
             </div>
@@ -1766,6 +1876,7 @@
               <li><a href="siot.html" class="hover:text-white transition-colors">시옷 (Siot)</a></li>
               <li><a href="bizmoa.html" class="hover:text-white transition-colors">비즈모아 (BizMoa)</a></li>
               <li><a href="dailo.html" class="hover:text-white transition-colors">다일로 (Dailo)</a></li>
+              <li><a href="morak.html" class="hover:text-white transition-colors">모락 (Morak)</a></li>
             </ul>
           </div>
           <div>
@@ -2576,7 +2687,8 @@
         'hero': 'img/gslt-logo-white.png',
         'siot': 'img/siot_logo_white.png',
         'dailo': 'img/dailo-logo.png',
-        'bizmoa': 'img/bizmoaLogo2-nav.png'
+        'bizmoa': 'img/bizmoaLogo2-nav.png',
+        'morak': 'img/morak-logo-nav.png'
       };
 
       window.addEventListener('scroll', () => {
@@ -2599,12 +2711,14 @@
         const awardText   = document.getElementById('award-text');
         const brandDailo  = document.getElementById('nav-brand-dailo');
         const brandBizmoa = document.getElementById('nav-brand-bizmoa');
+        const brandMorak  = document.getElementById('nav-brand-morak');
         const navCta      = document.getElementById('nav-cta');
         const ctaBase = "hidden md:flex items-center gap-2 bg-gslt-500 hover:bg-gslt-600 text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:scale-[1.02] active:scale-[0.98] transition-all duration-500 z-10";
 
         function hideAllBrands() {
           if (brandDailo)  brandDailo.classList.replace('flex', 'hidden');
           if (brandBizmoa) brandBizmoa.classList.replace('flex', 'hidden');
+          if (brandMorak)  brandMorak.classList.replace('flex', 'hidden');
         }
 
         if (currentSection === 'hero' || currentSection === 'metrics') {
@@ -2641,6 +2755,16 @@
           if (navCta)     navCta.className = ctaBase;
           hideAllBrands();
           if (brandBizmoa) { brandBizmoa.classList.remove('hidden'); brandBizmoa.classList.add('flex'); }
+        } else if (currentSection === 'morak') {
+          nav.classList.add('bg-white/90', 'border-morak-100', 'backdrop-blur-xl', 'shadow-sm');
+          navLinks.className = "absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-10 text-sm font-bold text-slate-600 transition-colors duration-500";
+          navLogo.src = logos.morak;
+          navLogo.style.filter = 'none';
+          if (divider)    divider.style.backgroundColor = 'rgba(0,194,194,0.25)';
+          if (awardText)  awardText.style.filter = 'brightness(1)';
+          if (navCta)     navCta.className = ctaBase;
+          hideAllBrands();
+          if (brandMorak) { brandMorak.classList.remove('hidden'); brandMorak.classList.add('flex'); }
         } else {
           nav.classList.add('bg-white/90', 'border-slate-200/50', 'backdrop-blur-xl', 'shadow-sm');
           navLinks.className = "absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-10 text-sm font-bold text-slate-600 transition-colors duration-500";
