@@ -2072,6 +2072,24 @@
       const phone = document.getElementById('cf-phone').value || '미기재';
       const message = document.getElementById('cf-message').value;
 
+      // 1) 문의 접수함 저장 (관리자 페이지에서 확인·관리)
+      let savedToInbox = false;
+      try {
+        const { db } = await import('./assets/site.js');
+        const { collection, addDoc, serverTimestamp } =
+          await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+        await addDoc(collection(db, 'inquiries'), {
+          name, company, email, phone, message,
+          read: false,
+          createdAt: serverTimestamp()
+        });
+        savedToInbox = true;
+      } catch (err) {
+        console.error('Inbox save error:', err);
+      }
+
+      // 2) 이메일 알림 (Web3Forms)
+      let emailSent = false;
       try {
         const res = await fetch('https://api.web3forms.com/submit', {
           method: 'POST',
@@ -2086,24 +2104,24 @@
             문의내용: message,
           }),
         });
-
         const data = await res.json();
-        if (data.success === true) {
-          status.textContent = '상담 신청이 접수되었습니다. 24시간 내에 연락드리겠습니다.';
-          status.className = 'text-sm font-medium px-4 py-3 rounded-xl bg-green-50 text-green-700 border border-green-200';
-          form.reset();
-        } else {
-          throw new Error('서버 응답 오류');
-        }
+        emailSent = data.success === true;
       } catch (err) {
         console.error('Form submit error:', err);
+      }
+
+      // 둘 중 하나라도 성공하면 접수 완료
+      if (savedToInbox || emailSent) {
+        status.textContent = '상담 신청이 접수되었습니다. 24시간 내에 연락드리겠습니다.';
+        status.className = 'text-sm font-medium px-4 py-3 rounded-xl bg-green-50 text-green-700 border border-green-200';
+        form.reset();
+      } else {
         status.textContent = '전송에 실패했습니다. gs7078103107@gmail.com 으로 직접 연락해 주세요.';
         status.className = 'text-sm font-medium px-4 py-3 rounded-xl bg-red-50 text-red-600 border border-red-200';
-      } finally {
-        status.classList.remove('hidden');
-        submitBtn.disabled = false;
-        submitText.textContent = '상담 신청 보내기';
       }
+      status.classList.remove('hidden');
+      submitBtn.disabled = false;
+      submitText.textContent = '상담 신청 보내기';
     }
   </script>
 

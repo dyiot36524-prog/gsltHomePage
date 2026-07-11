@@ -78,6 +78,9 @@
         <button data-tab="news" class="tab-btn px-5 py-2.5 rounded-full text-sm font-bold transition-all">뉴스</button>
         <button data-tab="portfolio" class="tab-btn px-5 py-2.5 rounded-full text-sm font-bold transition-all">포트폴리오</button>
         <button data-tab="downloads" class="tab-btn px-5 py-2.5 rounded-full text-sm font-bold transition-all">자료실</button>
+        <button data-tab="inquiries" class="tab-btn px-5 py-2.5 rounded-full text-sm font-bold transition-all">문의
+          <span id="inq-badge" class="hidden ml-1 px-1.5 py-0.5 rounded-full bg-rose-500 text-white text-[10px] font-black align-middle"></span>
+        </button>
         <button data-tab="settings" class="tab-btn px-5 py-2.5 rounded-full text-sm font-bold transition-all">메뉴 설정</button>
       </div>
 
@@ -165,6 +168,19 @@
         </div>
       </div>
 
+      <!-- ── 문의 접수함 ── -->
+      <div id="inquiries-panel" class="hidden">
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="text-xl font-black">문의 접수함</h2>
+          <label class="flex items-center gap-2 cursor-pointer select-none text-sm font-bold text-slate-600">
+            <input id="inq-unread-only" type="checkbox" class="w-4 h-4 accent-[#28b8c5]">
+            안 읽은 문의만
+          </label>
+        </div>
+        <div id="inq-list" class="space-y-3"></div>
+        <p id="inq-empty" class="hidden py-16 text-center text-slate-400 text-sm">접수된 문의가 없습니다.</p>
+      </div>
+
       <!-- ── 메뉴 설정 ── -->
       <div id="settings-panel" class="hidden">
         <h2 class="text-xl font-black mb-2">메뉴 설정</h2>
@@ -240,7 +256,10 @@
     onAuthStateChanged(auth, user => {
       $('login-view').classList.toggle('hidden', !!user);
       $('admin-view').classList.toggle('hidden', !user);
-      if (user) switchTab('news');
+      if (user) {
+        switchTab('news');
+        initInquiryBadge();
+      }
     });
 
     $('login-form').addEventListener('submit', async e => {
@@ -278,12 +297,16 @@
       currentTab = tab;
       paintTabs();
       $('editor-panel').classList.add('hidden');
+      $('posts-panel').classList.add('hidden');
+      $('settings-panel').classList.add('hidden');
+      $('inquiries-panel').classList.add('hidden');
       if (tab === 'settings') {
-        $('posts-panel').classList.add('hidden');
         $('settings-panel').classList.remove('hidden');
         loadMenus();
+      } else if (tab === 'inquiries') {
+        $('inquiries-panel').classList.remove('hidden');
+        loadInquiries();
       } else {
-        $('settings-panel').classList.add('hidden');
         $('posts-panel').classList.remove('hidden');
         $('panel-title').textContent = CATEGORY_LABEL[tab] + ' 관리';
         loadList();
@@ -552,6 +575,90 @@
         }
       ];
     }
+
+    /* ══ 문의 접수함 ══ */
+    let cachedInquiries = [];
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, c => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+    async function loadInquiries() {
+      const listEl = $('inq-list');
+      listEl.innerHTML = '<p class="py-8 text-center text-slate-400 text-sm">불러오는 중...</p>';
+      try {
+        const snap = await getDocs(collection(db, 'inquiries'));
+        cachedInquiries = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+      } catch (e) {
+        listEl.innerHTML = `<p class="py-8 text-center text-rose-600 text-sm">문의를 불러오지 못했습니다: ${e.code || e.message}</p>`;
+        return;
+      }
+      renderInquiries();
+      refreshInquiryBadge();
+    }
+
+    function renderInquiries() {
+      const listEl = $('inq-list');
+      const unreadOnly = $('inq-unread-only').checked;
+      const items = cachedInquiries.filter(q => !unreadOnly || q.read !== true);
+      $('inq-empty').classList.toggle('hidden', items.length > 0);
+      listEl.innerHTML = items.map(q => `
+        <div class="bg-white rounded-xl border ${q.read ? 'border-slate-200' : 'border-gslt-400'} p-5">
+          <div class="flex items-center gap-3 flex-wrap mb-2">
+            ${q.read ? '' : '<span class="px-2 py-0.5 rounded-md bg-rose-100 text-rose-600 text-[11px] font-black">새 문의</span>'}
+            <p class="font-black text-sm">${esc(q.name)}</p>
+            <p class="text-sm text-slate-500">${esc(q.company)}</p>
+            <p class="ml-auto text-xs text-slate-400">${q.createdAt?.seconds ? new Date(q.createdAt.seconds * 1000).toLocaleString('ko-KR') : ''}</p>
+          </div>
+          <p class="text-xs text-slate-500 mb-3">
+            <a href="mailto:${esc(q.email)}" class="text-gslt-600 hover:underline">${esc(q.email)}</a>
+            &nbsp;·&nbsp; ${esc(q.phone)}
+          </p>
+          <p class="text-sm text-slate-700 whitespace-pre-wrap break-keep bg-slate-50 rounded-lg p-3 mb-3">${esc(q.message)}</p>
+          <div class="flex items-center gap-3">
+            <button data-toggle-read="${q.id}" class="text-sm font-bold ${q.read ? 'text-slate-400 hover:text-slate-600' : 'text-gslt-600 hover:underline'}">
+              ${q.read ? '안 읽음으로 표시' : '읽음 처리'}
+            </button>
+            <button data-del-inq="${q.id}" class="text-sm font-bold text-rose-400 hover:text-rose-600">삭제</button>
+          </div>
+        </div>`).join('');
+      listEl.querySelectorAll('[data-toggle-read]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const q = cachedInquiries.find(x => x.id === btn.dataset.toggleRead);
+          await updateDoc(doc(db, 'inquiries', q.id), { read: q.read !== true });
+          q.read = q.read !== true;
+          renderInquiries();
+          refreshInquiryBadge();
+        });
+      });
+      listEl.querySelectorAll('[data-del-inq]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!confirm('이 문의를 삭제할까요? 되돌릴 수 없습니다.')) return;
+          await deleteDoc(doc(db, 'inquiries', btn.dataset.delInq));
+          cachedInquiries = cachedInquiries.filter(x => x.id !== btn.dataset.delInq);
+          renderInquiries();
+          refreshInquiryBadge();
+        });
+      });
+    }
+
+    function refreshInquiryBadge() {
+      const n = cachedInquiries.filter(q => q.read !== true).length;
+      const badge = $('inq-badge');
+      badge.textContent = n;
+      badge.classList.toggle('hidden', n === 0);
+    }
+
+    /* 로그인 직후 안 읽은 문의 수 표시 */
+    async function initInquiryBadge() {
+      try {
+        const snap = await getDocs(query(collection(db, 'inquiries'), where('read', '==', false)));
+        const badge = $('inq-badge');
+        badge.textContent = snap.size;
+        badge.classList.toggle('hidden', snap.size === 0);
+      } catch (e) { /* 규칙 미적용 등 — 뱃지 생략 */ }
+    }
+
+    $('inq-unread-only').addEventListener('change', renderInquiries);
 
     /* ══ 메뉴 설정 ══ */
     async function loadMenus() {

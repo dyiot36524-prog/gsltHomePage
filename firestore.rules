@@ -23,6 +23,28 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // 상담 문의: 방문자는 접수(생성)만 가능, 열람·관리는 관리자만
+    match /inquiries/{id} {
+      allow create: if request.resource.data.keys().hasOnly(
+          ['name', 'company', 'email', 'phone', 'message', 'read', 'createdAt'])
+        && request.resource.data.read == false
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 100
+        && request.resource.data.company is string
+        && request.resource.data.company.size() <= 200
+        && request.resource.data.email is string
+        && request.resource.data.email.size() > 0
+        && request.resource.data.email.size() <= 200
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() <= 50
+        && request.resource.data.message is string
+        && request.resource.data.message.size() > 0
+        && request.resource.data.message.size() <= 5000;
+      allow read, update, delete: if isAdmin();
+    }
+
     // 그 외 모든 경로 차단
     match /{document=**} {
       allow read, write: if false;
