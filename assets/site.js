@@ -128,9 +128,9 @@ export function renderFooter() {
         <div>
           <div class="flex items-center gap-3 mb-3">
             <img src="img/gslt-logo-white.png" alt="GSLT" class="h-7 w-auto object-contain">
-            <span class="text-xs font-medium border-l border-white/10 pl-3 text-slate-500 uppercase tracking-widest">Workspace Evolution</span>
+            <span class="text-xs font-medium border-l border-white/10 pl-3 text-slate-500 uppercase tracking-widest">IoT Space Builder</span>
           </div>
-          <p class="text-sm text-slate-600 leading-relaxed break-keep max-w-xs">디지털 워크스페이스와 스마트 공간 솔루션으로<br>일하는 방식을 다시 정의합니다.</p>
+          <p class="text-sm text-slate-600 leading-relaxed break-keep max-w-xs">무선 IoT 구축 전문기업.<br>오피스·주거·빌딩을 배선 공사 없이 스마트 공간으로 완성합니다.</p>
         </div>
         <div class="flex flex-col sm:flex-row gap-10 text-sm">
           <div>
