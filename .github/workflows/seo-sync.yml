@@ -1,0 +1,39 @@
+name: SEO Sync
+
+# 매일 KST 05:00에 Firestore의 발행 글로 정적 사본(p/*.html)·sitemap·rss·llms.txt를 재생성한다.
+# Actions 탭에서 "Run workflow"로 즉시 실행도 가능.
+on:
+  schedule:
+    - cron: '0 20 * * *' # UTC 20:00 = KST 05:00
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        run: npm install marked@12 --no-save
+
+      - name: Generate static copies
+        run: node scripts/seo-sync.mjs
+
+      - name: Commit & push if changed
+        run: |
+          git config user.name "seo-sync-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A p sitemap.xml rss.xml llms.txt
+          if git diff --cached --quiet; then
+            echo "변경 없음 — 커밋 생략"
+          else
+            git commit -m "chore: SEO 정적 사본 자동 갱신 [skip ci]"
+            git push
+          fi

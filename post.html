@@ -176,11 +176,13 @@
       setMeta('property', 'og:type', 'article');
       setMeta('property', 'og:title', post.title);
       setMeta('property', 'og:description', desc);
-      setMeta('property', 'og:url', location.href);
+      // 정본(canonical)은 검색엔진용 정적 스냅샷(p/<id>.html)으로 통일
+      const snapshotUrl = new URL(`p/${encodeURIComponent(id)}.html`, location.href).href;
+      setMeta('property', 'og:url', snapshotUrl);
       if (post.thumbnail) setMeta('property', 'og:image', absolute(post.thumbnail));
       let canon = document.querySelector('link[rel="canonical"]');
       if (!canon) { canon = document.createElement('link'); canon.rel = 'canonical'; document.head.appendChild(canon); }
-      canon.href = location.origin + location.pathname + '?id=' + encodeURIComponent(id);
+      canon.href = snapshotUrl;
       // 구조화 데이터 (NewsArticle)
       const ld = document.createElement('script');
       ld.type = 'application/ld+json';

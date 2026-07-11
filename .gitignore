@@ -23,3 +23,7 @@ img/gslt-logo.png
 img/오피스영상*.webp
 img/시옷*.png
 img/다일로*.png
+# 로컬 빌드 부산물
+node_modules/
+package.json
+package-lock.json
