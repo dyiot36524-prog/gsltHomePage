@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>관리자 - GSLT</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/png" href="img/gslt-symbol.png">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://cdn.tailwindcss.com">
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-dynamic-subset.min.css">
+  <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Pretendard', 'system-ui', 'sans-serif'] },
+          colors: {
+            gslt: { 50: '#effbfc', 100: '#d7f4f7', 200: '#b0e8ee', 300: '#7dd6e0', 400: '#4cc3d2', 500: '#28b8c5', 600: '#1e93a0', 700: '#1c7682' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .break-keep { word-break: keep-all; }
+    ::selection { background: #d7f4f7; color: #0f172a; }
+    .field { width: 100%; padding: 0.7rem 0.9rem; border: 1px solid #e2e8f0; border-radius: 0.75rem; font-size: 0.9rem; outline: none; background: white; }
+    .field:focus { border-color: #28b8c5; box-shadow: 0 0 0 3px rgba(40, 184, 197, 0.15); }
+    /* Toast UI 폰트 통일 */
+    .toastui-editor-defaultUI { font-family: 'Pretendard', sans-serif; border-radius: 0.75rem; }
+    .toastui-editor-contents { font-family: 'Pretendard', sans-serif; }
+  </style>
+</head>
+
+<body class="bg-slate-100 text-slate-900 font-sans antialiased min-h-screen">
+
+  <!-- ══ 로그인 화면 ══ -->
+  <div id="login-view" class="hidden min-h-screen flex items-center justify-center px-4">
+    <div class="w-full max-w-sm bg-white rounded-3xl shadow-xl border border-slate-200/70 p-8">
+      <img width="2245" height="615" src="img/gslt-logo-color.png" alt="GSLT" class="h-8 w-auto mb-2">
+      <h1 class="text-xl font-black mb-1">관리자 로그인</h1>
+      <p class="text-sm text-slate-500 mb-7">사이트 콘텐츠 관리 페이지입니다.</p>
+      <form id="login-form" class="space-y-3">
+        <input id="login-email" type="email" required placeholder="이메일" class="field" autocomplete="username">
+        <input id="login-pw" type="password" required placeholder="비밀번호" class="field" autocomplete="current-password">
+        <button type="submit"
+          class="w-full py-3 rounded-xl bg-gslt-500 hover:bg-gslt-600 text-white font-bold text-sm transition-all">로그인</button>
+        <p id="login-error" class="hidden text-sm text-rose-600 text-center pt-1"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- ══ 관리 화면 ══ -->
+  <div id="admin-view" class="hidden">
+    <!-- 상단 바 -->
+    <div class="bg-white border-b border-slate-200 sticky top-0 z-40">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <img width="2245" height="615" src="img/gslt-logo-color.png" alt="GSLT" class="h-7 w-auto">
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-widest border-l border-slate-200 pl-3">Admin</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <a href="index.html" target="_blank" class="text-sm font-semibold text-slate-500 hover:text-gslt-600 transition-colors">사이트 보기</a>
+          <button id="logout-btn" class="text-sm font-semibold text-slate-500 hover:text-rose-600 transition-colors">로그아웃</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+      <!-- 탭 -->
+      <div class="flex flex-wrap items-center gap-2 mb-8">
+        <button data-tab="news" class="tab-btn px-5 py-2.5 rounded-full text-sm font-bold transition-all">뉴스</button>
+        <button data-tab="portfolio" class="tab-btn px-5 py-2.5 rounded-full text-sm font-bold transition-all">포트폴리오</button>
+        <button data-tab="downloads" class="tab-btn px-5 py-2.5 rounded-full text-sm font-bold transition-all">자료실</button>
+        <button data-tab="settings" class="tab-btn px-5 py-2.5 rounded-full text-sm font-bold transition-all">메뉴 설정</button>
+      </div>
+
+      <!-- ── 글 관리 ── -->
+      <div id="posts-panel">
+        <div class="flex items-center justify-between mb-5 gap-3 flex-wrap">
+          <h2 id="panel-title" class="text-xl font-black"></h2>
+          <div class="flex items-center gap-2">
+            <button id="seed-btn"
+              class="px-4 py-2.5 rounded-full border border-slate-300 text-slate-600 text-sm font-bold hover:border-slate-500 transition-all">샘플 글 생성</button>
+            <button id="new-btn"
+              class="px-5 py-2.5 rounded-full bg-gslt-500 hover:bg-gslt-600 text-white text-sm font-bold transition-all">새 글 작성</button>
+          </div>
+        </div>
+        <div id="post-list" class="space-y-3"></div>
+        <p id="list-empty" class="hidden py-16 text-center text-slate-400 text-sm">글이 없습니다. "새 글 작성" 또는 "샘플 글 생성"으로 시작하세요.</p>
+      </div>
+
+      <!-- ── 에디터 ── -->
+      <div id="editor-panel" class="hidden">
+        <div class="flex items-center justify-between mb-5">
+          <h2 id="editor-title" class="text-xl font-black">새 글 작성</h2>
+          <button id="editor-close" class="text-sm font-semibold text-slate-500 hover:text-slate-900">목록으로 돌아가기</button>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4 max-w-4xl">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1.5">제목</label>
+            <input id="f-title" class="field" placeholder="제목을 입력하세요">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1.5">요약 (목록 카드에 표시)</label>
+            <input id="f-excerpt" class="field" placeholder="한두 문장 요약">
+          </div>
+          <div id="thumb-section">
+            <label class="block text-xs font-bold text-slate-500 mb-1.5">대표 이미지</label>
+            <div class="flex gap-2">
+              <input id="f-thumbnail" class="field" placeholder="이미지 URL (업로드 또는 직접 입력)">
+              <label class="shrink-0 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold cursor-pointer hover:bg-slate-700 transition-all">
+                업로드<input id="thumb-file" type="file" accept="image/*" class="hidden">
+              </label>
+            </div>
+            <div id="thumb-preview-wrap" class="hidden mt-3">
+              <img id="thumb-preview" src="" alt="" class="h-32 w-auto rounded-lg border border-slate-200 object-cover">
+            </div>
+            <p id="thumb-status" class="text-xs text-slate-400 mt-1.5"></p>
+          </div>
+          <div id="body-section">
+            <label class="block text-xs font-bold text-slate-500 mb-1.5">본문</label>
+            <div id="tui-editor"></div>
+            <p class="text-xs text-slate-400 mt-1.5">굵게·제목·목록·이미지 등은 상단 툴바 버튼으로 넣으세요. 이미지는 툴바의 이미지 버튼이나 끌어다 놓기로 삽입됩니다.</p>
+          </div>
+          <div id="files-section" class="hidden">
+            <label class="block text-xs font-bold text-slate-500 mb-1.5">첨부 파일 (다운로드 제공)</label>
+            <div id="file-list" class="space-y-2 mb-2"></div>
+            <label class="inline-block px-4 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold cursor-pointer hover:bg-slate-700 transition-all">
+              파일 업로드<input id="attach-file" type="file" class="hidden">
+            </label>
+            <p id="attach-status" class="text-xs text-slate-400 mt-1.5"></p>
+          </div>
+          <div class="flex items-center justify-between pt-3 border-t border-slate-100">
+            <label class="flex items-center gap-2.5 cursor-pointer select-none">
+              <input id="f-published" type="checkbox" checked class="w-4 h-4 accent-[#28b8c5]">
+              <span class="text-sm font-bold text-slate-700">게시 (끄면 비공개)</span>
+            </label>
+            <div class="flex gap-2">
+              <button id="delete-btn" class="hidden px-5 py-2.5 rounded-xl border border-rose-200 text-rose-600 text-sm font-bold hover:bg-rose-50 transition-all">삭제</button>
+              <button id="save-btn" class="px-6 py-2.5 rounded-xl bg-gslt-500 hover:bg-gslt-600 text-white text-sm font-bold transition-all">저장</button>
+            </div>
+          </div>
+          <p id="save-status" class="text-sm text-center"></p>
+        </div>
+      </div>
+
+      <!-- ── 메뉴 설정 ── -->
+      <div id="settings-panel" class="hidden">
+        <h2 class="text-xl font-black mb-2">메뉴 설정</h2>
+        <p class="text-sm text-slate-500 mb-6">끄면 사이트 헤더와 푸터에서 해당 메뉴가 숨겨집니다. 페이지 주소를 직접 아는 사람에게는 목록이 계속 보이므로, 완전 비공개가 필요하면 글을 비공개로 전환하세요.</p>
+        <div class="bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100 max-w-xl">
+          <div class="flex items-center justify-between p-5">
+            <div><p class="font-bold text-sm">뉴스</p><p class="text-xs text-slate-400 mt-0.5">news.html</p></div>
+            <input type="checkbox" id="m-news" class="w-5 h-5 accent-[#28b8c5] cursor-pointer">
+          </div>
+          <div class="flex items-center justify-between p-5">
+            <div><p class="font-bold text-sm">자료실</p><p class="text-xs text-slate-400 mt-0.5">downloads.html</p></div>
+            <input type="checkbox" id="m-downloads" class="w-5 h-5 accent-[#28b8c5] cursor-pointer">
+          </div>
+          <div class="flex items-center justify-between p-5">
+            <div><p class="font-bold text-sm">포트폴리오</p><p class="text-xs text-slate-400 mt-0.5">portfolio.html</p></div>
+            <input type="checkbox" id="m-portfolio" class="w-5 h-5 accent-[#28b8c5] cursor-pointer">
+          </div>
+        </div>
+        <button id="menus-save"
+          class="mt-5 px-6 py-2.5 rounded-xl bg-gslt-500 hover:bg-gslt-600 text-white text-sm font-bold transition-all">설정 저장</button>
+        <p id="menus-status" class="text-sm mt-3"></p>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { app, db, CATEGORY_LABEL } from './assets/site.js';
+    import {
+      getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged
+    } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+    import {
+      collection, doc, addDoc, updateDoc, deleteDoc, getDocs, setDoc, getDoc,
+      query, where, serverTimestamp
+    } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+    /* ── Cloudinary 설정 (이미지·파일 업로드) ── */
+    const CLOUDINARY = {
+      cloudName: 'r9pnckwj',
+      uploadPreset: 'dc4z8stu'   // Unsigned preset
+    };
+
+    const auth = getAuth(app);
+    const $ = id => document.getElementById(id);
+
+    let currentTab = 'news';
+    let editingId = null;
+    let editingCategory = 'news'; // 저장 시 탭 전환 race로 카테고리가 바뀌지 않도록 고정
+    let attachments = [];
+    let editor = null;   // Toast UI 인스턴스
+
+    /* Toast UI 에디터 초기화 — 글마다 새로 생성해 undo 히스토리 누수 방지 */
+    function ensureEditor() {
+      if (editor) { try { editor.destroy(); } catch (e) { } editor = null; }
+      editor = new toastui.Editor({
+        el: $('tui-editor'),
+        height: '480px',
+        initialEditType: 'wysiwyg',
+        previewStyle: 'vertical',
+        language: 'ko',
+        placeholder: '내용을 입력하세요...',
+        hooks: {
+          addImageBlobHook: async (blob, callback) => {
+            const r = await uploadToCloudinary(blob, $('save-status'), blob.name || 'image');
+            if (r) callback(r.secure_url, '');
+            else callback('', '업로드 실패 — Cloudinary 설정이 필요합니다');
+          }
+        }
+      });
+      return editor;
+    }
+
+    /* ══ 인증 ══ */
+    onAuthStateChanged(auth, user => {
+      $('login-view').classList.toggle('hidden', !!user);
+      $('admin-view').classList.toggle('hidden', !user);
+      if (user) switchTab('news');
+    });
+
+    $('login-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const err = $('login-error');
+      err.classList.add('hidden');
+      try {
+        await signInWithEmailAndPassword(auth, $('login-email').value.trim(), $('login-pw').value);
+      } catch (ex) {
+        err.textContent = '로그인에 실패했습니다. 이메일과 비밀번호를 확인하세요.';
+        err.classList.remove('hidden');
+      }
+    });
+    $('logout-btn').addEventListener('click', () => signOut(auth));
+
+    /* ══ 탭 ══ */
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    });
+
+    function paintTabs() {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        const on = btn.dataset.tab === currentTab;
+        btn.className = 'tab-btn px-5 py-2.5 rounded-full text-sm font-bold transition-all ' +
+          (on ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-400');
+      });
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      paintTabs();
+      $('editor-panel').classList.add('hidden');
+      if (tab === 'settings') {
+        $('posts-panel').classList.add('hidden');
+        $('settings-panel').classList.remove('hidden');
+        loadMenus();
+      } else {
+        $('settings-panel').classList.add('hidden');
+        $('posts-panel').classList.remove('hidden');
+        $('panel-title').textContent = CATEGORY_LABEL[tab] + ' 관리';
+        loadList();
+      }
+    }
+
+    /* ══ 글 목록 ══ */
+    async function loadList() {
+      const listEl = $('post-list');
+      listEl.innerHTML = '<p class="py-8 text-center text-slate-400 text-sm">불러오는 중...</p>';
+      let snap;
+      try {
+        snap = await getDocs(query(collection(db, 'posts'), where('category', '==', currentTab)));
+      } catch (e) {
+        listEl.innerHTML = `<p class="py-8 text-center text-rose-600 text-sm">목록을 불러오지 못했습니다: ${e.code || e.message}<br><span class="text-slate-400">관리자 계정으로 로그인했는지 확인하세요.</span></p>`;
+        return;
+      }
+      const posts = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+      $('list-empty').classList.toggle('hidden', posts.length > 0);
+      listEl.innerHTML = posts.map(p => `
+        <div class="flex items-center gap-4 bg-white rounded-xl border border-slate-200 px-5 py-4">
+          <span class="shrink-0 px-2.5 py-1 rounded-md text-[11px] font-black ${p.published !== false ? 'bg-gslt-100 text-gslt-700' : 'bg-slate-200 text-slate-500'}">
+            ${p.published !== false ? '게시중' : '비공개'}
+          </span>
+          <p class="flex-1 font-bold text-sm truncate">${p.title ? p.title.replace(/</g, '&lt;') : '(제목 없음)'}</p>
+          <p class="shrink-0 text-xs text-slate-400 hidden sm:block">${p.createdAt?.seconds ? new Date(p.createdAt.seconds * 1000).toLocaleDateString('ko-KR') : ''}</p>
+          ${currentTab !== 'downloads' ? `<a href="post.html?id=${p.id}" target="_blank" class="shrink-0 text-sm font-bold text-slate-400 hover:text-slate-700 hover:underline">보기</a>` : ''}
+          <button data-edit="${p.id}" class="shrink-0 text-sm font-bold text-gslt-600 hover:underline">수정</button>
+        </div>`).join('');
+      listEl.querySelectorAll('[data-edit]').forEach(btn => {
+        btn.addEventListener('click', () => openEditor(btn.dataset.edit));
+      });
+    }
+
+    /* ══ 에디터 ══ */
+    $('new-btn').addEventListener('click', () => openEditor(null));
+    $('editor-close').addEventListener('click', () => switchTab(currentTab));
+
+    async function openEditor(id) {
+      editingId = id;
+      editingCategory = currentTab;
+      attachments = [];
+      $('attach-status').textContent = '';
+      let p = { title: '', excerpt: '', body: '', thumbnail: '', attachments: [], published: true };
+      if (id) {
+        const snap = await getDoc(doc(db, 'posts', id));
+        if (snap.exists()) p = snap.data();
+        attachments = Array.isArray(p.attachments) ? [...p.attachments] : [];
+      }
+      $('editor-title').textContent = (id ? '글 수정' : '새 글 작성') + ' — ' + CATEGORY_LABEL[currentTab];
+      $('f-title').value = p.title || '';
+      $('f-excerpt').value = p.excerpt || '';
+      $('f-thumbnail').value = p.thumbnail || '';
+      updateThumbPreview();
+      $('f-published').checked = p.published !== false;
+      $('delete-btn').classList.toggle('hidden', !id);
+      $('save-status').textContent = '';
+      $('thumb-status').textContent = '';
+
+      const isDownloads = currentTab === 'downloads';
+      $('files-section').classList.toggle('hidden', !isDownloads);
+      $('body-section').classList.toggle('hidden', isDownloads);
+      $('thumb-section').classList.toggle('hidden', isDownloads);
+      renderFileList();
+
+      $('posts-panel').classList.add('hidden');
+      $('editor-panel').classList.remove('hidden');
+
+      if (!isDownloads) {
+        ensureEditor();
+        editor.setMarkdown(p.body || '');
+      }
+    }
+
+    /* 대표 이미지 미리보기 */
+    $('f-thumbnail').addEventListener('input', updateThumbPreview);
+    function updateThumbPreview() {
+      const url = $('f-thumbnail').value.trim();
+      $('thumb-preview').src = url;
+      $('thumb-preview-wrap').classList.toggle('hidden', !url);
+    }
+
+    /* Cloudinary 업로드 */
+    async function uploadToCloudinary(file, statusEl, nameHint) {
+      if (!CLOUDINARY.cloudName || !CLOUDINARY.uploadPreset) {
+        if (statusEl) { statusEl.textContent = '이미지 업로드는 Cloudinary 설정이 필요합니다. (URL 직접 입력은 가능)'; statusEl.className = 'text-sm text-center text-rose-600'; }
+        return null;
+      }
+      if (statusEl) { statusEl.textContent = '업로드 중...'; statusEl.className = 'text-sm text-center text-slate-500'; }
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('upload_preset', CLOUDINARY.uploadPreset);
+      try {
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY.cloudName}/auto/upload`, { method: 'POST', body: fd });
+        const json = await res.json();
+        if (!json.secure_url) throw new Error(json.error?.message || 'upload failed');
+        if (statusEl) { statusEl.textContent = '업로드 완료'; statusEl.className = 'text-sm text-center text-gslt-600 font-bold'; }
+        return json;
+      } catch (e) {
+        if (statusEl) { statusEl.textContent = '업로드 실패: ' + e.message; statusEl.className = 'text-sm text-center text-rose-600'; }
+        return null;
+      }
+    }
+
+    $('thumb-file').addEventListener('change', async e => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const r = await uploadToCloudinary(f, $('thumb-status'));
+      if (r) { $('f-thumbnail').value = r.secure_url; updateThumbPreview(); }
+      e.target.value = '';
+    });
+
+    $('attach-file').addEventListener('change', async e => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const r = await uploadToCloudinary(f, $('attach-status'));
+      if (r) {
+        attachments.push({ name: f.name, url: r.secure_url, size: f.size });
+        renderFileList();
+      }
+      e.target.value = '';
+    });
+
+    function renderFileList() {
+      $('file-list').innerHTML = attachments.map((f, i) => `
+        <div class="flex items-center justify-between gap-3 px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-sm">
+          <span class="truncate font-semibold text-slate-700">${f.name.replace(/</g, '&lt;')}</span>
+          <button data-rm="${i}" class="shrink-0 text-xs font-bold text-rose-500 hover:underline">제거</button>
+        </div>`).join('');
+      $('file-list').querySelectorAll('[data-rm]').forEach(btn => {
+        btn.addEventListener('click', () => { attachments.splice(Number(btn.dataset.rm), 1); renderFileList(); });
+      });
+    }
+
+    /* 저장 / 삭제 */
+    $('save-btn').addEventListener('click', async () => {
+      const status = $('save-status');
+      const title = $('f-title').value.trim();
+      if (!title) { status.textContent = '제목을 입력하세요.'; status.className = 'text-sm text-center text-rose-600'; return; }
+      status.textContent = '저장 중...';
+      status.className = 'text-sm text-center text-slate-500';
+      const body = editingCategory === 'downloads' ? '' : (editor ? editor.getMarkdown() : '');
+      const data = {
+        category: editingCategory,
+        title,
+        excerpt: $('f-excerpt').value.trim(),
+        body,
+        thumbnail: $('f-thumbnail').value.trim(),
+        attachments,
+        published: $('f-published').checked,
+        updatedAt: serverTimestamp()
+      };
+      try {
+        if (editingId) {
+          await updateDoc(doc(db, 'posts', editingId), data);
+        } else {
+          await addDoc(collection(db, 'posts'), { ...data, createdAt: serverTimestamp() });
+        }
+        status.textContent = '저장되었습니다.';
+        status.className = 'text-sm text-center text-gslt-600 font-bold';
+        setTimeout(() => switchTab(currentTab), 600);
+      } catch (e) {
+        status.textContent = '저장 실패: ' + e.message;
+        status.className = 'text-sm text-center text-rose-600';
+      }
+    });
+
+    $('delete-btn').addEventListener('click', async () => {
+      if (!editingId) return;
+      if (!confirm('이 글을 삭제할까요? 되돌릴 수 없습니다.')) return;
+      await deleteDoc(doc(db, 'posts', editingId));
+      switchTab(currentTab);
+    });
+
+    /* ══ 샘플 글 생성 ══ */
+    $('seed-btn').addEventListener('click', async () => {
+      if (!confirm('샘플 글을 생성할까요? (뉴스 3 · 포트폴리오 2 · 자료실 1)\n테스트 후 각 글은 목록에서 삭제할 수 있습니다.')) return;
+      const btn = $('seed-btn');
+      btn.disabled = true;
+      btn.textContent = '생성 중...';
+      const samples = sampleData();
+      try {
+        for (const s of samples) {
+          await addDoc(collection(db, 'posts'), {
+            ...s, attachments: s.attachments || [],
+            createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+          });
+        }
+        btn.textContent = '생성 완료';
+        setTimeout(() => { btn.disabled = false; btn.textContent = '샘플 글 생성'; switchTab(currentTab); }, 800);
+      } catch (e) {
+        alert('생성 실패: ' + e.message);
+        btn.disabled = false;
+        btn.textContent = '샘플 글 생성';
+      }
+    });
+
+    function sampleData() {
+      return [
+        {
+          category: 'news', published: true, thumbnail: 'img/siot3.png',
+          title: '지에스엘티, 포브스 코리아 대상 수상',
+          excerpt: "'무선 IoT 기반 스마트 공간' 부문에서 포브스 코리아 대상을 수상했습니다.",
+          body: '## 포브스 코리아 대상 수상\n\n지에스엘티가 **무선 IoT 기반 스마트 공간** 부문에서 포브스 코리아 대상을 수상했습니다.\n\n이번 수상은 배선 공사 없이 공간을 스마트하게 전환하는 시옷(Siot) 솔루션의 기술력을 인정받은 결과입니다.\n\n- 무선 IoT 기반 통합 제어\n- 1초 단위 실시간 모니터링\n- 99.9% 제어 안정성\n\n앞으로도 공간의 가치를 높이는 기술로 보답하겠습니다.'
+        },
+        {
+          category: 'news', published: true, thumbnail: 'img/bizmoa1.JPG',
+          title: '비즈모아, 견적 자동화 SaaS 정식 출시',
+          excerpt: '도면 위 장비 배치부터 견적·계약·납품까지 한 번에 처리하는 올인원 SaaS를 출시했습니다.',
+          body: '## 비즈모아 정식 출시\n\n시공·설치업체를 위한 올인원 견적 자동화 SaaS **비즈모아**를 정식 출시했습니다.\n\n도면 위에 장비를 배치하면 견적서가 즉시 생성되고, 계약서와 납품확인서까지 자동으로 만들어집니다.\n\n> 견적 작성 시간을 크게 줄이고, 서류 실수를 없앱니다.'
+        },
+        {
+          category: 'news', published: true, thumbnail: '',
+          title: '중소벤처기업부 창업성장기술개발사업 선정',
+          excerpt: '디딤돌 R&D 과제에 선정되어 무선 IoT 스마트 공간 기술 고도화를 지원받습니다.',
+          body: '## R&D 과제 선정\n\n중소벤처기업부 **창업성장기술개발사업(디딤돌 R&D)** 과제에 선정되었습니다.\n\n무선 IoT 기반 스마트 공간 기술의 고도화에 박차를 가하겠습니다.'
+        },
+        {
+          category: 'portfolio', published: true, thumbnail: 'img/siot1.png',
+          title: '강남 오피스 스마트 공간 구축',
+          excerpt: '조명·블라인드·공조를 하나의 대시보드에서 제어하는 스마트 오피스를 구축했습니다.',
+          body: '## 강남 오피스 프로젝트\n\n약 300평 규모의 오피스에 시옷(Siot) 통합 제어 시스템을 구축했습니다.\n\n조명, 블라인드, 공조 설비를 하나의 대시보드에서 제어하고, 상황별 프리셋으로 회의·집중·휴식 모드를 원클릭 전환합니다.\n\n- 배선 공사 없는 무선 설치\n- 상황별 장면 모드 프리셋\n- 중앙 집중식 관제'
+        },
+        {
+          category: 'portfolio', published: true, thumbnail: 'img/dailo1.png',
+          title: '다일로 워크스페이스 도입 사례',
+          excerpt: '문서와 채팅을 결합한 지식 관리 워크스페이스를 도입했습니다.',
+          body: '## 다일로 도입 사례\n\n파편화된 업무 지식을 토픽 기반으로 연결하는 다일로 워크스페이스를 도입했습니다.\n\n대화가 곧 지식이 되고, AI가 맥락을 정리합니다.'
+        },
+        {
+          category: 'downloads', published: true, thumbnail: '',
+          title: 'GSLT 회사 소개서',
+          excerpt: '지에스엘티의 솔루션과 실적을 정리한 회사 소개 자료입니다.',
+          body: '',
+          attachments: [{ name: 'GSLT_회사소개서.png', url: 'img/gslt-logo-color.png', size: 42514 }]
+        }
+      ];
+    }
+
+    /* ══ 메뉴 설정 ══ */
+    async function loadMenus() {
+      let menus = { news: true, downloads: true, portfolio: true };
+      try {
+        const snap = await getDoc(doc(db, 'settings', 'menus'));
+        if (snap.exists()) menus = { ...menus, ...snap.data() };
+      } catch (e) { }
+      $('m-news').checked = menus.news !== false;
+      $('m-downloads').checked = menus.downloads !== false;
+      $('m-portfolio').checked = menus.portfolio !== false;
+    }
+
+    $('menus-save').addEventListener('click', async () => {
+      const status = $('menus-status');
+      status.textContent = '저장 중...';
+      status.className = 'text-sm mt-3 text-slate-500';
+      try {
+        await setDoc(doc(db, 'settings', 'menus'), {
+          news: $('m-news').checked,
+          downloads: $('m-downloads').checked,
+          portfolio: $('m-portfolio').checked
+        });
+        try { sessionStorage.removeItem('gslt-menus'); } catch (e) { }
+        status.textContent = '저장되었습니다. 사이트에 바로 반영됩니다.';
+        status.className = 'text-sm mt-3 text-gslt-600 font-bold';
+      } catch (e) {
+        status.textContent = '저장 실패: ' + e.message;
+        status.className = 'text-sm mt-3 text-rose-600';
+      }
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,31 @@
+// GSLT 홈페이지 Firestore 보안 규칙
+// 적용 위치: Firebase 콘솔 → Firestore Database → 규칙 탭에 붙여넣고 게시
+// 관리자 계정: dyiot36524@gmail.com (이 이메일만 쓰기 가능)
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email == 'dyiot36524@gmail.com';
+    }
+
+    // 게시글: 방문자는 게시된 글만 읽기, 쓰기는 관리자만
+    match /posts/{id} {
+      allow read: if resource.data.published == true || isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // 사이트 설정(메뉴 노출): 누구나 읽기, 쓰기는 관리자만
+    match /settings/{doc} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 그 외 모든 경로 차단
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GSLT</title>
+  <link rel="icon" type="image/png" href="img/gslt-symbol.png">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://cdn.tailwindcss.com">
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-dynamic-subset.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Pretendard', 'system-ui', 'sans-serif'] },
+          colors: {
+            gslt: { 50: '#effbfc', 100: '#d7f4f7', 200: '#b0e8ee', 300: '#7dd6e0', 400: '#4cc3d2', 500: '#28b8c5', 600: '#1e93a0', 700: '#1c7682' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .break-keep { word-break: keep-all; }
+    ::selection { background: #d7f4f7; color: #0f172a; }
+
+    /* 마크다운 본문 스타일 */
+    .prose-body { line-height: 1.85; color: #334155; word-break: keep-all; }
+    .prose-body h1, .prose-body h2, .prose-body h3 { color: #0f172a; font-weight: 800; margin: 2em 0 0.7em; line-height: 1.35; }
+    .prose-body h1 { font-size: 1.6em; }
+    .prose-body h2 { font-size: 1.35em; }
+    .prose-body h3 { font-size: 1.15em; }
+    .prose-body p { margin: 1em 0; }
+    .prose-body a { color: #1e93a0; text-decoration: underline; }
+    .prose-body strong { color: #0f172a; }
+    .prose-body ul, .prose-body ol { margin: 1em 0; padding-left: 1.5em; }
+    .prose-body ul { list-style: disc; }
+    .prose-body ol { list-style: decimal; }
+    .prose-body li { margin: 0.35em 0; }
+    .prose-body img { border-radius: 1rem; margin: 1.8em 0; width: 100%; height: auto; }
+    .prose-body blockquote { border-left: 3px solid #28b8c5; padding-left: 1.2em; color: #64748b; margin: 1.5em 0; }
+    .prose-body hr { border-color: #e2e8f0; margin: 2.5em 0; }
+    .prose-body table { width: 100%; border-collapse: collapse; margin: 1.5em 0; font-size: 0.95em; }
+    .prose-body th, .prose-body td { border: 1px solid #e2e8f0; padding: 0.6em 0.9em; text-align: left; }
+    .prose-body th { background: #f8fafc; font-weight: 700; }
+    .prose-body pre { background: #0f172a; color: #e2e8f0; border-radius: 0.75rem; padding: 1.2em; overflow-x: auto; margin: 1.5em 0; }
+    .prose-body code { font-size: 0.9em; }
+  </style>
+</head>
+
+<body class="bg-slate-50 text-slate-900 font-sans antialiased">
+  <header id="site-header"></header>
+
+  <main class="pt-32 md:pt-40 min-h-[60vh]">
+    <!-- 로딩/404 -->
+    <div id="status" class="max-w-3xl mx-auto px-4 sm:px-6 py-24 text-center text-slate-400">
+      <p class="text-lg font-semibold">불러오는 중...</p>
+    </div>
+
+    <!-- 본문 -->
+    <article id="article" class="hidden max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center gap-4 mb-6">
+        <span class="block w-10 h-px bg-gslt-400"></span>
+        <span id="cat-label" class="text-[11px] uppercase tracking-[0.3em] font-bold text-gslt-600"></span>
+      </div>
+      <h1 id="title" class="text-3xl md:text-5xl font-black tracking-tight leading-tight break-keep mb-5"></h1>
+      <div class="flex items-center justify-between gap-4 pb-8 mb-10 border-b border-slate-200">
+        <p id="date" class="text-sm font-semibold text-slate-500"></p>
+        <button id="copy-link"
+          class="shrink-0 px-4 py-2 rounded-full border border-slate-200 text-slate-500 text-xs font-bold hover:border-gslt-400 hover:text-gslt-600 transition-all">링크
+          복사</button>
+      </div>
+      <div id="thumb-wrap" class="hidden mb-10">
+        <img id="thumb" src="" alt="" class="w-full h-auto rounded-2xl border border-slate-200/70">
+      </div>
+      <div id="body" class="prose-body text-[1.05rem]"></div>
+
+      <!-- 하단 문의 유도 -->
+      <div class="mt-16 rounded-3xl bg-slate-900 text-white p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="text-center md:text-left">
+          <p class="text-xl md:text-2xl font-black break-keep mb-1.5">더 자세한 이야기가 궁금하다면</p>
+          <p class="text-sm text-slate-400 break-keep">도입 상담부터 견적까지, 평균 24시간 안에 답변드립니다.</p>
+        </div>
+        <a href="index.html?open=contact"
+          class="shrink-0 px-7 py-3.5 rounded-full bg-gslt-500 hover:bg-gslt-600 text-white font-bold text-sm transition-all">도입 문의하기</a>
+      </div>
+
+      <!-- 하단 내비게이션 -->
+      <div class="mt-10 pt-8 border-t border-slate-200 flex items-center justify-between gap-4">
+        <a id="back-link" href="news.html"
+          class="px-6 py-3 rounded-full border-2 border-slate-200 text-slate-600 font-bold text-sm hover:border-gslt-400 hover:text-gslt-600 transition-all">
+          목록으로
+        </a>
+        <div class="flex gap-3">
+          <a id="prev-link" class="hidden px-5 py-3 rounded-full bg-white border border-slate-200 text-slate-600 font-bold text-sm hover:border-gslt-400 hover:text-gslt-600 transition-all">이전 글</a>
+          <a id="next-link" class="hidden px-5 py-3 rounded-full bg-white border border-slate-200 text-slate-600 font-bold text-sm hover:border-gslt-400 hover:text-gslt-600 transition-all">다음 글</a>
+        </div>
+      </div>
+    </article>
+  </main>
+
+  <div id="site-footer"></div>
+
+  <script type="module">
+    import { db, renderHeader, renderFooter, fetchPosts, formatDate, escapeHtml, CATEGORY_LABEL } from './assets/site.js';
+    import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+    renderFooter();
+
+    const params = new URLSearchParams(location.search);
+    const id = params.get('id');
+    const statusEl = document.getElementById('status');
+
+    function notFound() {
+      renderHeader('');
+      // 소프트 404 방지: 검색엔진이 이 URL을 인덱싱하지 않도록 신호
+      document.title = '글을 찾을 수 없습니다 - GSLT';
+      const robots = document.createElement('meta');
+      robots.name = 'robots';
+      robots.content = 'noindex';
+      document.head.appendChild(robots);
+      statusEl.innerHTML = `
+        <p class="text-lg font-semibold mb-2">글을 찾을 수 없습니다</p>
+        <p class="text-sm mb-8">삭제되었거나 비공개로 전환된 글일 수 있습니다.</p>
+        <a href="index.html" class="inline-block px-6 py-3 rounded-full bg-gslt-500 hover:bg-gslt-600 text-white font-bold text-sm transition-all">홈으로</a>`;
+    }
+
+    (async () => {
+      if (!id) return notFound();
+      let post = null;
+      try {
+        const snap = await getDoc(doc(db, 'posts', id));
+        if (snap.exists()) post = { id: snap.id, ...snap.data() };
+      } catch (e) { /* 미게시 글은 규칙에서 거부됨 */ }
+      if (!post || post.published === false) return notFound();
+
+      const listPage = post.category === 'portfolio' ? 'portfolio.html'
+        : post.category === 'downloads' ? 'downloads.html' : 'news.html';
+      renderHeader(post.category === 'portfolio' ? 'portfolio'
+        : post.category === 'downloads' ? 'downloads' : 'news');
+
+      document.title = `${post.title} - GSLT`;
+      document.getElementById('cat-label').textContent = CATEGORY_LABEL[post.category] || '';
+      document.getElementById('title').textContent = post.title;
+      document.getElementById('date').textContent = formatDate(post.createdAt);
+      document.getElementById('back-link').href = listPage;
+
+      if (post.thumbnail) {
+        const th = document.getElementById('thumb');
+        th.src = post.thumbnail;
+        th.alt = post.title;
+        document.getElementById('thumb-wrap').classList.remove('hidden');
+      }
+
+      // 관대한 마크다운: '##제목'처럼 공백이 빠져도 제목으로 인식
+      const forgiving = String(post.body || '').replace(/^(#{1,6})([^#\s])/gm, '$1 $2');
+      const raw = marked.parse(forgiving);
+      document.getElementById('body').innerHTML = DOMPurify.sanitize(raw, { USE_PROFILES: { html: true } });
+
+      // ── 검색엔진 노출용 동적 메타 (구글은 JS 렌더 후 인덱싱) ──
+      const absolute = u => u && !/^https?:/i.test(u) ? new URL(u, location.href).href : u;
+      const desc = post.excerpt || post.title;
+      const setMeta = (attr, key, val) => {
+        if (!val) return;
+        let m = document.querySelector(`meta[${attr}="${key}"]`);
+        if (!m) { m = document.createElement('meta'); m.setAttribute(attr, key); document.head.appendChild(m); }
+        m.setAttribute('content', val);
+      };
+      setMeta('name', 'description', desc);
+      setMeta('property', 'og:type', 'article');
+      setMeta('property', 'og:title', post.title);
+      setMeta('property', 'og:description', desc);
+      setMeta('property', 'og:url', location.href);
+      if (post.thumbnail) setMeta('property', 'og:image', absolute(post.thumbnail));
+      let canon = document.querySelector('link[rel="canonical"]');
+      if (!canon) { canon = document.createElement('link'); canon.rel = 'canonical'; document.head.appendChild(canon); }
+      canon.href = location.origin + location.pathname + '?id=' + encodeURIComponent(id);
+      // 구조화 데이터 (NewsArticle)
+      const ld = document.createElement('script');
+      ld.type = 'application/ld+json';
+      ld.textContent = JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': post.category === 'news' ? 'NewsArticle' : 'Article',
+        headline: post.title,
+        description: desc,
+        image: post.thumbnail ? [absolute(post.thumbnail)] : undefined,
+        datePublished: post.createdAt?.seconds ? new Date(post.createdAt.seconds * 1000).toISOString() : undefined,
+        dateModified: post.updatedAt?.seconds ? new Date(post.updatedAt.seconds * 1000).toISOString() : undefined,
+        author: { '@type': 'Organization', name: '지에스엘티(GSLT)' },
+        publisher: { '@type': 'Organization', name: '지에스엘티(GSLT)' }
+      });
+      document.head.appendChild(ld);
+
+      statusEl.classList.add('hidden');
+      document.getElementById('article').classList.remove('hidden');
+
+      // 링크 복사
+      const copyBtn = document.getElementById('copy-link');
+      copyBtn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(location.href);
+          copyBtn.textContent = '복사됨';
+          setTimeout(() => { copyBtn.textContent = '링크 복사'; }, 1500);
+        } catch (e) {
+          copyBtn.textContent = '복사 실패';
+        }
+      });
+
+      // 이전/다음 글
+      try {
+        const siblings = await fetchPosts(post.category);
+        const idx = siblings.findIndex(p => p.id === post.id);
+        if (idx === -1) return; // 목록에 없으면(비공개 등) 내비 생략
+        const prev = siblings[idx + 1]; // 더 오래된 글
+        const next = siblings[idx - 1]; // 더 최신 글
+        if (prev) {
+          const el = document.getElementById('prev-link');
+          el.href = `post.html?id=${prev.id}`;
+          el.classList.remove('hidden');
+        }
+        if (next) {
+          const el = document.getElementById('next-link');
+          el.href = `post.html?id=${next.id}`;
+          el.classList.remove('hidden');
+        }
+      } catch (e) { }
+    })();
+  </script>
+</body>
+
+</html>

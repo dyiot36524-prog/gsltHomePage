@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://dyiot36524-prog.github.io/gsltHomePage/sitemap.xml

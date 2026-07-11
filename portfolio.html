@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>포트폴리오 - GSLT</title>
+  <meta name="description" content="지에스엘티(GSLT)의 시공사례와 프로젝트 포트폴리오를 확인하세요.">
+  <link rel="canonical" href="https://dyiot36524-prog.github.io/gsltHomePage/portfolio.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="GSLT">
+  <meta property="og:title" content="포트폴리오 - GSLT">
+  <meta property="og:description" content="지에스엘티(GSLT)의 시공사례와 프로젝트 포트폴리오를 확인하세요.">
+  <meta property="og:url" content="https://dyiot36524-prog.github.io/gsltHomePage/portfolio.html">
+  <meta property="og:locale" content="ko_KR">
+  <link rel="icon" type="image/png" href="img/gslt-symbol.png">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://cdn.tailwindcss.com">
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-dynamic-subset.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Pretendard', 'system-ui', 'sans-serif'] },
+          colors: {
+            gslt: { 50: '#effbfc', 100: '#d7f4f7', 200: '#b0e8ee', 300: '#7dd6e0', 400: '#4cc3d2', 500: '#28b8c5', 600: '#1e93a0', 700: '#1c7682' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .break-keep { word-break: keep-all; }
+    ::selection { background: #d7f4f7; color: #0f172a; }
+    .page-outline {
+      -webkit-text-stroke: 2px rgba(40, 184, 197, 0.14);
+      color: transparent;
+    }
+    .clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-50 text-slate-900 font-sans antialiased">
+  <header id="site-header"></header>
+
+  <main class="pt-32 md:pt-40 min-h-[60vh]">
+    <!-- 타이틀 밴드 -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative overflow-hidden mb-12 md:mb-16">
+      <span class="page-outline hidden md:block absolute -top-6 right-0 text-[7.5rem] font-black tracking-tighter leading-none select-none pointer-events-none">PORTFOLIO</span>
+      <div class="relative">
+        <div class="flex items-center gap-4 mb-5">
+          <span class="block w-10 h-px bg-gslt-400"></span>
+          <span class="text-[11px] uppercase tracking-[0.3em] font-bold text-gslt-600">Portfolio</span>
+        </div>
+        <h1 class="text-4xl md:text-6xl font-black tracking-tight leading-tight break-keep mb-4">포트폴리오</h1>
+        <p class="text-slate-500 text-lg break-keep">지에스엘티가 완성한 스마트 공간과 시공사례를 소개합니다.</p>
+      </div>
+    </div>
+
+    <!-- 목록 -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div id="grid" class="grid grid-cols-1 md:grid-cols-2 gap-8"></div>
+      <div id="empty" class="hidden py-24 text-center text-slate-400">
+        <p class="text-lg font-semibold mb-1">등록된 시공사례가 없습니다</p>
+        <p class="text-sm">프로젝트가 준비되면 이곳에서 소개하겠습니다.</p>
+      </div>
+      <div id="more-wrap" class="hidden text-center mt-14">
+        <button id="more-btn"
+          class="px-8 py-3.5 rounded-full border-2 border-slate-200 text-slate-600 font-bold text-sm hover:border-gslt-400 hover:text-gslt-600 transition-all">
+          더 보기
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <div id="site-footer"></div>
+
+  <script type="module">
+    import { renderHeader, renderFooter, fetchPosts, formatDate, escapeHtml } from './assets/site.js';
+
+    renderHeader('portfolio');
+    renderFooter();
+
+    const PAGE = 8;
+    let posts = [];
+    let shown = 0;
+
+    const grid = document.getElementById('grid');
+    const empty = document.getElementById('empty');
+    const moreWrap = document.getElementById('more-wrap');
+
+    function card(p) {
+      const img = p.thumbnail
+        ? `<img src="${escapeHtml(p.thumbnail)}" alt="${escapeHtml(p.title)}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[1.5s]">`
+        : `<div class="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
+             <span class="text-white/20 font-black text-3xl tracking-tighter">GSLT</span>
+           </div>`;
+      return `
+      <a href="post.html?id=${p.id}" class="group block relative rounded-3xl overflow-hidden border border-slate-200/70 shadow-sm hover:shadow-2xl transition-all duration-500">
+        <div class="aspect-[4/3] overflow-hidden">${img}</div>
+        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent"></div>
+        <div class="absolute bottom-0 left-0 right-0 p-7">
+          <p class="text-[11px] font-semibold text-white/60 mb-1.5">${formatDate(p.createdAt)}</p>
+          <h3 class="font-black text-xl md:text-2xl text-white leading-snug break-keep clamp-2 mb-1">${escapeHtml(p.title)}</h3>
+          <p class="text-sm text-white/70 break-keep clamp-2">${escapeHtml(p.excerpt)}</p>
+        </div>
+      </a>`;
+    }
+
+    function renderMore() {
+      const next = posts.slice(shown, shown + PAGE);
+      grid.insertAdjacentHTML('beforeend', next.map(card).join(''));
+      shown += next.length;
+      moreWrap.classList.toggle('hidden', shown >= posts.length);
+    }
+
+    (async () => {
+      let failed = false;
+      try {
+        posts = await fetchPosts('portfolio');
+      } catch (e) {
+        posts = [];
+        failed = true;
+      }
+      if (!posts.length) {
+        if (failed) empty.innerHTML = '<p class="text-lg font-semibold mb-1">목록을 불러오지 못했습니다</p><p class="text-sm">일시적인 문제일 수 있습니다. 잠시 후 새로고침해 주세요.</p>';
+        empty.classList.remove('hidden');
+        return;
+      }
+      renderMore();
+      document.getElementById('more-btn').addEventListener('click', renderMore);
+    })();
+  </script>
+</body>
+
+</html>

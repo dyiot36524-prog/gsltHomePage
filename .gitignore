@@ -10,3 +10,16 @@ img/.DS_Store
 오피스영상4.mp4
 # 한글 폴더명 로고 원본 (영문 복사본으로 대체)
 img/로고/
+# 미사용 대형 원본 (배포 제외, 로컬 보관)
+img/office1.webp
+img/office2.webp
+img/office3.webp
+img/office4.webp
+img/bizmoaLogo1.png
+img/bizmoaLogo2.png
+img/dailo2.png
+img/siot-logo.png
+img/gslt-logo.png
+img/오피스영상*.webp
+img/시옷*.png
+img/다일로*.png

@@ -8,12 +8,46 @@
   <link rel="icon" type="image/png" href="img/gslt-symbol.png">
   <meta name="description"
     content="문서와 채팅의 완벽한 결합 다일로(Dailo)와 미니 IoT 장비로 완성하는 스마트 오피스 솔루션 시옷(Siot). 지에스엘티가 제안하는 새로운 업무 환경을 경험하세요.">
+  <link rel="canonical" href="https://dyiot36524-prog.github.io/gsltHomePage/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="GSLT">
+  <meta property="og:title" content="GSLT - 차세대 워크스페이스 & 스마트 공간 솔루션">
+  <meta property="og:description" content="무선 IoT 스마트 공간 시옷, 견적 자동화 비즈모아, AI 워크스페이스 다일로. 지에스엘티가 일하는 방식과 머무는 공간을 재정의합니다.">
+  <meta property="og:image" content="https://dyiot36524-prog.github.io/gsltHomePage/img/gslt-logo-color.png">
+  <meta property="og:url" content="https://dyiot36524-prog.github.io/gsltHomePage/">
+  <meta property="og:locale" content="ko_KR">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "지에스엘티(GSLT)",
+    "alternateName": "GSLT",
+    "founder": { "@type": "Person", "name": "최광수" },
+    "url": "https://dyiot36524-prog.github.io/gsltHomePage/",
+    "logo": "https://dyiot36524-prog.github.io/gsltHomePage/img/gslt-logo-color.png",
+    "email": "gs7078103107@gmail.com",
+    "telephone": "+82-70-4659-4804",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "성남시",
+      "addressRegion": "경기도",
+      "streetAddress": "중원구 둔촌대로 388번길 24, 우림라이온스밸리 3차 501호",
+      "addressCountry": "KR"
+    },
+    "award": "포브스 코리아 대상 - 무선 IoT 기반 스마트 공간 부문"
+  }
+  </script>
+
+  <!-- Preconnect -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://cdn.tailwindcss.com">
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 
   <!-- Fonts -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-dynamic-subset.min.css">
 
   <!-- Iconify -->
-  <script src="https://code.iconify.design/iconify-icon/2.3.0/iconify-icon.min.js"></script>
+  <script src="https://code.iconify.design/iconify-icon/2.3.0/iconify-icon.min.js" defer></script>
 
   <!-- WebGL Fluid Simulation (paint-flow hero effect) -->
   <script src="https://cdn.jsdelivr.net/npm/webgl-fluid@0.4"></script>
@@ -103,6 +137,14 @@
     .hero-line {
       display: block;
       overflow: hidden;
+      /* 리빌 중에는 좌우 여유를 둬 섀도우가 옆면에서 잘리지 않게 */
+      padding-inline: 0.15em;
+      margin-inline: -0.15em;
+    }
+
+    /* 리빌이 끝나면 클리핑 해제 — 섀도우 각짐 방지 */
+    .hero-line.revealed {
+      overflow: visible;
     }
 
     .hero-line-inner {
@@ -170,6 +212,10 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
+      .hero-line {
+        overflow: visible;
+      }
+
       .hero-line-inner,
       .hero-reveal {
         animation: none;
@@ -184,7 +230,12 @@
 
     /* 히어로 텍스트: 밝은 물감 위에서도 가독성 확보 */
     .hero-shadow {
-      text-shadow: 0 1px 3px rgba(4, 6, 12, 0.55), 0 6px 28px rgba(4, 6, 12, 0.6);
+      text-shadow: 0 1px 2px rgba(4, 6, 12, 0.5), 0 3px 12px rgba(4, 6, 12, 0.55);
+    }
+
+    /* truncate(overflow:hidden)와 겹치면 섀도우가 각지게 잘리므로 축소 */
+    .hero-shadow .truncate {
+      text-shadow: 0 1px 2px rgba(4, 6, 12, 0.7);
     }
 
     /* Selection Color */
@@ -210,7 +261,7 @@
       <!-- Left: Logo & Badge -->
       <div class="flex items-center gap-3 z-10">
         <a href="#" class="flex items-center h-8">
-          <img id="nav-logo" src="img/gslt-logo-white.png" alt="GSLT"
+          <img width="2245" height="615" id="nav-logo" src="img/gslt-logo-white.png" alt="GSLT"
             class="h-full w-auto object-contain transition-all duration-500">
         </a>
 
@@ -229,7 +280,7 @@
         <div id="award-area" class="hidden sm:flex items-center gap-2.5">
           <div id="nav-divider" class="w-px h-5 bg-slate-300/70 transition-colors duration-500"
             style="background-color:rgba(255,255,255,0.15)"></div>
-          <img id="award-badge" src="img/forbes-badge-square.png" alt="Forbes Award"
+          <img width="142" height="141" id="award-badge" src="img/forbes-badge-square.png" alt="Forbes Award"
             class="h-7 w-7 object-contain opacity-90 transition-all duration-500 shrink-0">
           <div id="award-text" class="flex flex-col leading-tight transition-colors duration-500"
             style="filter:brightness(1.8)">
@@ -242,9 +293,9 @@
       <!-- Center: Links (Absolute Centering) -->
       <div id="nav-links"
         class="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-10 text-sm font-bold text-slate-300 transition-colors duration-500">
-        <a href="#siot" class="hover:text-siot-600 transition-colors">Siot 솔루션</a>
-        <a href="#bizmoa" class="hover:text-bizmoa-600 transition-colors">BizMoa 자동화</a>
-        <a href="#dailo" class="hover:text-dailo-600 transition-colors">Dailo 워크스페이스</a>
+        <a href="news.html" data-menu="news" class="hover:text-gslt-500 transition-colors">뉴스</a>
+        <a href="downloads.html" data-menu="downloads" class="hover:text-gslt-500 transition-colors">자료실</a>
+        <a href="portfolio.html" data-menu="portfolio" class="hover:text-gslt-500 transition-colors">포트폴리오</a>
       </div>
 
       <!-- Right: Button -->
@@ -253,6 +304,15 @@
         <span>도입 문의</span>
         <iconify-icon icon="solar:arrow-right-linear" class="text-base"></iconify-icon>
       </a>
+    </div>
+
+    <!-- 모바일 네비게이션 행 -->
+    <div id="nav-links-mobile"
+      class="md:hidden flex items-center gap-6 px-4 pb-3 text-sm font-bold text-slate-300 overflow-x-auto whitespace-nowrap transition-colors duration-500">
+      <a href="news.html" data-menu="news">뉴스</a>
+      <a href="downloads.html" data-menu="downloads">자료실</a>
+      <a href="portfolio.html" data-menu="portfolio">포트폴리오</a>
+      <a href="#contact" class="text-gslt-500">도입 문의</a>
     </div>
   </nav>
 
@@ -361,18 +421,18 @@
           style="mask-image:linear-gradient(to right,transparent,black 15%,black 85%,transparent);-webkit-mask-image:linear-gradient(to right,transparent,black 15%,black 85%,transparent);">
           <div class="marquee-track flex items-center text-white/30 whitespace-nowrap">
             <div class="flex gap-12 items-center pr-12">
-              <h3 class="text-xl font-bold font-sans tracking-tighter">STELLAR<span class="font-light">LABS</span></h3>
-              <h3 class="text-xl font-bold font-serif italic tracking-tight">Luminary</h3>
-              <h3 class="text-xl font-extrabold font-sans tracking-widest uppercase">Verify</h3>
-              <h3 class="text-xl font-semibold font-sans tracking-tight">FlowCanvas</h3>
-              <h3 class="text-xl font-bold font-sans tracking-tighter">NEXVISION</h3>
+              <span class="text-xl font-bold font-sans tracking-tighter">STELLAR<span class="font-light">LABS</span></span>
+              <span class="text-xl font-bold font-serif italic tracking-tight">Luminary</span>
+              <span class="text-xl font-extrabold font-sans tracking-widest uppercase">Verify</span>
+              <span class="text-xl font-semibold font-sans tracking-tight">FlowCanvas</span>
+              <span class="text-xl font-bold font-sans tracking-tighter">NEXVISION</span>
             </div>
             <div class="flex gap-12 items-center pr-12" aria-hidden="true">
-              <h3 class="text-xl font-bold font-sans tracking-tighter">STELLAR<span class="font-light">LABS</span></h3>
-              <h3 class="text-xl font-bold font-serif italic tracking-tight">Luminary</h3>
-              <h3 class="text-xl font-extrabold font-sans tracking-widest uppercase">Verify</h3>
-              <h3 class="text-xl font-semibold font-sans tracking-tight">FlowCanvas</h3>
-              <h3 class="text-xl font-bold font-sans tracking-tighter">NEXVISION</h3>
+              <span class="text-xl font-bold font-sans tracking-tighter">STELLAR<span class="font-light">LABS</span></span>
+              <span class="text-xl font-bold font-serif italic tracking-tight">Luminary</span>
+              <span class="text-xl font-extrabold font-sans tracking-widest uppercase">Verify</span>
+              <span class="text-xl font-semibold font-sans tracking-tight">FlowCanvas</span>
+              <span class="text-xl font-bold font-sans tracking-tighter">NEXVISION</span>
             </div>
           </div>
         </div>
@@ -461,7 +521,7 @@
           <div class="absolute inset-x-[10%] bottom-0 h-1/3 bg-siot-500/10 blur-[60px] pointer-events-none"></div>
           <div class="relative card-outer-dark tilt-card">
             <div class="card-inner-dark p-2 md:p-3">
-              <img src="img/siot3.png" alt="시옷 메인 관제 페이지" class="w-full h-auto object-contain block rounded-2xl"
+              <img width="1440" height="1674" src="img/siot3.png" alt="시옷 메인 관제 페이지" class="w-full h-auto object-contain block rounded-2xl"
                 loading="lazy">
             </div>
           </div>
@@ -565,7 +625,7 @@
               <div class="absolute inset-x-[10%] bottom-0 h-1/3 bg-siot-500/8 blur-[60px] pointer-events-none"></div>
               <div class="relative card-outer-dark tilt-card">
                 <div class="card-inner-dark p-2 md:p-3">
-                  <img src="img/siot1.png" alt="시옷 통합 제어 대시보드" class="w-full h-auto object-contain block rounded-2xl"
+                  <img width="1440" height="1144" src="img/siot1.png" alt="시옷 통합 제어 대시보드" class="w-full h-auto object-contain block rounded-2xl"
                     loading="lazy">
                 </div>
               </div>
@@ -587,7 +647,7 @@
               <div class="absolute inset-x-[10%] bottom-0 h-1/3 bg-siot-500/8 blur-[60px] pointer-events-none"></div>
               <div class="relative card-outer-dark tilt-card">
                 <div class="card-inner-dark p-2 md:p-3">
-                  <img src="img/siot2.png" alt="시옷 장면 모드 프리셋" class="w-full h-auto object-contain block rounded-2xl"
+                  <img width="1440" height="900" src="img/siot2.png" alt="시옷 장면 모드 프리셋" class="w-full h-auto object-contain block rounded-2xl"
                     loading="lazy">
                 </div>
               </div>
@@ -652,7 +712,7 @@
 
         <div class="animate-on-scroll">
           <div class="relative h-[300px] rounded-[1.625rem] overflow-hidden border border-white/10 group">
-            <video autoplay loop muted playsinline preload="none"
+            <video data-autoplay loop muted playsinline preload="none"
               class="absolute inset-0 w-full h-full object-cover opacity-75 group-hover:scale-105 transition-transform duration-[2s]">
               <source src="img/office2.mp4" type="video/mp4">
             </video>
@@ -668,7 +728,7 @@
 
         <div class="animate-on-scroll" style="transition-delay:120ms;">
           <div class="relative h-[300px] rounded-[1.625rem] overflow-hidden border border-white/10 group">
-            <video autoplay loop muted playsinline preload="none"
+            <video data-autoplay loop muted playsinline preload="none"
               class="absolute inset-0 w-full h-full object-cover opacity-75 group-hover:scale-105 transition-transform duration-[2s]">
               <source src="img/office4.mp4" type="video/mp4">
             </video>
@@ -759,7 +819,7 @@
                     <span class="text-[10px] text-slate-400 font-medium font-sans">bizmoa.com</span>
                   </div>
                 </div>
-                <img src="img/bizmoa1.JPG" alt="BizMoa Dashboard" class="w-full h-auto block max-h-[72vh] object-cover object-top"
+                <img width="2518" height="1319" src="img/bizmoa1.JPG" alt="BizMoa Dashboard" class="w-full h-auto block max-h-[72vh] object-cover object-top"
                   loading="lazy" decoding="async">
               </div>
               <!-- 5단계 워크플로우 스트립 -->
@@ -788,7 +848,7 @@
                 <div class="lg:col-span-8 animate-on-scroll" data-parallax="1">
                   <div data-lightbox
                     class="rounded-2xl overflow-hidden shadow-xl border border-slate-200/60 bg-white cursor-zoom-in">
-                    <img src="img/bizmoa5.JPG" alt="BizMoa 도면 편집기"
+                    <img width="2518" height="1319" src="img/bizmoa5.JPG" alt="BizMoa 도면 편집기"
                       class="w-full h-auto block max-h-[74vh] object-cover object-top" loading="lazy">
                   </div>
                 </div>
@@ -874,7 +934,7 @@
                 <div class="lg:col-span-8 order-2 animate-on-scroll" data-parallax="1">
                   <div data-lightbox
                     class="rounded-2xl overflow-hidden shadow-xl border border-slate-200/60 bg-white cursor-zoom-in">
-                    <img src="img/bizmoa6.JPG" alt="BizMoa 견적서"
+                    <img width="2518" height="1319" src="img/bizmoa6.JPG" alt="BizMoa 견적서"
                       class="w-full h-auto block max-h-[74vh] object-cover object-top" loading="lazy">
                   </div>
                 </div>
@@ -893,12 +953,12 @@
                   <div class="relative lg:pb-20 lg:pr-16">
                     <div data-lightbox data-parallax="1"
                       class="w-full lg:w-[88%] rounded-2xl overflow-hidden shadow-xl border border-slate-200/60 bg-white cursor-zoom-in">
-                      <img src="img/bizmoa7.JPG" alt="BizMoa 계약서"
+                      <img width="2518" height="1319" src="img/bizmoa7.JPG" alt="BizMoa 계약서"
                         class="w-full h-auto block max-h-[64vh] object-cover object-top" loading="lazy">
                     </div>
                     <div data-lightbox data-parallax="1.4"
                       class="relative lg:absolute lg:right-0 lg:bottom-0 w-full lg:w-[52%] mt-4 lg:mt-0 rounded-2xl overflow-hidden shadow-2xl border border-slate-200/80 bg-white cursor-zoom-in lg:z-10">
-                      <img src="img/bizmoa8.JPG" alt="BizMoa 납품확인서"
+                      <img width="2518" height="1319" src="img/bizmoa8.JPG" alt="BizMoa 납품확인서"
                         class="w-full h-auto block max-h-[46vh] object-cover object-top" loading="lazy">
                     </div>
                   </div>
@@ -986,12 +1046,12 @@
                   <div class="relative lg:pb-20 lg:pl-16">
                     <div data-lightbox data-parallax="1"
                       class="w-full lg:w-[88%] lg:ml-auto rounded-2xl overflow-hidden shadow-xl border border-slate-200/60 bg-white cursor-zoom-in">
-                      <img src="img/bizmoa3.JPG" alt="BizMoa 프로젝트 카드"
+                      <img width="2518" height="1319" src="img/bizmoa3.JPG" alt="BizMoa 프로젝트 카드"
                         class="w-full h-auto block max-h-[64vh] object-cover object-top" loading="lazy">
                     </div>
                     <div data-lightbox data-parallax="1.4"
                       class="relative lg:absolute lg:left-0 lg:bottom-0 w-full lg:w-[52%] mt-4 lg:mt-0 rounded-2xl overflow-hidden shadow-2xl border border-slate-200/80 bg-white cursor-zoom-in lg:z-10">
-                      <img src="img/bizmoa4.JPG" alt="BizMoa 견적 이력"
+                      <img width="2518" height="1319" src="img/bizmoa4.JPG" alt="BizMoa 견적 이력"
                         class="w-full h-auto block max-h-[46vh] object-cover object-top" loading="lazy">
                     </div>
                   </div>
@@ -1011,12 +1071,12 @@
                   <div class="relative lg:pb-20 lg:pr-16">
                     <div data-lightbox data-parallax="1"
                       class="w-full lg:w-[88%] rounded-2xl overflow-hidden shadow-xl border border-slate-200/60 bg-white cursor-zoom-in">
-                      <img src="img/bizmoa2.JPG" alt="BizMoa 인건비 단가표"
+                      <img width="2518" height="1319" src="img/bizmoa2.JPG" alt="BizMoa 인건비 단가표"
                         class="w-full h-auto block max-h-[64vh] object-cover object-top" loading="lazy">
                     </div>
                     <div data-lightbox data-parallax="1.4"
                       class="relative lg:absolute lg:right-0 lg:bottom-0 w-full lg:w-[52%] mt-4 lg:mt-0 rounded-2xl overflow-hidden shadow-2xl border border-slate-200/80 bg-white cursor-zoom-in lg:z-10">
-                      <img src="img/bizmoa9.JPG" alt="BizMoa 사용자 관리"
+                      <img width="2518" height="1319" src="img/bizmoa9.JPG" alt="BizMoa 사용자 관리"
                         class="w-full h-auto block max-h-[46vh] object-cover object-top" loading="lazy">
                     </div>
                   </div>
@@ -1144,7 +1204,7 @@
                </div>
                <div class="mx-auto w-1/3 h-5 bg-white rounded-md border border-slate-200/50 opacity-50"></div>
             </div>
-            <img src="img/dailo1.png" alt="Dailo Platform Dashboard" class="w-full h-auto block" loading="lazy" decoding="async">
+            <img width="1808" height="900" src="img/dailo1.png" alt="Dailo Platform Dashboard" class="w-full h-auto block" loading="lazy" decoding="async">
           </div>
           <div class="absolute -top-10 -right-4 hidden lg:block animate-on-scroll" style="transition-delay: 500ms;">
              <div class="bg-white/90 backdrop-blur-2xl p-4 rounded-2xl shadow-2xl border border-white/50 flex items-center gap-4 hover:scale-105 transition-transform cursor-default">
@@ -1250,7 +1310,7 @@
               <div class="flex items-center justify-between mb-10">
                 <div class="flex items-center gap-4">
                   <div class="w-12 h-12 rounded-2xl overflow-hidden shadow-lg shadow-dailo-200 group-hover:shadow-dailo-400 transition-all">
-                    <img src="img/dailo-logo.png" alt="Dailo" class="w-full h-full object-cover">
+                    <img width="524" height="524" src="img/dailo-logo.png" alt="Dailo" class="w-full h-full object-cover">
                   </div>
                   <h4 class="text-2xl font-black text-slate-900 italic font-bold">Dailo 워크스페이스</h4>
                 </div>
@@ -1303,10 +1363,9 @@
               <iconify-icon icon="solar:star-bold"></iconify-icon>
             </div>
             <p class="text-slate-700 leading-relaxed break-keep mb-8 flex-1">"Slack과 Notion을 오가며 복사 붙여넣기를 하던 시간이 완벽히
-              사라졌습니다. 다일로의 멘션 연동은 정말 그 어떤 툴에서도 볼 수 없었던 게임 체인저입니다." (하지만 텍스트 제약상 '대단한 전환점입니다'로 수정)</p>
+              사라졌습니다. 다일로의 멘션 연동은 정말 그 어떤 툴에서도 볼 수 없었던 대단한 전환점입니다."</p>
             <div class="flex items-center gap-4">
-              <img src="https://i.pravatar.cc/150?u=haeso" class="w-12 h-12 rounded-full border border-slate-200"
-                alt="하윤서">
+              <div class="w-12 h-12 rounded-full bg-dailo-100 border border-slate-200 flex items-center justify-center font-black text-dailo-600 shrink-0" aria-hidden="true">하</div>
               <div>
                 <p class="font-bold text-slate-900">하윤서</p>
                 <p class="text-sm text-slate-500">스텔라랩스 프로덕트 리드</p>
@@ -1328,8 +1387,7 @@
             <p class="text-slate-700 leading-relaxed break-keep mb-8 flex-1">"전시장 전체 조명과 장치 제어가 시옷 하나의 대시보드로 통일되었습니다. 공간
               구성이 바뀔 때마다 복잡했던 배선 변경 없이 태블릿 터치로 해결합니다."</p>
             <div class="flex items-center gap-4">
-              <img src="https://i.pravatar.cc/150?u=dohyun" class="w-12 h-12 rounded-full border border-slate-200"
-                alt="박도현">
+              <div class="w-12 h-12 rounded-full bg-siot-100 border border-slate-200 flex items-center justify-center font-black text-siot-600 shrink-0" aria-hidden="true">박</div>
               <div>
                 <p class="font-bold text-slate-900">박도현</p>
                 <p class="text-sm text-slate-500">루미너스 전시 총괄 공간 디자이너</p>
@@ -1351,8 +1409,7 @@
             <p class="text-slate-700 leading-relaxed break-keep mb-8 flex-1">"새로 조인한 멤버에게 과거 검색 기록을 일일이 공유할 필요가 없어졌어요.
               토픽의 히스토리를 훑어보는 것 만으로 모든 맥락 파악이 끝납니다."</p>
             <div class="flex items-center gap-4">
-              <img src="https://i.pravatar.cc/150?u=seojin" class="w-12 h-12 rounded-full border border-slate-200"
-                alt="이서진">
+              <div class="w-12 h-12 rounded-full bg-gslt-100 border border-slate-200 flex items-center justify-center font-black text-gslt-600 shrink-0" aria-hidden="true">이</div>
               <div>
                 <p class="font-bold text-slate-900">이서진</p>
                 <p class="text-sm text-slate-500">플로우캔버스 스타트업 대표</p>
@@ -1575,7 +1632,7 @@
         <!-- 브랜드 -->
         <div>
           <div class="flex items-center gap-3 mb-3">
-            <img src="img/gslt-logo-white.png" alt="GSLT" class="h-7 w-auto object-contain">
+            <img width="2245" height="615" src="img/gslt-logo-white.png" alt="GSLT" class="h-7 w-auto object-contain">
             <span
               class="text-xs font-medium border-l border-white/10 pl-3 text-slate-500 uppercase tracking-widest">Workspace
               Evolution</span>
@@ -1590,7 +1647,16 @@
             <p class="text-white font-semibold mb-3 text-xs uppercase tracking-wider">솔루션</p>
             <ul class="space-y-2">
               <li><a href="#siot" class="hover:text-white transition-colors">시옷 (Siot)</a></li>
+              <li><a href="#bizmoa" class="hover:text-white transition-colors">비즈모아 (BizMoa)</a></li>
               <li><a href="#dailo" class="hover:text-white transition-colors">다일로 (Dailo)</a></li>
+            </ul>
+          </div>
+          <div>
+            <p class="text-white font-semibold mb-3 text-xs uppercase tracking-wider">소식</p>
+            <ul class="space-y-2">
+              <li><a href="news.html" data-menu="news" class="hover:text-white transition-colors">뉴스</a></li>
+              <li><a href="downloads.html" data-menu="downloads" class="hover:text-white transition-colors">자료실</a></li>
+              <li><a href="portfolio.html" data-menu="portfolio" class="hover:text-white transition-colors">포트폴리오</a></li>
             </ul>
           </div>
           <div>
@@ -1615,11 +1681,12 @@
 
       <!-- 하단: 사업자 정보 -->
       <div class="pt-7 flex flex-col md:flex-row justify-between items-start gap-4">
-        <div class="text-xs text-slate-600 space-y-1.5 leading-relaxed">
+        <div class="text-xs text-slate-400 space-y-1.5 leading-relaxed">
           <p><span class="text-slate-500 font-medium">상호</span> &nbsp;지에스엘티(GSLT) &nbsp;|&nbsp; <span
+              class="text-slate-500 font-medium">대표자</span> &nbsp;최광수 &nbsp;|&nbsp; <span
               class="text-slate-500 font-medium">사업자등록번호</span> &nbsp;707-81-03107</p>
-          <p><span class="text-slate-500 font-medium">주소</span> &nbsp;경기도 평택시 고덕면 도시지원1길 52, 101동 1042호 (해창리, 에이스)</p>
-          <p><span class="text-slate-500 font-medium">Tel</span> &nbsp;010-2905-0655 &nbsp;|&nbsp; <span
+          <p><span class="text-slate-500 font-medium">주소</span> &nbsp;경기도 성남시 중원구 둔촌대로 388번길 24, 우림라이온스밸리 3차 501호</p>
+          <p><span class="text-slate-500 font-medium">Tel</span> &nbsp;070-4659-4804 &nbsp;|&nbsp; <span
               class="text-slate-500 font-medium">Email</span> &nbsp;<a href="mailto:gs7078103107@gmail.com"
               class="hover:text-white transition-colors">gs7078103107@gmail.com</a></p>
         </div>
@@ -1649,7 +1716,7 @@
             <h2 id="modal-title" class="text-2xl font-bold text-slate-900 tracking-tight">무료 상담 신청</h2>
             <p class="text-sm text-slate-500 mt-1">전문가가 24시간 내에 연락드립니다.</p>
           </div>
-          <button onclick="closeContactModal()"
+          <button onclick="closeContactModal()" aria-label="닫기"
             class="text-slate-400 hover:text-slate-700 transition-colors ml-4 mt-0.5" aria-label="닫기">
             <iconify-icon icon="solar:close-circle-bold" class="text-2xl"></iconify-icon>
           </button>
@@ -1695,8 +1762,14 @@
         </div>
 
         <!-- Status Message -->
-        <div id="cf-status" class="hidden text-sm font-medium px-4 py-3 rounded-xl"></div>
+        <div id="cf-status" role="status" aria-live="polite" class="hidden text-sm font-medium px-4 py-3 rounded-xl"></div>
 
+        <label class="flex items-start gap-2.5 cursor-pointer select-none text-sm text-slate-600">
+          <input type="checkbox" id="cf-privacy" required class="mt-0.5 w-4 h-4 accent-[#28b8c5] shrink-0">
+          <span class="break-keep">개인정보 수집·이용에 동의합니다.
+            <button type="button" onclick="openPrivacyModal()" class="underline text-slate-500 hover:text-slate-800">처리방침 보기</button>
+          </span>
+        </label>
         <button type="submit" id="cf-submit"
           class="w-full flex items-center justify-center gap-3 bg-gslt-500 text-white py-4 rounded-xl font-bold text-base hover:bg-gslt-600 active:scale-[0.98] transition-all duration-300">
           <iconify-icon icon="solar:letter-bold" class="text-lg"></iconify-icon>
@@ -1721,7 +1794,7 @@
           <h2 class="text-2xl font-bold text-slate-900">서비스 이용약관</h2>
           <p class="text-sm text-slate-500 mt-1">최종 업데이트: 2025년 1월 1일</p>
         </div>
-        <button onclick="closeTermsModal()" class="text-slate-400 hover:text-slate-700 transition-colors ml-4">
+        <button onclick="closeTermsModal()" aria-label="닫기" class="text-slate-400 hover:text-slate-700 transition-colors ml-4">
           <iconify-icon icon="solar:close-circle-bold" class="text-2xl"></iconify-icon>
         </button>
       </div>
@@ -1760,7 +1833,7 @@
           <p class="break-keep">서비스 이용과 관련하여 분쟁이 발생한 경우, 회사와 이용자는 원만한 해결을 위해 성실히 협의합니다. 협의가 이루어지지 않을 경우, 관할 법원은 회사 소재지를
             관할하는 법원으로 합니다.</p>
         </div>
-        <p class="text-slate-400 text-xs pt-4 border-t border-slate-100">문의: gs7078103107@gmail.com · Tel. 010-2905-0655
+        <p class="text-slate-400 text-xs pt-4 border-t border-slate-100">문의: gs7078103107@gmail.com · Tel. 070-4659-4804
         </p>
       </div>
     </div>
@@ -1776,7 +1849,7 @@
           <h2 class="text-2xl font-bold text-slate-900">개인정보 처리방침</h2>
           <p class="text-sm text-slate-500 mt-1">최종 업데이트: 2025년 1월 1일</p>
         </div>
-        <button onclick="closePrivacyModal()" class="text-slate-400 hover:text-slate-700 transition-colors ml-4">
+        <button onclick="closePrivacyModal()" aria-label="닫기" class="text-slate-400 hover:text-slate-700 transition-colors ml-4">
           <iconify-icon icon="solar:close-circle-bold" class="text-2xl"></iconify-icon>
         </button>
       </div>
@@ -1818,7 +1891,7 @@
           <h3 class="font-bold text-slate-900 mb-2">6. 개인정보 보호책임자</h3>
           <p>성명: GSLT 개인정보 담당자</p>
           <p>이메일: gs7078103107@gmail.com</p>
-          <p>Tel: 010-2905-0655</p>
+          <p>Tel: 070-4659-4804</p>
         </div>
         <p class="text-slate-400 text-xs pt-4 border-t border-slate-100">본 방침은 2025년 1월 1일부터 시행됩니다.</p>
       </div>
@@ -1835,13 +1908,13 @@
           <h2 class="text-2xl font-bold text-slate-900">고객 지원</h2>
           <p class="text-sm text-slate-500 mt-1">무엇이든 도와드리겠습니다.</p>
         </div>
-        <button onclick="closeSupportModal()" class="text-slate-400 hover:text-slate-700 transition-colors ml-4">
+        <button onclick="closeSupportModal()" aria-label="닫기" class="text-slate-400 hover:text-slate-700 transition-colors ml-4">
           <iconify-icon icon="solar:close-circle-bold" class="text-2xl"></iconify-icon>
         </button>
       </div>
       <div class="px-8 py-7 space-y-5">
         <!-- 연락처 카드들 -->
-        <a href="tel:010-2905-0655"
+        <a href="tel:070-4659-4804"
           class="flex items-center gap-4 p-4 rounded-2xl border border-slate-200 hover:border-slate-900 hover:bg-slate-50 transition-all group">
           <div
             class="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 text-xl group-hover:bg-slate-900 group-hover:text-white transition-all shrink-0">
@@ -1849,7 +1922,7 @@
           </div>
           <div>
             <p class="font-bold text-slate-900 text-sm">전화 문의</p>
-            <p class="text-slate-500 text-sm">010-2905-0655</p>
+            <p class="text-slate-500 text-sm">070-4659-4804</p>
             <p class="text-slate-400 text-xs mt-0.5">평일 09:00 – 18:00</p>
           </div>
           <iconify-icon icon="solar:arrow-right-linear"
@@ -1876,7 +1949,7 @@
             <iconify-icon icon="solar:map-point-bold-duotone" class="text-slate-500 text-lg"></iconify-icon>
             <p class="font-bold text-slate-900 text-sm">오시는 길</p>
           </div>
-          <p class="text-slate-500 text-sm leading-relaxed break-keep">경기도 평택시 고덕면 도시지원1길 52<br>101동 1042호 (해창리, 에이스)
+          <p class="text-slate-500 text-sm leading-relaxed break-keep">경기도 성남시 중원구 둔촌대로 388번길 24<br>우림라이온스밸리 3차 501호
           </p>
         </div>
 
@@ -1890,40 +1963,36 @@
   </div>
 
   <script>
-    function openContactModal() {
-      document.getElementById('contact-modal').classList.remove('hidden');
+    /* ── 모달 공통: 포커스 이동·트랩·복귀 (WCAG 2.4.3 / 2.1.2) ── */
+    let modalTrigger = null;
+
+    function openModal(id) {
+      modalTrigger = document.activeElement;
+      const modal = document.getElementById(id);
+      modal.classList.remove('hidden');
       document.body.style.overflow = 'hidden';
+      const focusables = modal.querySelectorAll('button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])');
+      if (focusables.length) focusables[0].focus();
     }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+      document.body.style.overflow = '';
+      if (modalTrigger && document.body.contains(modalTrigger)) modalTrigger.focus();
+      modalTrigger = null;
+    }
+
+    function openContactModal() { openModal('contact-modal'); }
     function closeContactModal() {
-      document.getElementById('contact-modal').classList.add('hidden');
-      document.body.style.overflow = '';
-      const status = document.getElementById('cf-status');
-      status.classList.add('hidden');
+      closeModal('contact-modal');
+      document.getElementById('cf-status').classList.add('hidden');
     }
-    function openTermsModal() {
-      document.getElementById('terms-modal').classList.remove('hidden');
-      document.body.style.overflow = 'hidden';
-    }
-    function closeTermsModal() {
-      document.getElementById('terms-modal').classList.add('hidden');
-      document.body.style.overflow = '';
-    }
-    function openPrivacyModal() {
-      document.getElementById('privacy-modal').classList.remove('hidden');
-      document.body.style.overflow = 'hidden';
-    }
-    function closePrivacyModal() {
-      document.getElementById('privacy-modal').classList.add('hidden');
-      document.body.style.overflow = '';
-    }
-    function openSupportModal() {
-      document.getElementById('support-modal').classList.remove('hidden');
-      document.body.style.overflow = 'hidden';
-    }
-    function closeSupportModal() {
-      document.getElementById('support-modal').classList.add('hidden');
-      document.body.style.overflow = '';
-    }
+    function openTermsModal() { openModal('terms-modal'); }
+    function closeTermsModal() { closeModal('terms-modal'); }
+    function openPrivacyModal() { openModal('privacy-modal'); }
+    function closePrivacyModal() { closeModal('privacy-modal'); }
+    function openSupportModal() { openModal('support-modal'); }
+    function closeSupportModal() { closeModal('support-modal'); }
 
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') {
@@ -1931,7 +2000,22 @@
         closeTermsModal();
         closePrivacyModal();
         closeSupportModal();
+        return;
       }
+      // Tab 포커스 트랩: 열린 모달 안에서 순환
+      if (e.key !== 'Tab') return;
+      const open = ['contact-modal', 'terms-modal', 'privacy-modal', 'support-modal']
+        .map(id => document.getElementById(id))
+        .find(m => m && !m.classList.contains('hidden'));
+      if (!open) return;
+      const focusables = [...open.querySelectorAll('button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])')]
+        .filter(el => el.offsetParent !== null);
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      else if (!open.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
     });
 
     async function submitContactForm(e) {
@@ -2179,6 +2263,19 @@
       mq.addEventListener('change', e => e.matches ? start() : stop());
     })();
 
+    /* ─── 히어로 라인 리빌 종료 후 클리핑 해제 ─── */
+    (function () {
+      document.querySelectorAll('#hero .hero-line-inner').forEach(inner => {
+        const line = inner.closest('.hero-line');
+        if (!line) return;
+        inner.addEventListener('animationend', () => line.classList.add('revealed'), { once: true });
+      });
+      // 애니메이션이 실행되지 않는 환경(reduced-motion 등) 대비
+      setTimeout(() => {
+        document.querySelectorAll('#hero .hero-line').forEach(l => l.classList.add('revealed'));
+      }, 3000);
+    })();
+
     /* ─── 앵커 이동 보정 ───
        lazy 이미지가 로드되며 레이아웃이 밀리면 앵커 도착 위치가 어긋난다.
        이동 완료 후 목표 섹션 상단으로 위치를 재보정한다. */
@@ -2239,7 +2336,7 @@
 
     /* ─── 화면 밖 영상 자동 일시정지 (CPU/배터리 절약) ─── */
     (function () {
-      const vids = document.querySelectorAll('video[autoplay]');
+      const vids = document.querySelectorAll('video[autoplay], video[data-autoplay]');
       if (!vids.length || !('IntersectionObserver' in window)) return;
       const obs = new IntersectionObserver(entries => {
         entries.forEach(en => {
@@ -2333,7 +2430,7 @@
         'hero': 'img/gslt-logo-white.png',
         'siot': 'img/siot_logo_white.png',
         'dailo': 'img/dailo-logo.png',
-        'bizmoa': 'img/bizmoaLogo2.png'
+        'bizmoa': 'img/bizmoaLogo2-nav.png'
       };
 
       window.addEventListener('scroll', () => {
@@ -2407,11 +2504,37 @@
           if (navCta)     navCta.className = ctaBase;
           hideAllBrands();
         }
+
+        // 모바일 네비 행 텍스트 색을 데스크톱 링크와 동기화
+        const navLinksMobile = document.getElementById('nav-links-mobile');
+        if (navLinksMobile) {
+          const dark = navLinks.className.includes('text-slate-300');
+          navLinksMobile.classList.toggle('text-slate-300', dark);
+          navLinksMobile.classList.toggle('text-slate-600', !dark);
+        }
       });
 
       // Apply correct nav state on initial load
       window.dispatchEvent(new Event('scroll'));
     });
+  </script>
+
+  <!-- 게시판 메뉴 노출 설정 (관리자 설정에 따라 표시/숨김) — 초기 렌더를 막지 않도록 유휴 시점에 로드 -->
+  <script type="module">
+    const loadMenus = () => import('./assets/site.js').then(m => m.applyMenuVisibility()).catch(() => { });
+    if ('requestIdleCallback' in window) requestIdleCallback(loadMenus, { timeout: 4000 });
+    else setTimeout(loadMenus, 2500);
+  </script>
+
+  <!-- 서브페이지 푸터에서 ?open= 파라미터로 모달 열기 -->
+  <script>
+    (function () {
+      const open = new URLSearchParams(location.search).get('open');
+      if (!open) return;
+      const map = { terms: 'openTermsModal', privacy: 'openPrivacyModal', support: 'openSupportModal', contact: 'openContactModal' };
+      const fn = map[open];
+      if (fn && typeof window[fn] === 'function') setTimeout(() => window[fn](), 300);
+    })();
   </script>
 </body>
 
