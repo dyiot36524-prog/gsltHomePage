@@ -226,6 +226,25 @@
       color: transparent;
     }
 
+    /* 연혁 타임라인: 현재 연도 노드 펄스 */
+    .tl-now::after {
+      content: '';
+      position: absolute;
+      inset: -7px;
+      border-radius: 999px;
+      border: 2px solid rgba(245, 158, 11, 0.5);
+      animation: tlPulse 2.4s ease-out infinite;
+    }
+
+    @keyframes tlPulse {
+      0% { transform: scale(0.5); opacity: 1; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .tl-now::after { animation: none; }
+    }
+
     /* Siot scroll-pin: line-mask reveal (JS-driven) */
     .siot-line {
       display: block;
@@ -1484,8 +1503,8 @@
           </h2>
         </div>
         <div class="lg:w-1/2 animate-on-scroll" style="transition-delay:150ms;">
-          <p class="text-slate-500 text-lg leading-relaxed break-keep pt-2 lg:pt-16">지에스엘티(GSLT)는 스마트 공간 솔루션 시옷과 하이브리드
-            워크스페이스 다일로를 통해, 기업이 일하는 방식과 머무는 공간을 동시에 혁신합니다. 소규모 오피스부터 대형 복합시설까지, 모든 공간에 지능을 더합니다.</p>
+          <p class="text-slate-500 text-lg leading-relaxed break-keep pt-2 lg:pt-16">지에스엘티(GSLT)는 무선 IoT 구축 솔루션 시옷, 시공 견적 자동화
+            비즈모아, AI 워크스페이스 다일로로 일하는 방식과 머무는 공간을 동시에 혁신합니다. 소규모 오피스부터 대형 복합시설까지, 모든 공간에 지능을 더합니다.</p>
           <!-- 핵심 수치 -->
           <div class="grid grid-cols-3 gap-6 mt-10">
             <div>
@@ -1494,7 +1513,7 @@
               <p class="text-sm text-slate-500 font-medium">설립</p>
             </div>
             <div>
-              <p class="text-3xl font-black text-slate-900 mb-1">2<span
+              <p class="text-3xl font-black text-slate-900 mb-1">3<span
                   class="text-base font-medium text-slate-400 ml-1">개</span></p>
               <p class="text-sm text-slate-500 font-medium">핵심 솔루션</p>
             </div>
@@ -1507,114 +1526,80 @@
         </div>
       </div>
 
-      <!-- 연혁 타임라인
-           ─────────────────────────────────────────────────────────
-           아래 timeline-item 블록을 복사해서 연도별로 채워주세요.
-           data-year="연도", .tl-title에 사건명, .tl-desc에 설명
-           ───────────────────────────────────────────────────────── -->
+      <!-- 성과 & 연혁 (Milestones) -->
       <div class="animate-on-scroll">
         <div class="flex items-center gap-4 mb-10">
-          <h3 class="text-2xl font-bold text-slate-900">연혁</h3>
+          <h3 class="text-2xl font-bold text-slate-900">성과와 걸어온 길</h3>
           <div class="flex-1 h-px bg-slate-200"></div>
-          <span class="text-xs text-slate-400 font-medium uppercase tracking-wider">History</span>
+          <span class="text-xs text-slate-400 font-medium uppercase tracking-wider">Milestones</span>
         </div>
 
-        <div class="relative">
-          <!-- 수직 선 -->
-          <div class="absolute left-[7.5rem] top-0 bottom-0 w-px bg-slate-200 hidden md:block"></div>
-
-          <div class="space-y-0" id="timeline">
-
-            <!-- 2023 설립 -->
-            <div class="timeline-item flex flex-col md:flex-row gap-4 md:gap-0 group">
-              <div class="md:w-[7.5rem] shrink-0 pt-5 pr-6 text-right hidden md:block">
-                <span class="text-sm font-bold text-slate-900 bg-white px-2 relative z-10">2023</span>
-              </div>
-              <div
-                class="md:pl-10 pb-10 md:border-l-0 border-l-2 border-slate-200 pl-5 relative md:before:content-[''] md:before:absolute md:before:left-[-4.5px] md:before:top-[22px] md:before:w-2.5 md:before:h-2.5 md:before:rounded-full md:before:bg-siot-500 md:before:border-2 md:before:border-white md:before:shadow-sm">
-                <span class="md:hidden text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 block">2023</span>
-                <p class="tl-title font-bold text-slate-900 text-base mb-1">지에스엘티(GSLT) 설립</p>
-                <p class="tl-desc text-slate-500 text-sm leading-relaxed break-keep">스마트 공간 솔루션 및 디지털 워크스페이스 전문 기업으로 창업.
-                  시옷(Siot) 개발 착수.</p>
-              </div>
+        <!-- 성과 하이라이트 3카드 -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+          <!-- 포브스 대상 -->
+          <div class="relative overflow-hidden rounded-3xl bg-[#0a0a0f] p-8 group">
+            <span
+              class="absolute -top-6 -right-2 text-[6.5rem] font-black tracking-tighter leading-none text-amber-400/10 select-none pointer-events-none">1st</span>
+            <div
+              class="absolute -bottom-24 -left-12 w-64 h-64 bg-amber-500 rounded-full blur-[110px] opacity-20 group-hover:opacity-40 transition-opacity duration-700 pointer-events-none">
             </div>
+            <p class="relative text-[11px] font-bold tracking-[0.25em] uppercase text-amber-400 mb-7">Forbes Korea ·
+              2026</p>
+            <p class="relative text-2xl font-black leading-snug break-keep text-white mb-3">포브스 코리아<br>대상 수상</p>
+            <p class="relative text-sm text-white/50 break-keep">'무선 IoT 기반 스마트 공간' 부문 대상</p>
+            <span
+              class="relative mt-7 inline-flex px-3.5 py-1.5 rounded-full border border-amber-400/40 text-amber-300 text-[11px] font-bold tracking-[0.2em] uppercase">Grand
+              Prize</span>
+          </div>
+          <!-- 디딤돌 R&D -->
+          <div
+            class="relative overflow-hidden rounded-3xl bg-white border border-slate-200/70 p-8 group hover:shadow-xl hover:-translate-y-1 transition-all duration-500">
+            <span
+              class="absolute -top-6 -right-2 text-[6.5rem] font-black tracking-tighter leading-none text-blue-600/10 select-none pointer-events-none">R&D</span>
+            <p class="text-[11px] font-bold tracking-[0.25em] uppercase text-blue-600 mb-7">중소벤처기업부 · 2026</p>
+            <p class="text-2xl font-black leading-snug break-keep text-slate-900 mb-3">디딤돌 R&D<br>국책과제 선정</p>
+            <p class="text-sm text-slate-500 break-keep">창업성장기술개발사업 — 무선 IoT 스마트 공간 기술 고도화</p>
+            <span
+              class="mt-7 inline-flex px-3.5 py-1.5 rounded-full border border-blue-200 bg-blue-50 text-blue-600 text-[11px] font-bold tracking-[0.2em] uppercase">Selected</span>
+          </div>
+          <!-- 초기창업패키지 -->
+          <div
+            class="relative overflow-hidden rounded-3xl bg-white border border-slate-200/70 p-8 group hover:shadow-xl hover:-translate-y-1 transition-all duration-500">
+            <span
+              class="absolute -top-6 -right-2 text-[6.5rem] font-black tracking-tighter leading-none text-emerald-600/10 select-none pointer-events-none">SEED</span>
+            <p class="text-[11px] font-bold tracking-[0.25em] uppercase text-emerald-600 mb-7">중소벤처기업부 · 2025</p>
+            <p class="text-2xl font-black leading-snug break-keep text-slate-900 mb-3">초기창업패키지<br>선발 · 졸업</p>
+            <p class="text-sm text-slate-500 break-keep">기술 고도화·사업화 지원 프로그램 수행 완료</p>
+            <span
+              class="mt-7 inline-flex px-3.5 py-1.5 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-600 text-[11px] font-bold tracking-[0.2em] uppercase">Graduated</span>
+          </div>
+        </div>
 
-            <!-- 2025 초기창업패키지 -->
-            <div class="timeline-item flex flex-col md:flex-row gap-4 md:gap-0 group">
-              <div class="md:w-[7.5rem] shrink-0 pt-5 pr-6 text-right hidden md:block">
-                <span class="text-sm font-bold text-slate-900 bg-white px-2 relative z-10">2025</span>
-              </div>
-              <div
-                class="md:pl-10 pb-10 md:border-l-0 border-l-2 border-slate-200 pl-5 relative md:before:content-[''] md:before:absolute md:before:left-[-4.5px] md:before:top-[22px] md:before:w-2.5 md:before:h-2.5 md:before:rounded-full md:before:bg-siot-500 md:before:border-2 md:before:border-white md:before:shadow-sm">
-                <span class="md:hidden text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 block">2025</span>
-                <div class="flex items-center gap-2 mb-1">
-                  <p class="tl-title font-bold text-slate-900 text-base">초기창업패키지 선발</p>
-                  <span
-                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-bold uppercase tracking-wide">
-                    <iconify-icon icon="solar:medal-ribbons-star-bold-duotone" class="text-xs"></iconify-icon>
-                    선발
-                  </span>
-                </div>
-                <p class="tl-desc text-slate-500 text-sm leading-relaxed break-keep">중소벤처기업부 초기창업패키지 프로그램 선발. 기술 고도화 및
-                  사업화 지원.</p>
-              </div>
+        <!-- 가로 타임라인 -->
+        <div id="tl-wrap" class="relative">
+          <div class="hidden md:block absolute top-[10px] left-1 right-1 h-0.5 bg-slate-200 rounded overflow-hidden">
+            <div id="tl-progress" class="h-full w-0 bg-gradient-to-r from-gslt-400 via-blue-500 to-amber-400"
+              style="transition:width 1.6s cubic-bezier(0.16,1,0.3,1)"></div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-6">
+            <div class="relative md:pt-12">
+              <div class="hidden md:block absolute top-0 left-0 w-[22px] h-[22px] rounded-full bg-white border-[3px] border-gslt-400 shadow-sm"></div>
+              <p class="text-5xl font-black text-slate-200/80 leading-none mb-3 select-none">2023</p>
+              <p class="font-bold text-slate-900 mb-1">지에스엘티(GSLT) 설립</p>
+              <p class="text-sm text-slate-500 break-keep">스마트 공간 솔루션 기업으로 창업, 시옷(Siot) 개발 착수</p>
             </div>
-
-            <!-- 2026 R&D + Forbes 수상 -->
-            <div class="timeline-item flex flex-col md:flex-row gap-4 md:gap-0 group">
-              <div class="md:w-[7.5rem] shrink-0 pt-5 pr-6 text-right hidden md:block">
-                <span class="text-sm font-bold text-siot-600 bg-white px-2 relative z-10">2026</span>
-              </div>
-              <div
-                class="md:pl-10 pb-2 md:border-l-0 border-l-2 border-slate-200 pl-5 relative md:before:content-[''] md:before:absolute md:before:left-[-5px] md:before:top-[20px] md:before:w-3 md:before:h-3 md:before:rounded-full md:before:bg-siot-500 md:before:border-2 md:before:border-white md:before:shadow-md">
-                <span class="md:hidden text-xs font-bold text-siot-500 uppercase tracking-wider mb-2 block">2026 ·
-                  현재</span>
-
-                <!-- R&D 선발 -->
-                <div class="mb-5">
-                  <div class="flex items-center gap-2 mb-1">
-                    <p class="tl-title font-bold text-slate-900 text-base">창업성장기술개발사업 R&D 선발</p>
-                    <span
-                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-[10px] font-bold uppercase tracking-wide">
-                      <iconify-icon icon="solar:medal-ribbons-star-bold-duotone" class="text-xs"></iconify-icon>
-                      선발
-                    </span>
-                  </div>
-                  <p class="tl-desc text-slate-500 text-sm leading-relaxed break-keep">중소벤처기업부 창업성장기술개발사업(디딤돌R&D) 선정. 무선
-                    IoT 기반 스마트 공간 기술 고도화 지원.</p>
-                </div>
-
-                <!-- Forbes 수상 -->
-                <div
-                  class="p-4 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 relative overflow-hidden">
-                  <div
-                    class="absolute top-0 right-0 opacity-5 leading-none pointer-events-none select-none text-amber-400">
-                    <iconify-icon icon="solar:star-bold" style="font-size:7rem"></iconify-icon>
-                  </div>
-                  <div class="flex items-start gap-3 relative z-10">
-                    <div
-                      class="w-9 h-9 rounded-xl bg-amber-100 border border-amber-200 flex items-center justify-center shrink-0">
-                      <iconify-icon icon="solar:cup-star-bold-duotone" class="text-amber-600 text-lg"></iconify-icon>
-                    </div>
-                    <div>
-                      <div class="flex items-center gap-2 mb-1 flex-wrap">
-                        <p class="font-black text-slate-900 text-base">포브스 코리아 대상 수상</p>
-                        <span
-                          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 border border-amber-300 text-amber-700 text-[10px] font-bold uppercase tracking-wide">
-                          <iconify-icon icon="solar:star-bold" class="text-xs"></iconify-icon>
-                          Award
-                        </span>
-                      </div>
-                      <p class="text-slate-600 text-sm leading-relaxed break-keep font-medium">'무선 IoT 기반 스마트 공간' 부문 대상
-                      </p>
-                      <p class="text-slate-400 text-xs mt-1">Forbes Korea · 2026</p>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
+            <div class="relative md:pt-12">
+              <div class="hidden md:block absolute top-0 left-0 w-[22px] h-[22px] rounded-full bg-white border-[3px] border-emerald-400 shadow-sm"></div>
+              <p class="text-5xl font-black text-slate-200/80 leading-none mb-3 select-none">2025</p>
+              <p class="font-bold text-slate-900 mb-1">초기창업패키지 선발</p>
+              <p class="text-sm text-slate-500 break-keep">중소벤처기업부 프로그램 수행 후 졸업</p>
             </div>
-
+            <div class="relative md:pt-12">
+              <div class="tl-now hidden md:block absolute top-0 left-0 w-[22px] h-[22px] rounded-full bg-amber-400 border-[3px] border-white shadow-md"></div>
+              <p class="text-5xl font-black text-amber-200 leading-none mb-3 select-none">2026</p>
+              <p class="font-bold text-slate-900 mb-1">디딤돌 R&D 선정 · 포브스 코리아 대상</p>
+              <p class="text-sm text-slate-500 break-keep">국책과제 선정과 대상 수상을 함께 이룬 해</p>
+            </div>
           </div>
         </div>
       </div>
@@ -2305,6 +2290,17 @@
           card.style.transform = 'perspective(1200px) rotateX(0deg) rotateY(0deg)';
         });
       });
+    })();
+
+    /* ─── 연혁 타임라인 라인 드로우 ─── */
+    (function () {
+      const bar = document.getElementById('tl-progress');
+      const wrap = document.getElementById('tl-wrap');
+      if (!bar || !wrap || !('IntersectionObserver' in window)) return;
+      const obs = new IntersectionObserver(es => es.forEach(e => {
+        if (e.isIntersecting) { bar.style.width = '100%'; obs.disconnect(); }
+      }), { threshold: 0.3 });
+      obs.observe(wrap);
     })();
 
     /* ─── 숫자 카운트업 (뷰포트 진입 시 1회) ─── */
