@@ -76,6 +76,7 @@
           class="shrink-0 px-4 py-2 rounded-full border border-slate-200 text-slate-500 text-xs font-bold hover:border-gslt-400 hover:text-gslt-600 transition-all">링크
           복사</button>
       </div>
+      <div id="tags" class="hidden flex-wrap gap-2 -mt-4 mb-8"></div>
       <div id="thumb-wrap" class="hidden mb-10">
         <img id="thumb" src="" alt="" class="w-full h-auto rounded-2xl border border-slate-200/70">
       </div>
@@ -109,7 +110,7 @@
 
   <script type="module">
     import { app, db, renderHeader, renderFooter, fetchPosts, formatDate, escapeHtml, CATEGORY_LABEL } from './assets/site.js';
-    import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+    import { doc, getDoc, updateDoc, increment } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
     import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
     renderFooter();
@@ -163,11 +164,32 @@
       renderHeader(post.category === 'portfolio' ? 'portfolio'
         : post.category === 'downloads' ? 'downloads' : 'news');
 
+      // 조회수 +1 (게시글만, 같은 브라우저 세션 중복 방지)
+      if (post.published !== false) {
+        try {
+          if (!sessionStorage.getItem('viewed-' + id)) {
+            await updateDoc(doc(db, 'posts', id), { views: increment(1) });
+            sessionStorage.setItem('viewed-' + id, '1');
+            post.views = (post.views || 0) + 1;
+          }
+        } catch (e) { /* 규칙 미적용·오프라인 등 — 조회수는 부가 기능 */ }
+      }
+
       document.title = `${post.title} - GSLT`;
       document.getElementById('cat-label').textContent = CATEGORY_LABEL[post.category] || '';
       document.getElementById('title').textContent = post.title;
-      document.getElementById('date').textContent = formatDate(post.createdAt);
+      document.getElementById('date').textContent = formatDate(post.createdAt)
+        + (post.views ? ` · 조회 ${Number(post.views).toLocaleString('ko-KR')}` : '');
       document.getElementById('back-link').href = listPage;
+
+      // 태그
+      if (Array.isArray(post.tags) && post.tags.length) {
+        const t = document.getElementById('tags');
+        t.innerHTML = post.tags.map(x =>
+          `<span class="px-3 py-1 rounded-full bg-gslt-50 border border-gslt-200 text-gslt-700 text-xs font-semibold">${escapeHtml(x)}</span>`).join('');
+        t.classList.remove('hidden');
+        t.classList.add('flex');
+      }
 
       if (post.thumbnail) {
         const th = document.getElementById('thumb');

@@ -120,6 +120,28 @@ export function renderHeader(active = '') {
   applyMenuVisibility(el);
 }
 
+/* ─── 스크롤 투 탑 버튼 (전 페이지 공통) ─── */
+export function initScrollTop() {
+  if (document.getElementById('scroll-top-btn')) return;
+  const btn = document.createElement('button');
+  btn.id = 'scroll-top-btn';
+  btn.setAttribute('aria-label', '맨 위로');
+  btn.textContent = 'TOP';
+  btn.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:40;width:48px;height:48px;'
+    + 'border-radius:999px;background:rgba(255,255,255,.95);border:1px solid #e2e8f0;'
+    + 'box-shadow:0 4px 16px rgba(0,0,0,.12);font-size:11px;font-weight:800;letter-spacing:.08em;'
+    + 'color:#475569;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .3s;';
+  btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  document.body.appendChild(btn);
+  const onScroll = () => {
+    const show = window.scrollY > 600;
+    btn.style.opacity = show ? '1' : '0';
+    btn.style.pointerEvents = show ? 'auto' : 'none';
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+}
+
 /* ─── 서브페이지 공통 푸터 ─── */
 export function renderFooter() {
   const el = document.getElementById('site-footer');
@@ -173,4 +195,5 @@ export function renderFooter() {
     </div>
   </footer>`;
   applyMenuVisibility(el);
+  initScrollTop();
 }

@@ -2575,7 +2575,9 @@
 
   <!-- 게시판 메뉴 노출 설정 (관리자 설정에 따라 표시/숨김) — 초기 렌더를 막지 않도록 유휴 시점에 로드 -->
   <script type="module">
-    const loadMenus = () => import('./assets/site.js').then(m => m.applyMenuVisibility()).catch(() => { });
+    const loadMenus = () => import('./assets/site.js')
+      .then(m => { m.applyMenuVisibility(); m.initScrollTop(); })
+      .catch(() => { });
     if ('requestIdleCallback' in window) requestIdleCallback(loadMenus, { timeout: 4000 });
     else setTimeout(loadMenus, 2500);
   </script>

@@ -67,6 +67,10 @@
 
     <!-- 목록 -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="mb-8">
+        <input id="news-search" type="search" placeholder="소식 검색"
+          class="w-full max-w-sm px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm outline-none focus:border-gslt-400">
+      </div>
       <div id="featured"></div>
       <div id="grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
       <div id="empty" class="hidden py-24 text-center text-slate-400">
@@ -135,13 +139,33 @@
       </a>`;
     }
 
+    let filtered = null; // null = 검색 없음
+
+    function currentList() {
+      return filtered !== null ? filtered : posts.slice(1);
+    }
+
     function renderMore() {
-      const rest = posts.slice(1);
+      const rest = currentList();
       const next = rest.slice(shown, shown + PAGE);
       grid.insertAdjacentHTML('beforeend', next.map(card).join(''));
       shown += next.length;
       moreWrap.classList.toggle('hidden', shown >= rest.length);
+      if (filtered !== null && !filtered.length) {
+        grid.innerHTML = '<p class="col-span-full py-16 text-center text-slate-400 text-sm">검색 결과가 없습니다.</p>';
+      }
     }
+
+    document.getElementById('news-search').addEventListener('input', e => {
+      const q = e.target.value.trim().toLowerCase();
+      filtered = q
+        ? posts.filter(p => (p.title || '').toLowerCase().includes(q) || (p.excerpt || '').toLowerCase().includes(q))
+        : null;
+      featured.classList.toggle('hidden', !!q);
+      grid.innerHTML = '';
+      shown = 0;
+      renderMore();
+    });
 
     (async () => {
       let failed = false;

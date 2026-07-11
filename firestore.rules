@@ -14,7 +14,13 @@ service cloud.firestore {
     // 게시글: 방문자는 게시된 글만 읽기, 쓰기는 관리자만
     match /posts/{id} {
       allow read: if resource.data.published == true || isAdmin();
-      allow create, update, delete: if isAdmin();
+      allow create, delete: if isAdmin();
+      // 방문자는 게시된 글의 조회수(views)만 정확히 +1 가능
+      allow update: if isAdmin() || (
+        resource.data.published == true
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views'])
+        && request.resource.data.views == resource.data.get('views', 0) + 1
+      );
     }
 
     // 사이트 설정(메뉴 노출): 누구나 읽기, 쓰기는 관리자만

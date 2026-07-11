@@ -67,6 +67,7 @@
 
     <!-- 목록 -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div id="tag-filter" class="hidden flex-wrap gap-2 mb-8"></div>
       <div id="grid" class="grid grid-cols-1 md:grid-cols-2 gap-8"></div>
       <div id="empty" class="hidden py-24 text-center text-slate-400">
         <p class="text-lg font-semibold mb-1">등록된 시공사례가 없습니다</p>
@@ -115,11 +116,40 @@
       </a>`;
     }
 
+    let activeTag = null;
+
+    function currentList() {
+      return activeTag
+        ? posts.filter(p => Array.isArray(p.tags) && p.tags.includes(activeTag))
+        : posts;
+    }
+
     function renderMore() {
-      const next = posts.slice(shown, shown + PAGE);
+      const list = currentList();
+      const next = list.slice(shown, shown + PAGE);
       grid.insertAdjacentHTML('beforeend', next.map(card).join(''));
       shown += next.length;
-      moreWrap.classList.toggle('hidden', shown >= posts.length);
+      moreWrap.classList.toggle('hidden', shown >= list.length);
+    }
+
+    function renderTagChips() {
+      const tags = [...new Set(posts.flatMap(p => Array.isArray(p.tags) ? p.tags : []))];
+      if (!tags.length) return;
+      const el = document.getElementById('tag-filter');
+      el.classList.remove('hidden');
+      el.classList.add('flex');
+      const chip = (label, val) =>
+        `<button data-tag="${escapeHtml(val || '')}" class="tag-chip px-4 py-2 rounded-full border text-sm font-bold transition-all ${activeTag === val
+          ? 'bg-slate-900 text-white border-slate-900'
+          : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'}">${escapeHtml(label)}</button>`;
+      el.innerHTML = chip('전체', null) + tags.map(t => chip(t, t)).join('');
+      el.querySelectorAll('.tag-chip').forEach(b => b.addEventListener('click', () => {
+        activeTag = b.dataset.tag || null;
+        grid.innerHTML = '';
+        shown = 0;
+        renderTagChips();
+        renderMore();
+      }));
     }
 
     (async () => {
@@ -135,6 +165,7 @@
         empty.classList.remove('hidden');
         return;
       }
+      renderTagChips();
       renderMore();
       document.getElementById('more-btn').addEventListener('click', renderMore);
     })();

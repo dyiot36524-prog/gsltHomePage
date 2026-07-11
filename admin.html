@@ -122,6 +122,10 @@
             <label class="block text-xs font-bold text-slate-500 mb-1.5">요약 (목록 카드에 표시)</label>
             <input id="f-excerpt" class="field" placeholder="한두 문장 요약">
           </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1.5">태그 (쉼표로 구분 — 포트폴리오 필터·글 상단에 표시)</label>
+            <input id="f-tags" class="field" placeholder="예: 스마트오피스, 성남, 조명 제어">
+          </div>
           <div id="thumb-section">
             <label class="block text-xs font-bold text-slate-500 mb-1.5">대표 이미지</label>
             <div class="flex gap-2">
@@ -381,6 +385,7 @@
       $('editor-title').textContent = (id ? '글 수정' : '새 글 작성') + ' — ' + CATEGORY_LABEL[currentTab];
       $('f-title').value = p.title || '';
       $('f-excerpt').value = p.excerpt || '';
+      $('f-tags').value = Array.isArray(p.tags) ? p.tags.join(', ') : '';
       $('f-thumbnail').value = p.thumbnail || '';
       updateThumbPreview();
       $('f-published').checked = p.published !== false;
@@ -484,6 +489,7 @@
         excerpt: $('f-excerpt').value.trim(),
         body,
         thumbnail: $('f-thumbnail').value.trim(),
+        tags: $('f-tags').value.split(',').map(s => s.trim()).filter(Boolean),
         attachments,
         published: $('f-published').checked,
         pinned: $('f-pinned').checked,
