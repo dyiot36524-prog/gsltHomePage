@@ -124,7 +124,7 @@ function snapshotPage(p) {
 <meta property="og:title" content="${escHtml(p.title)}">
 <meta property="og:description" content="${escHtml(desc)}">
 <meta property="og:url" content="${url}">
-${p.thumbnail ? `<meta property="og:image" content="${escHtml(absolute(p.thumbnail))}">` : ''}
+<meta property="og:image" content="${escHtml(p.thumbnail ? absolute(p.thumbnail) : `${BASE_URL}/img/og-image.png`)}">
 <meta property="og:locale" content="ko_KR">
 <script type="application/ld+json">${JSON.stringify(ld)}</script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-dynamic-subset.min.css">
@@ -188,6 +188,7 @@ ${files.length ? `<div class="files">${files.map(f => `<a href="${escHtml(absolu
 function buildSitemap(posts) {
   const staticPages = [
     { loc: `${BASE_URL}/`, priority: '1.0', changefreq: 'weekly' },
+    { loc: `${BASE_URL}/about.html`, priority: '0.8', changefreq: 'monthly' },
     { loc: `${BASE_URL}/news.html`, priority: '0.8', changefreq: 'weekly' },
     { loc: `${BASE_URL}/portfolio.html`, priority: '0.8', changefreq: 'weekly' },
     { loc: `${BASE_URL}/downloads.html`, priority: '0.6', changefreq: 'monthly' }

@@ -99,6 +99,7 @@ export function renderHeader(active = '') {
       </a>
       <div class="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-10 text-sm font-bold">
         ${link('index.html', 'home', '홈')}
+        ${link('about.html', 'about', '회사소개')}
         ${link('news.html', 'news', '뉴스')}
         ${link('downloads.html', 'downloads', '자료실')}
         ${link('portfolio.html', 'portfolio', '포트폴리오')}
@@ -111,6 +112,7 @@ export function renderHeader(active = '') {
     <div class="md:hidden border-t border-slate-100 bg-white/95">
       <div class="flex items-center gap-6 px-4 py-2.5 text-sm font-bold overflow-x-auto whitespace-nowrap">
         ${link('index.html', 'home', '홈')}
+        ${link('about.html', 'about', '회사소개')}
         ${link('news.html', 'news', '뉴스')}
         ${link('downloads.html', 'downloads', '자료실')}
         ${link('portfolio.html', 'portfolio', '포트폴리오')}
