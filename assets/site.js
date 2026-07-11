@@ -163,9 +163,9 @@ export function renderFooter() {
           <div>
             <p class="text-white font-semibold mb-3 text-xs uppercase tracking-wider">솔루션</p>
             <ul class="space-y-2">
-              <li><a href="index.html#siot" class="hover:text-white transition-colors">시옷 (Siot)</a></li>
-              <li><a href="index.html#bizmoa" class="hover:text-white transition-colors">비즈모아 (BizMoa)</a></li>
-              <li><a href="index.html#dailo" class="hover:text-white transition-colors">다일로 (Dailo)</a></li>
+              <li><a href="siot.html" class="hover:text-white transition-colors">시옷 (Siot)</a></li>
+              <li><a href="bizmoa.html" class="hover:text-white transition-colors">비즈모아 (BizMoa)</a></li>
+              <li><a href="dailo.html" class="hover:text-white transition-colors">다일로 (Dailo)</a></li>
             </ul>
           </div>
           <div>

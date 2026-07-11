@@ -189,6 +189,9 @@ function buildSitemap(posts) {
   const staticPages = [
     { loc: `${BASE_URL}/`, priority: '1.0', changefreq: 'weekly' },
     { loc: `${BASE_URL}/about.html`, priority: '0.8', changefreq: 'monthly' },
+    { loc: `${BASE_URL}/siot.html`, priority: '0.9', changefreq: 'monthly' },
+    { loc: `${BASE_URL}/bizmoa.html`, priority: '0.9', changefreq: 'monthly' },
+    { loc: `${BASE_URL}/dailo.html`, priority: '0.9', changefreq: 'monthly' },
     { loc: `${BASE_URL}/news.html`, priority: '0.8', changefreq: 'weekly' },
     { loc: `${BASE_URL}/portfolio.html`, priority: '0.8', changefreq: 'weekly' },
     { loc: `${BASE_URL}/downloads.html`, priority: '0.6', changefreq: 'monthly' }
@@ -247,9 +250,9 @@ function buildLlms(posts) {
 
 ## 솔루션
 
-- [시옷 (Siot)](${BASE_URL}/#siot): 배선 공사 없는 무선 IoT로 조명·블라인드·공조를 통합 제어하는 스마트 공간 솔루션. 1초 단위 실시간 모니터링, 99.9% 제어 안정성, 상황별 장면 모드 프리셋.
-- [비즈모아 (BizMoa)](${BASE_URL}/#bizmoa): 건축 도면 위에 장비를 배치하면 견적서·계약서·납품확인서가 자동 생성되는 시공·설치업체용 올인원 B2B SaaS. 인건비 자동 산출, 프로젝트·권한 관리 포함.
-- [다일로 (Dailo)](${BASE_URL}/#dailo): 문서와 채팅을 결합해 대화를 지식으로 바꾸는 AI 워크스페이스. 토픽 기반 업무 프로세스와 AI 어시스턴트 제공.
+- [시옷 (Siot)](${BASE_URL}/siot.html): 배선 공사 없는 무선 IoT로 조명·블라인드·공조를 통합 제어하는 스마트 공간 솔루션. 1초 단위 실시간 모니터링, 99.9% 제어 안정성, 상황별 장면 모드 프리셋.
+- [비즈모아 (BizMoa)](${BASE_URL}/bizmoa.html): 건축 도면 위에 장비를 배치하면 견적서·계약서·납품확인서가 자동 생성되는 시공·설치업체용 올인원 B2B SaaS. 인건비 자동 산출, 프로젝트·권한 관리 포함.
+- [다일로 (Dailo)](${BASE_URL}/dailo.html): 문서와 채팅을 결합해 대화를 지식으로 바꾸는 AI 워크스페이스. 토픽 기반 업무 프로세스와 AI 어시스턴트 제공.
 ${section('news', '최근 소식')}${section('portfolio', '시공사례 (포트폴리오)')}${section('downloads', '자료실')}
 ## 페이지
 
