@@ -29,3 +29,4 @@ package.json
 package-lock.json
 # 모락 플레이스토어 원본 폴더 (로컬 보관, img/morak-*로 복사해 사용)
 모락 플레이스토어 이미지*/
+img/모락이미지/
