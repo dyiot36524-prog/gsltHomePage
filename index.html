@@ -239,29 +239,31 @@
     /* 모락 폰 프레임 (토스 스타일 목업) */
     .phone-frame {
       position: relative;
-      border-radius: 2.6rem;
-      background: #0b1220;
-      padding: 28px 12px 20px;
-      box-shadow: 0 30px 60px -15px rgba(2, 6, 23, 0.35), inset 0 0 0 2px rgba(255, 255, 255, 0.05);
+      border-radius: 3rem;
+      background: #0b0f1a;
+      padding: 11px;
+      box-shadow: 0 30px 60px -15px rgba(2, 6, 23, 0.4), inset 0 0 0 2px rgba(255, 255, 255, 0.08);
     }
 
+    /* 다이내믹 아일랜드 */
     .phone-frame::before {
       content: '';
       position: absolute;
-      top: 12px;
+      top: 20px;
       left: 50%;
       transform: translateX(-50%);
-      width: 26%;
-      height: 6px;
-      background: #263243;
+      width: 30%;
+      height: 20px;
+      background: #0b0f1a;
       border-radius: 999px;
+      z-index: 2;
     }
 
     .phone-frame img {
       display: block;
       width: 100%;
       height: auto;
-      border-radius: 1.6rem;
+      border-radius: 2.3rem;
     }
 
     /* 모락 오빗 비주얼 */
@@ -1532,10 +1534,10 @@
           </div>
           <div class="relative z-10 flex items-center">
             <div class="phone-frame w-[160px] md:w-[210px] -rotate-6 translate-x-5 md:translate-x-8">
-              <img width="520" height="1090" src="img/morak-screen-home.png" alt="모락 홈 대시보드 — 주간 하이라이트와 통합 캘린더" loading="lazy">
+              <img width="520" height="1153" src="img/morak-screen-home.png" alt="모락 홈 대시보드 — 주간 하이라이트와 통합 캘린더" loading="lazy">
             </div>
             <div class="phone-frame w-[180px] md:w-[240px] rotate-3 -translate-x-4 z-10">
-              <img width="520" height="1090" src="img/morak-screen-groups.png" alt="모락 내 모임 — 커버·기수 뱃지·다가오는 일정" loading="lazy">
+              <img width="520" height="1153" src="img/morak-screen-groups.png" alt="모락 내 모임 — 커버·기수 뱃지·다가오는 일정" loading="lazy">
             </div>
           </div>
         </div>
@@ -1547,7 +1549,7 @@
         <div class="animate-on-scroll grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
           <div class="flex justify-center">
             <div class="phone-frame w-[250px] md:w-[300px] animate-float">
-              <img width="520" height="1090" src="img/morak-screen-groups.png" alt="모락 내 모임 화면 — 커버 카드, 역할·기수 뱃지, 다가오는 일정" loading="lazy">
+              <img width="520" height="1153" src="img/morak-screen-groups.png" alt="모락 내 모임 화면 — 커버 카드, 역할·기수 뱃지, 다가오는 일정" loading="lazy">
             </div>
           </div>
           <div class="text-center md:text-left">
@@ -1562,7 +1564,7 @@
         <div class="animate-on-scroll grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
           <div class="flex justify-center md:order-2">
             <div class="phone-frame w-[250px] md:w-[300px] animate-float" style="animation-delay:-2s;">
-              <img width="520" height="1032" src="img/morak-screen-space.png" alt="모락 모임 공간 화면 — 멤버·일정·검색·관리와 통계" loading="lazy">
+              <img width="520" height="1090" src="img/morak-screen-space.png" alt="모락 모임 공간 화면 — 멤버·일정·검색·관리와 통계" loading="lazy">
             </div>
           </div>
           <div class="text-center md:text-left md:order-1">
@@ -1577,7 +1579,7 @@
         <div class="animate-on-scroll grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
           <div class="flex justify-center">
             <div class="phone-frame w-[250px] md:w-[300px] animate-float" style="animation-delay:-4s;">
-              <img width="520" height="1090" src="img/morak-screen-members.png" alt="모락 멤버 관리 화면 — 명함 저장과 연락처 내보내기" loading="lazy">
+              <img width="520" height="1153" src="img/morak-screen-members.png" alt="모락 멤버 관리 화면 — 명함 저장과 연락처 내보내기" loading="lazy">
             </div>
           </div>
           <div class="text-center md:text-left">
@@ -1592,7 +1594,7 @@
         <div class="animate-on-scroll grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
           <div class="flex justify-center md:order-2">
             <div class="phone-frame w-[250px] md:w-[300px] animate-float" style="animation-delay:-3s;">
-              <img width="520" height="1090" src="img/morak-screen-chat.png" alt="모락 채팅 화면 — 기수·직책 뱃지가 보이는 대화 목록" loading="lazy">
+              <img width="520" height="1153" src="img/morak-screen-chat.png" alt="모락 채팅 화면 — 기수·직책 뱃지가 보이는 대화 목록" loading="lazy">
             </div>
           </div>
           <div class="text-center md:text-left md:order-1">
