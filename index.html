@@ -236,6 +236,34 @@
       color: transparent;
     }
 
+    /* 모락 폰 프레임 (토스 스타일 목업) */
+    .phone-frame {
+      position: relative;
+      border-radius: 2.6rem;
+      background: #0b1220;
+      padding: 28px 12px 20px;
+      box-shadow: 0 30px 60px -15px rgba(2, 6, 23, 0.35), inset 0 0 0 2px rgba(255, 255, 255, 0.05);
+    }
+
+    .phone-frame::before {
+      content: '';
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 26%;
+      height: 6px;
+      background: #263243;
+      border-radius: 999px;
+    }
+
+    .phone-frame img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 1.6rem;
+    }
+
     /* 모락 오빗 비주얼 */
     .orbit-ring { animation: orbitSpin 26s linear infinite; }
     .orbit-ring-r { animation: orbitSpin 18s linear infinite reverse; }
@@ -1503,67 +1531,76 @@
             </div>
           </div>
           <div class="relative z-10 flex items-center">
-            <img width="560" height="1088" src="img/morak-app-home.png" alt="모락 홈 대시보드 — 주간 하이라이트와 통합 캘린더"
-              class="w-[160px] md:w-[210px] h-auto rounded-[1.6rem] shadow-xl border border-slate-200/60 -rotate-6 translate-x-5 md:translate-x-8"
-              loading="lazy">
-            <img width="560" height="1088" src="img/morak-app-groups.png" alt="모락 내 모임 — 커버·기수 뱃지·다가오는 일정"
-              class="w-[180px] md:w-[240px] h-auto rounded-[1.6rem] shadow-2xl border border-slate-200/60 rotate-3 -translate-x-4 relative z-10"
-              loading="lazy">
+            <div class="phone-frame w-[160px] md:w-[210px] -rotate-6 translate-x-5 md:translate-x-8">
+              <img width="520" height="1090" src="img/morak-screen-home.png" alt="모락 홈 대시보드 — 주간 하이라이트와 통합 캘린더" loading="lazy">
+            </div>
+            <div class="phone-frame w-[180px] md:w-[240px] rotate-3 -translate-x-4 z-10">
+              <img width="520" height="1090" src="img/morak-screen-groups.png" alt="모락 내 모임 — 커버·기수 뱃지·다가오는 일정" loading="lazy">
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- 기능 상세 -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-20 md:mt-28">
-        <div class="animate-on-scroll group bg-slate-50 rounded-3xl border border-slate-200/60 overflow-hidden hover:shadow-xl transition-all duration-500">
-          <div class="h-52 overflow-hidden px-6 pt-6">
-            <img width="560" height="1088" src="img/morak-app-groups.png" alt="모락 내 모임 화면"
-              class="w-full h-auto rounded-t-[1.3rem] border border-slate-200/60 shadow-md group-hover:-translate-y-2 transition-transform duration-700" loading="lazy">
+      <!-- 기능 상세 (교차 배치) -->
+      <div class="space-y-24 md:space-y-32 mt-24 md:mt-36">
+
+        <div class="animate-on-scroll grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
+          <div class="flex justify-center">
+            <div class="phone-frame w-[250px] md:w-[300px] animate-float">
+              <img width="520" height="1090" src="img/morak-screen-groups.png" alt="모락 내 모임 화면 — 커버 카드, 역할·기수 뱃지, 다가오는 일정" loading="lazy">
+            </div>
           </div>
-          <div class="p-6 pt-5">
-            <p class="text-[11px] font-black tracking-widest text-morak-600 uppercase mb-2">Groups</p>
-            <p class="font-bold text-lg mb-2 break-keep">내 모임 한눈에</p>
-            <p class="text-sm text-slate-500 break-keep leading-relaxed">가입한 모임이 커버 사진과 함께 카드로 정리됩니다.
-              오너·임원 역할과 기수 뱃지, 다가오는 일정 날짜까지 카드에서 바로 보입니다.</p>
-          </div>
-        </div>
-        <div class="animate-on-scroll group bg-slate-50 rounded-3xl border border-slate-200/60 overflow-hidden hover:shadow-xl transition-all duration-500"
-          style="transition-delay:100ms;">
-          <div class="h-52 overflow-hidden px-6 pt-6">
-            <img width="560" height="1061" src="img/morak-app-space.png" alt="모락 모임 공간 화면"
-              class="w-full h-auto rounded-t-[1.3rem] border border-slate-200/60 shadow-md group-hover:-translate-y-2 transition-transform duration-700" loading="lazy">
-          </div>
-          <div class="p-6 pt-5">
-            <p class="text-[11px] font-black tracking-widest text-morak-600 uppercase mb-2">Space</p>
-            <p class="font-bold text-lg mb-2 break-keep">모임마다 하나의 공간</p>
-            <p class="text-sm text-slate-500 break-keep leading-relaxed">멤버·일정·검색·관리 메뉴와 공지·자유·자기소개 게시판을
-              갖춘 전용 공간. 멤버 수, 기수, 창립연도, 활동률 통계가 한눈에 잡힙니다.</p>
+          <div class="text-center md:text-left">
+            <p class="text-[11px] font-black tracking-[0.25em] text-morak-600 uppercase mb-4">Groups</p>
+            <h3 class="text-3xl md:text-4xl font-black break-keep leading-tight mb-5">내 모임,<br>한눈에 정리됩니다</h3>
+            <p class="text-slate-500 text-base md:text-lg leading-relaxed break-keep max-w-md mx-auto md:mx-0">가입한 모임이 커버 사진과 함께
+              카드로 쌓입니다. 오너·임원 역할과 기수 뱃지, 다가오는 일정 날짜까지 카드에서 바로 확인하고,
+              관심사·지역으로 새로운 모임도 찾아볼 수 있습니다.</p>
           </div>
         </div>
-        <div class="animate-on-scroll group bg-slate-50 rounded-3xl border border-slate-200/60 overflow-hidden hover:shadow-xl transition-all duration-500"
-          style="transition-delay:200ms;">
-          <div class="h-52 overflow-hidden px-6 pt-6">
-            <img width="560" height="1088" src="img/morak-app-members.png" alt="모락 멤버·명함 관리 화면"
-              class="w-full h-auto rounded-t-[1.3rem] border border-slate-200/60 shadow-md group-hover:-translate-y-2 transition-transform duration-700" loading="lazy">
+
+        <div class="animate-on-scroll grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
+          <div class="flex justify-center md:order-2">
+            <div class="phone-frame w-[250px] md:w-[300px] animate-float" style="animation-delay:-2s;">
+              <img width="520" height="1032" src="img/morak-screen-space.png" alt="모락 모임 공간 화면 — 멤버·일정·검색·관리와 통계" loading="lazy">
+            </div>
           </div>
-          <div class="p-6 pt-5">
-            <p class="text-[11px] font-black tracking-widest text-morak-600 uppercase mb-2">Members</p>
-            <p class="font-bold text-lg mb-2 break-keep">명함이 인맥이 되는 멤버 관리</p>
-            <p class="text-sm text-slate-500 break-keep leading-relaxed">모임에서 받은 명함과 인맥을 한곳에서 검색·관리합니다.
-              전화·이메일·주소를 저장하고 내 폰 연락처로 바로 내보낼 수 있습니다.</p>
+          <div class="text-center md:text-left md:order-1">
+            <p class="text-[11px] font-black tracking-[0.25em] text-morak-600 uppercase mb-4">Space</p>
+            <h3 class="text-3xl md:text-4xl font-black break-keep leading-tight mb-5">모임마다<br>하나의 공간이 생깁니다</h3>
+            <p class="text-slate-500 text-base md:text-lg leading-relaxed break-keep max-w-md mx-auto md:mx-0">멤버·일정·검색·관리 메뉴와
+              공지·자유·자기소개 게시판을 갖춘 전용 공간. 멤버 수, 기수, 창립연도, 활동률 통계가
+              모임 첫 화면에서 한눈에 잡힙니다.</p>
           </div>
         </div>
-        <div class="animate-on-scroll group bg-slate-50 rounded-3xl border border-slate-200/60 overflow-hidden hover:shadow-xl transition-all duration-500"
-          style="transition-delay:300ms;">
-          <div class="h-52 overflow-hidden px-6 pt-6">
-            <img width="560" height="1088" src="img/morak-app-chat.png" alt="모락 기수 채팅 화면"
-              class="w-full h-auto rounded-t-[1.3rem] border border-slate-200/60 shadow-md group-hover:-translate-y-2 transition-transform duration-700" loading="lazy">
+
+        <div class="animate-on-scroll grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
+          <div class="flex justify-center">
+            <div class="phone-frame w-[250px] md:w-[300px] animate-float" style="animation-delay:-4s;">
+              <img width="520" height="1090" src="img/morak-screen-members.png" alt="모락 멤버 관리 화면 — 명함 저장과 연락처 내보내기" loading="lazy">
+            </div>
           </div>
-          <div class="p-6 pt-5">
-            <p class="text-[11px] font-black tracking-widest text-morak-600 uppercase mb-2">Chat</p>
-            <p class="font-bold text-lg mb-2 break-keep">기수가 보이는 채팅</p>
-            <p class="text-sm text-slate-500 break-keep leading-relaxed">대화 상대 이름 옆에 "12기 · 회장" 같은 기수·직책 뱃지가
-              함께 보여, 누구와 이야기하는지 헷갈리지 않습니다. 1:1과 모임 단체방 지원.</p>
+          <div class="text-center md:text-left">
+            <p class="text-[11px] font-black tracking-[0.25em] text-morak-600 uppercase mb-4">Members</p>
+            <h3 class="text-3xl md:text-4xl font-black break-keep leading-tight mb-5">명함이 인맥이 되는<br>멤버 관리</h3>
+            <p class="text-slate-500 text-base md:text-lg leading-relaxed break-keep max-w-md mx-auto md:mx-0">모임에서 받은 명함과 인맥을
+              한곳에서 검색하고 관리합니다. 전화·이메일·주소를 저장하고, 필요하면 내 폰 연락처로
+              바로 내보낼 수 있습니다.</p>
+          </div>
+        </div>
+
+        <div class="animate-on-scroll grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
+          <div class="flex justify-center md:order-2">
+            <div class="phone-frame w-[250px] md:w-[300px] animate-float" style="animation-delay:-3s;">
+              <img width="520" height="1090" src="img/morak-screen-chat.png" alt="모락 채팅 화면 — 기수·직책 뱃지가 보이는 대화 목록" loading="lazy">
+            </div>
+          </div>
+          <div class="text-center md:text-left md:order-1">
+            <p class="text-[11px] font-black tracking-[0.25em] text-morak-600 uppercase mb-4">Chat</p>
+            <h3 class="text-3xl md:text-4xl font-black break-keep leading-tight mb-5">기수가 보이는<br>채팅</h3>
+            <p class="text-slate-500 text-base md:text-lg leading-relaxed break-keep max-w-md mx-auto md:mx-0">대화 상대 이름 옆에
+              "12기 · 회장" 같은 기수·직책 뱃지가 함께 보여, 누구와 이야기하는지 헷갈리지 않습니다.
+              1:1 대화와 모임 단체방을 모두 지원합니다.</p>
           </div>
         </div>
       </div>
