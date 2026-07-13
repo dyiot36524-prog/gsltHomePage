@@ -97,7 +97,33 @@ export function renderHeader(active = '') {
       <a href="index.html" class="flex items-center h-8 z-10">
         <img src="img/gslt-logo-color.png" alt="GSLT" class="h-full w-auto object-contain">
       </a>
-      <div class="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-10 text-sm font-bold">
+      <div class="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-9 text-sm font-bold text-slate-600">
+        <div class="relative group">
+          <button class="flex items-center gap-1 hover:text-gslt-600 transition-colors">
+            솔루션
+            <iconify-icon icon="solar:alt-arrow-down-linear" class="text-xs transition-transform duration-300 group-hover:rotate-180"></iconify-icon>
+          </button>
+          <div class="absolute left-1/2 -translate-x-1/2 top-full pt-4 opacity-0 invisible translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200">
+            <div class="w-72 bg-white rounded-2xl shadow-xl border border-slate-200/70 p-2">
+              <a href="siot.html" class="flex items-start gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-colors group/item">
+                <span class="mt-1.5 w-2 h-2 rounded-full shrink-0" style="background:#f97316"></span>
+                <span class="block"><span class="font-bold text-slate-900 group-hover/item:text-gslt-600 transition-colors">시옷 <span class="text-slate-400 font-medium text-xs">Siot</span></span><span class="block text-xs text-slate-500 mt-0.5">무선 IoT 통합 제어</span></span>
+              </a>
+              <a href="bizmoa.html" class="flex items-start gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-colors group/item">
+                <span class="mt-1.5 w-2 h-2 rounded-full shrink-0" style="background:#3b82f6"></span>
+                <span class="block"><span class="font-bold text-slate-900 group-hover/item:text-gslt-600 transition-colors">비즈모아 <span class="text-slate-400 font-medium text-xs">BizMoa</span></span><span class="block text-xs text-slate-500 mt-0.5">IoT 시공 견적 자동화 SaaS</span></span>
+              </a>
+              <a href="dailo.html" class="flex items-start gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-colors group/item">
+                <span class="mt-1.5 w-2 h-2 rounded-full shrink-0" style="background:#8b5cf6"></span>
+                <span class="block"><span class="font-bold text-slate-900 group-hover/item:text-gslt-600 transition-colors">다일로 <span class="text-slate-400 font-medium text-xs">Dailo</span></span><span class="block text-xs text-slate-500 mt-0.5">AI 지식 워크스페이스</span></span>
+              </a>
+              <a href="morak.html" class="flex items-start gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-colors group/item">
+                <span class="mt-1.5 w-2 h-2 rounded-full shrink-0" style="background:#00c2c2"></span>
+                <span class="block"><span class="font-bold text-slate-900 group-hover/item:text-gslt-600 transition-colors">모락 <span class="text-slate-400 font-medium text-xs">Morak</span></span><span class="block text-xs text-slate-500 mt-0.5">기수제 모임 커뮤니티</span></span>
+              </a>
+            </div>
+          </div>
+        </div>
         ${link('index.html', 'home', '홈')}
         ${link('about.html', 'about', '회사소개')}
         ${link('news.html', 'news', '뉴스')}
@@ -110,7 +136,12 @@ export function renderHeader(active = '') {
       </a>
     </div>
     <div class="md:hidden border-t border-slate-100 bg-white/95">
-      <div class="flex items-center gap-6 px-4 py-2.5 text-sm font-bold overflow-x-auto whitespace-nowrap">
+      <div class="flex items-center gap-5 px-4 py-2.5 text-sm font-bold overflow-x-auto whitespace-nowrap text-slate-600">
+        <a href="siot.html" class="hover:text-gslt-600 transition-colors">시옷</a>
+        <a href="bizmoa.html" class="hover:text-gslt-600 transition-colors">비즈모아</a>
+        <a href="dailo.html" class="hover:text-gslt-600 transition-colors">다일로</a>
+        <a href="morak.html" class="hover:text-gslt-600 transition-colors">모락</a>
+        <span class="w-px h-4 bg-slate-200 shrink-0"></span>
         ${link('index.html', 'home', '홈')}
         ${link('about.html', 'about', '회사소개')}
         ${link('news.html', 'news', '뉴스')}

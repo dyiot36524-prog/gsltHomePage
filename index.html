@@ -413,7 +413,34 @@
 
       <!-- Center: Links (Absolute Centering) -->
       <div id="nav-links"
-        class="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-10 text-sm font-bold text-slate-300 transition-colors duration-500">
+        class="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-9 text-sm font-bold text-slate-300 transition-colors duration-500">
+        <!-- 솔루션 드롭다운 -->
+        <div class="relative group">
+          <button class="flex items-center gap-1 hover:text-gslt-500 transition-colors">
+            솔루션
+            <iconify-icon icon="solar:alt-arrow-down-linear" class="text-xs transition-transform duration-300 group-hover:rotate-180"></iconify-icon>
+          </button>
+          <div class="absolute left-1/2 -translate-x-1/2 top-full pt-4 opacity-0 invisible translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200">
+            <div class="w-72 bg-white rounded-2xl shadow-xl border border-slate-200/70 p-2">
+              <a href="siot.html" class="flex items-start gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-colors group/item">
+                <span class="mt-1.5 w-2 h-2 rounded-full bg-siot-500 shrink-0"></span>
+                <span class="block"><span class="font-bold text-slate-900 group-hover/item:text-siot-600 transition-colors">시옷 <span class="text-slate-400 font-medium text-xs">Siot</span></span><span class="block text-xs text-slate-500 mt-0.5">무선 IoT 통합 제어</span></span>
+              </a>
+              <a href="bizmoa.html" class="flex items-start gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-colors group/item">
+                <span class="mt-1.5 w-2 h-2 rounded-full bg-bizmoa-500 shrink-0"></span>
+                <span class="block"><span class="font-bold text-slate-900 group-hover/item:text-bizmoa-600 transition-colors">비즈모아 <span class="text-slate-400 font-medium text-xs">BizMoa</span></span><span class="block text-xs text-slate-500 mt-0.5">IoT 시공 견적 자동화 SaaS</span></span>
+              </a>
+              <a href="dailo.html" class="flex items-start gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-colors group/item">
+                <span class="mt-1.5 w-2 h-2 rounded-full bg-dailo-500 shrink-0"></span>
+                <span class="block"><span class="font-bold text-slate-900 group-hover/item:text-dailo-600 transition-colors">다일로 <span class="text-slate-400 font-medium text-xs">Dailo</span></span><span class="block text-xs text-slate-500 mt-0.5">AI 지식 워크스페이스</span></span>
+              </a>
+              <a href="morak.html" class="flex items-start gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-colors group/item">
+                <span class="mt-1.5 w-2 h-2 rounded-full bg-morak-500 shrink-0"></span>
+                <span class="block"><span class="font-bold text-slate-900 group-hover/item:text-morak-600 transition-colors">모락 <span class="text-slate-400 font-medium text-xs">Morak</span></span><span class="block text-xs text-slate-500 mt-0.5">기수제 모임 커뮤니티</span></span>
+              </a>
+            </div>
+          </div>
+        </div>
         <a href="about.html" class="hover:text-gslt-500 transition-colors">회사소개</a>
         <a href="news.html" data-menu="news" class="hover:text-gslt-500 transition-colors">뉴스</a>
         <a href="downloads.html" data-menu="downloads" class="hover:text-gslt-500 transition-colors">자료실</a>
@@ -430,7 +457,12 @@
 
     <!-- 모바일 네비게이션 행 -->
     <div id="nav-links-mobile"
-      class="md:hidden flex items-center gap-6 px-4 pb-3 text-sm font-bold text-slate-300 overflow-x-auto whitespace-nowrap transition-colors duration-500">
+      class="md:hidden flex items-center gap-5 px-4 pb-3 text-sm font-bold text-slate-300 overflow-x-auto whitespace-nowrap transition-colors duration-500">
+      <a href="siot.html">시옷</a>
+      <a href="bizmoa.html">비즈모아</a>
+      <a href="dailo.html">다일로</a>
+      <a href="morak.html">모락</a>
+      <span class="w-px h-4 bg-current opacity-20 shrink-0"></span>
       <a href="about.html">회사소개</a>
       <a href="news.html" data-menu="news">뉴스</a>
       <a href="downloads.html" data-menu="downloads">자료실</a>
