@@ -11,7 +11,7 @@
  * 커스텀 도메인 연결 시 BASE_URL만 변경하면 된다.
  */
 import { marked } from 'marked';
-import { mkdirSync, rmSync, writeFileSync, existsSync } from 'node:fs';
+import { mkdirSync, rmSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
 
 const BASE_URL = 'https://home.gslt.kr';
 const PROJECT_ID = 'gslthomepage';
@@ -267,6 +267,19 @@ ${section('news', '최근 소식')}${section('portfolio', '시공사례 (포트�
 /* ── 실행 ── */
 const posts = await fetchPublishedPosts();
 console.log(`발행 글 ${posts.length}건 조회됨`);
+
+// 안전장치: 기존 스냅샷이 있는데 조회 결과가 0건이면 중단한다.
+// Firestore 장애·규칙 변경·네트워크 오류로 빈 배열이 오면 아래 rmSync가 스냅샷을
+// 전부 지우고, 워크플로가 그대로 커밋·푸시해 프로덕션까지 반영돼 버린다.
+// 글을 정말 전부 내린 경우라면 p/ 를 손으로 지우고 다시 실행하면 된다.
+const existing = existsSync('p') ? readdirSync('p').filter(f => f.endsWith('.html')).length : 0;
+if (posts.length === 0 && existing > 0) {
+  console.error(
+    `중단: 발행 글 0건인데 기존 스냅샷이 ${existing}건 있습니다. ` +
+    `조회 실패로 스냅샷이 전부 삭제되는 것을 막기 위해 아무것도 쓰지 않았습니다.`
+  );
+  process.exit(1);
+}
 
 // p/ 디렉터리는 매번 재생성 → 비공개/삭제 글 스냅샷 자동 제거
 if (existsSync('p')) rmSync('p', { recursive: true });

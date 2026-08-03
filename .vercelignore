@@ -1,8 +1,15 @@
 # Vercel CLI는 .vercelignore가 있으면 .gitignore를 더 이상 참고하지 않는다.
 # 따라서 .gitignore 규칙을 그대로 복제한 뒤, 사이트에 서빙할 필요 없는 것을 추가로 제외한다.
 # (img/ 에는 배포 대상이 아닌 원본 gif·webp가 550MB 넘게 있어 이 복제가 필수)
+#
+# ⚠️ macOS NFD 함정: APFS는 한글 파일명을 자모 분리(NFD)로 저장하는데, git은
+#    core.precomposeunicode=true 로 NFC 변환해 읽으므로 NFC 패턴이 먹는다.
+#    반면 Vercel CLI는 디스크 원본(NFD)을 그대로 읽어 NFC 패턴이 매칭되지 않는다.
+#    실제로 이 때문에 미추적 한글 파일 23건 34MB가 배포된 적이 있다.
+#    → 한글이 든 패턴은 NFC/NFD 두 형태를 모두 적는다. (아래 자동 생성 구간)
+#    Vercel을 GitHub 저장소에 연동하면 추적 파일만 배포되어 이 문제 자체가 사라진다.
 
-# ── .gitignore 사본 ──
+# ── .gitignore 사본 (NFC) ──
 .DS_Store
 img/.DS_Store
 .claude/
@@ -37,6 +44,20 @@ package-lock.json
 img/모락이미지/
 # 히어로 영상 원본 (키프레임 1개뿐이라 탐색 불가 — img/hero-scroll-*.mp4로 재인코딩해 사용)
 img/히어로.mp4
+.vercel
+
+# ── 위 규칙 중 한글 포함 항목의 NFD 형태 (macOS 디스크 실제 표기) ──
+오피스영상.mp4
+오피스영상2.mp4
+오피스영상3.mp4
+오피스영상4.mp4
+img/로고/
+img/오피스영상*.webp
+img/시옷*.png
+img/다일로*.png
+모락 플레이스토어 이미지*/
+img/모락이미지/
+img/히어로.mp4
 
 # ── 저장소에는 있지만 공개 서빙할 필요 없는 것 ──
 .git/
