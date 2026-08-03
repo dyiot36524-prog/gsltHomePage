@@ -13,7 +13,7 @@
 import { marked } from 'marked';
 import { mkdirSync, rmSync, writeFileSync, existsSync } from 'node:fs';
 
-const BASE_URL = 'https://dyiot36524-prog.github.io/gsltHomePage';
+const BASE_URL = 'https://home.gslt.kr';
 const PROJECT_ID = 'gslthomepage';
 const API_KEY = 'AIzaSyCjnuHSGhy97XOtoVC1fSwnGInLwVs1wok'; // 공개용 웹 API 키 (권한은 Firestore 규칙이 통제)
 

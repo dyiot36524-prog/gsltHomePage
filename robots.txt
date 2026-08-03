@@ -29,4 +29,4 @@ Allow: /
 User-agent: Yeti
 Allow: /
 
-Sitemap: https://dyiot36524-prog.github.io/gsltHomePage/sitemap.xml
+Sitemap: https://home.gslt.kr/sitemap.xml
