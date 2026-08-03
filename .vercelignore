@@ -1,3 +1,8 @@
+# Vercel CLI는 .vercelignore가 있으면 .gitignore를 더 이상 참고하지 않는다.
+# 따라서 .gitignore 규칙을 그대로 복제한 뒤, 사이트에 서빙할 필요 없는 것을 추가로 제외한다.
+# (img/ 에는 배포 대상이 아닌 원본 gif·webp가 550MB 넘게 있어 이 복제가 필수)
+
+# ── .gitignore 사본 ──
 .DS_Store
 img/.DS_Store
 .claude/
@@ -32,4 +37,15 @@ package-lock.json
 img/모락이미지/
 # 히어로 영상 원본 (키프레임 1개뿐이라 탐색 불가 — img/hero-scroll-*.mp4로 재인코딩해 사용)
 img/히어로.mp4
-.vercel
+
+# ── 저장소에는 있지만 공개 서빙할 필요 없는 것 ──
+.git/
+.github/
+docs/
+scripts/
+firestore.rules
+.gitignore
+.vercelignore
+
+# 아직 공개하지 않는 작업물
+amp/
