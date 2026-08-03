@@ -94,8 +94,8 @@
   <!-- Iconify -->
   <script src="https://code.iconify.design/iconify-icon/2.3.0/iconify-icon.min.js" defer></script>
 
-  <!-- WebGL Fluid Simulation (paint-flow hero effect) -->
-  <script src="https://cdn.jsdelivr.net/npm/webgl-fluid@0.4"></script>
+  <!-- 히어로 텍스트 초기 은닉 (JS 동작 시에만 — 미동작 시엔 그대로 노출) -->
+  <script>document.documentElement.classList.add('js-hero');</script>
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -179,41 +179,118 @@
       scroll-behavior: smooth;
     }
 
-    /* ─── Hero: line-mask reveal (craftedbygc style) ─── */
+    /* ─── Hero: 스크롤 연동 영상 스크럽 ───
+       #hero-track이 스크롤 구간(길이)을 만들고, .hero-stage가 그 안에 sticky로 고정된다.
+       스크롤 진행도(0~1)를 JS가 계산해 영상 currentTime과 텍스트 리빌을 함께 몰아준다.
+       주의: #hero / #hero-track에 overflow:hidden을 주면 sticky가 깨진다. */
+    #hero-track {
+      height: 380vh;
+    }
+
+    .hero-stage {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      height: 100svh;
+      overflow: hidden;
+    }
+
+    #hero-video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      background: #05070c;
+    }
+
+    /* 상단 네비 / 하단 스크롤 큐 가독성용 그라데이션 */
+    .hero-grade {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(to bottom,
+          rgba(5, 7, 12, .72) 0%, rgba(5, 7, 12, 0) 26%,
+          rgba(5, 7, 12, 0) 58%, rgba(5, 7, 12, .6) 100%);
+    }
+
+    /* 텍스트가 떠오를 때 영상을 눌러주는 암막 — JS가 opacity 제어.
+       왼쪽(텍스트)은 진하게, 오른쪽은 옅게 둬서 마지막 빌딩 컷이 배경으로 남게 한다. */
+    .hero-veil {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0;
+      background: linear-gradient(100deg,
+          rgba(5, 7, 12, .95) 0%, rgba(5, 7, 12, .88) 34%,
+          rgba(5, 7, 12, .62) 62%, rgba(5, 7, 12, .44) 100%);
+    }
+
+    /* 모바일은 텍스트가 화면 폭을 다 쓰므로 고르게 덮는다 */
+    @media (max-width: 767px) {
+      .hero-veil {
+        background: linear-gradient(180deg,
+            rgba(5, 7, 12, .9) 0%, rgba(5, 7, 12, .86) 55%, rgba(5, 7, 12, .9) 100%);
+      }
+    }
+
+    /* 라인 마스크 리빌 — --y를 JS가 스크롤 진행도로 밀어 넣는다 */
     .hero-line {
       display: block;
       overflow: hidden;
-      /* 리빌 중에는 좌우 여유를 둬 섀도우가 옆면에서 잘리지 않게 */
+      /* 리빌 중 섀도우가 옆면에서 잘리지 않게 좌우 여유 */
       padding-inline: 0.15em;
       margin-inline: -0.15em;
     }
 
-    /* 리빌이 끝나면 클리핑 해제 — 섀도우 각짐 방지 */
-    .hero-line.revealed {
-      overflow: visible;
-    }
-
     .hero-line-inner {
       display: block;
-      transform: translateY(120%);
-      animation: heroLineUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-      animation-delay: var(--d, 0s);
+      transform: translateY(var(--y, 0%));
     }
 
-    @keyframes heroLineUp {
-      to { transform: translateY(0); }
+    .hero-fade {
+      opacity: var(--o, 1);
+      transform: translateY(var(--y, 0px));
     }
 
-    .hero-reveal {
-      opacity: 0;
-      animation: heroFade 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-      animation-delay: var(--d, 0s);
+    /* JS 동작 시에만 초기 은닉 — JS가 없으면 그대로 보인다 */
+    .js-hero .hero-line-inner { --y: 110%; }
+    .js-hero .hero-fade { --o: 0; --y: 22px; }
+
+    /* 짧은 뷰포트(노트북·소형 폰)에서도 한 화면에 들어오도록 유동 타이포·여백 */
+    .hero-eyebrow { margin-bottom: clamp(.85rem, 2.6vh, 2.5rem); }
+
+    .hero-title {
+      font-size: clamp(1.9rem, min(6vw, 9.2vh), 5.25rem);
+      line-height: 1.08;
+      margin-bottom: clamp(.85rem, 2.8vh, 2.5rem);
     }
 
-    @keyframes heroFade {
-      from { opacity: 0; transform: translateY(24px); }
-      to { opacity: 1; transform: translateY(0); }
+    .hero-desc {
+      font-size: clamp(.8125rem, min(1.25vw, 2vh), 1.0625rem);
+      margin-bottom: clamp(.9rem, 3.2vh, 3rem);
     }
+
+    .hero-row { padding-block: clamp(.5rem, 1.8vh, 1.4rem); }
+    .hero-row-name { font-size: clamp(1rem, min(2vw, 3vh), 1.75rem); }
+
+    @media (max-width: 767px) {
+      #hero-track { height: 300vh; }
+    }
+
+    /* 스크럽 비활성(모션 최소화·JS 미동작): 마지막 장면 + 텍스트 즉시 노출 */
+    .hero-static #hero-track { height: auto; }
+
+    .hero-static .hero-stage {
+      position: relative;
+      height: auto;
+      min-height: 100svh;
+    }
+
+    .hero-static .hero-line-inner { --y: 0% !important; }
+    .hero-static .hero-fade { --o: 1 !important; --y: 0px !important; }
+    .hero-static .hero-veil { opacity: .82 !important; }
 
     /* Scroll indicator */
     .scroll-dash {
@@ -328,23 +405,16 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .hero-line {
-        overflow: visible;
-      }
-
-      .hero-line-inner,
-      .hero-reveal {
-        animation: none;
-        transform: none;
-        opacity: 1;
-      }
+      .hero-line { overflow: visible; }
+      .hero-line-inner { --y: 0% !important; }
+      .hero-fade { --o: 1 !important; --y: 0px !important; }
       .scroll-dash,
       .marquee-track {
         animation: none;
       }
     }
 
-    /* 히어로 텍스트: 밝은 물감 위에서도 가독성 확보 */
+    /* 히어로 텍스트: 밝은 영상 프레임 위에서도 가독성 확보 */
     .hero-shadow {
       text-shadow: 0 1px 2px rgba(4, 6, 12, 0.5), 0 3px 12px rgba(4, 6, 12, 0.55);
     }
@@ -471,102 +541,108 @@
     </div>
   </nav>
 
-  <!-- Hero Section -->
-  <section id="hero"
-    class="relative min-h-[100dvh] flex flex-col justify-center bg-[#0a0a0f] overflow-hidden pt-32 pb-28 px-4 sm:px-6 lg:px-8">
-    <div class="absolute inset-0 z-0">
-      <!-- Geometric particle canvas -->
-      <canvas id="hero-canvas" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
-      <div
-        class="absolute -top-40 -left-40 w-[38rem] h-[38rem] bg-dailo-600 rounded-full blur-[160px] opacity-[0.13] pointer-events-none">
-      </div>
-      <div
-        class="absolute -bottom-48 -right-40 w-[38rem] h-[38rem] bg-siot-600 rounded-full blur-[160px] opacity-[0.10] pointer-events-none">
-      </div>
-      <div
-        class="absolute top-1/3 left-1/2 w-[30rem] h-[30rem] bg-gslt-500 rounded-full blur-[150px] opacity-[0.10] pointer-events-none">
-      </div>
-    </div>
+  <!-- Hero Section — 스크롤에 따라 재생되는 스마트빌딩 필름 -->
+  <section id="hero" class="relative bg-[#05070c]">
+    <noscript>
+      <style>
+        #hero-track { height: auto; }
+        .hero-stage { position: relative; height: auto; min-height: 100svh; }
+        .hero-veil { opacity: .82; }
+      </style>
+    </noscript>
 
-    <div class="max-w-6xl mx-auto w-full relative z-10 hero-shadow">
-      <div class="hero-reveal flex items-center gap-4 mb-10" style="--d:.15s">
-        <span class="block w-12 h-px bg-gslt-400"></span>
-        <span class="text-[11px] md:text-xs font-semibold tracking-[0.35em] uppercase text-gslt-300/80">GSLT · IoT
-          Space Builder</span>
-      </div>
+    <div id="hero-track" class="relative">
+      <div class="hero-stage">
+        <video id="hero-video" poster="img/hero-poster.jpg" muted playsinline webkit-playsinline preload="auto"
+          disablepictureinpicture aria-hidden="true" tabindex="-1">
+          <source src="img/hero-scroll-720.mp4" type="video/mp4" media="(max-width: 767px)">
+          <source src="img/hero-scroll-1280.mp4" type="video/mp4">
+        </video>
 
-      <h1
-        class="font-black tracking-tight leading-[1.08] break-keep text-white text-[2.5rem] sm:text-6xl md:text-7xl lg:text-8xl xl:text-[6.75rem] mb-10">
-        <span class="hero-line"><span class="hero-line-inner" style="--d:.3s">오피스에서 빌딩까지,</span></span>
-        <span class="hero-line"><span class="hero-line-inner text-gslt-400" style="--d:.45s">공간을 IoT로
-            짓습니다.</span></span>
-      </h1>
+        <div class="hero-grade"></div>
+        <div class="hero-veil" id="hero-veil"></div>
 
-      <p class="hero-reveal max-w-2xl text-base md:text-lg text-white/50 leading-relaxed break-keep mb-16"
-        style="--d:.7s">
-        배선 공사 없는 무선 IoT 구축 <strong class="text-white font-semibold">시옷</strong>,
-        IoT 시공 견적 자동화 <strong class="text-white font-semibold">비즈모아</strong>,
-        대화를 지식으로 바꾸는 <strong class="text-white font-semibold">다일로</strong>,
-        모임을 연결하는 <strong class="text-white font-semibold">모락</strong>.
-        지에스엘티는 오피스·주거·빌딩, 모든 공간을 스마트 공간으로 완성하는 IoT 구축 전문기업입니다.
-      </p>
+        <div class="relative z-10 h-full flex flex-col justify-center px-4 sm:px-6 lg:px-8 pt-24 pb-16">
+          <div class="max-w-6xl mx-auto w-full hero-shadow">
+            <div class="hero-fade hero-eyebrow flex items-center gap-4" data-hero="eyebrow">
+              <span class="block w-12 h-px bg-gslt-400"></span>
+              <span class="text-[11px] md:text-xs font-semibold tracking-[0.35em] uppercase text-gslt-300/80">GSLT · IoT
+                Space Builder</span>
+            </div>
 
-      <div class="hero-reveal" style="--d:.9s">
-        <a href="#siot"
-          class="group flex items-center justify-between gap-4 py-5 md:py-6 border-t border-white/10">
-          <div class="flex items-baseline gap-4 md:gap-6 min-w-0">
-            <span class="text-xs font-semibold tracking-widest text-white/30">01</span>
-            <span
-              class="text-xl md:text-3xl font-bold text-white group-hover:text-siot-500 transition-colors duration-300">시옷
-              솔루션</span>
-            <span class="hidden sm:inline text-sm text-white/35 truncate">무선 IoT 구축 · 통합 제어</span>
+            <h1 class="hero-title font-black tracking-tight break-keep text-white">
+              <span class="hero-line"><span class="hero-line-inner" data-hero="line1">오피스에서 빌딩까지,</span></span>
+              <span class="hero-line"><span class="hero-line-inner text-gslt-400" data-hero="line2">공간을 IoT로
+                  짓습니다.</span></span>
+            </h1>
+
+            <p class="hero-fade hero-desc max-w-2xl text-white/55 leading-relaxed break-keep" data-hero="desc">
+              배선 공사 없는 무선 IoT 구축 <strong class="text-white font-semibold">시옷</strong>,
+              IoT 시공 견적 자동화 <strong class="text-white font-semibold">비즈모아</strong>,
+              대화를 지식으로 바꾸는 <strong class="text-white font-semibold">다일로</strong>,
+              모임을 연결하는 <strong class="text-white font-semibold">모락</strong>.
+              지에스엘티는 오피스·주거·빌딩, 모든 공간을 스마트 공간으로 완성하는 IoT 구축 전문기업입니다.
+            </p>
+
+            <div>
+              <a href="#siot" data-hero="row"
+                class="hero-fade hero-row group flex items-center justify-between gap-4 border-t border-white/10">
+                <div class="flex items-baseline gap-4 md:gap-6 min-w-0">
+                  <span class="text-xs font-semibold tracking-widest text-white/30">01</span>
+                  <span
+                    class="hero-row-name font-bold text-white group-hover:text-siot-500 transition-colors duration-300">시옷
+                    솔루션</span>
+                  <span class="hidden sm:inline text-sm text-white/35 truncate">무선 IoT 구축 · 통합 제어</span>
+                </div>
+                <iconify-icon icon="solar:arrow-right-up-linear"
+                  class="text-xl md:text-2xl text-white/30 group-hover:text-siot-500 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-300 shrink-0"></iconify-icon>
+              </a>
+              <a href="#bizmoa" data-hero="row"
+                class="hero-fade hero-row group flex items-center justify-between gap-4 border-t border-white/10">
+                <div class="flex items-baseline gap-4 md:gap-6 min-w-0">
+                  <span class="text-xs font-semibold tracking-widest text-white/30">02</span>
+                  <span
+                    class="hero-row-name font-bold text-white group-hover:text-bizmoa-500 transition-colors duration-300">비즈모아
+                    자동화</span>
+                  <span class="hidden sm:inline text-sm text-white/35 truncate">IoT 시공 견적 자동화 SaaS</span>
+                </div>
+                <iconify-icon icon="solar:arrow-right-up-linear"
+                  class="text-xl md:text-2xl text-white/30 group-hover:text-bizmoa-500 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-300 shrink-0"></iconify-icon>
+              </a>
+              <a href="#dailo" data-hero="row"
+                class="hero-fade hero-row group flex items-center justify-between gap-4 border-t border-white/10">
+                <div class="flex items-baseline gap-4 md:gap-6 min-w-0">
+                  <span class="text-xs font-semibold tracking-widest text-white/30">03</span>
+                  <span
+                    class="hero-row-name font-bold text-white group-hover:text-dailo-500 transition-colors duration-300">다일로
+                    워크스페이스</span>
+                  <span class="hidden sm:inline text-sm text-white/35 truncate">문서와 채팅의 결합, AI 지식 관리</span>
+                </div>
+                <iconify-icon icon="solar:arrow-right-up-linear"
+                  class="text-xl md:text-2xl text-white/30 group-hover:text-dailo-500 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-300 shrink-0"></iconify-icon>
+              </a>
+              <a href="#morak" data-hero="row"
+                class="hero-fade hero-row group flex items-center justify-between gap-4 border-t border-b border-white/10">
+                <div class="flex items-baseline gap-4 md:gap-6 min-w-0">
+                  <span class="text-xs font-semibold tracking-widest text-white/30">04</span>
+                  <span
+                    class="hero-row-name font-bold text-white group-hover:text-morak-400 transition-colors duration-300">모락
+                    커뮤니티</span>
+                  <span class="hidden sm:inline text-sm text-white/35 truncate">기수제 모임 플랫폼 · 디지털 명함</span>
+                </div>
+                <iconify-icon icon="solar:arrow-right-up-linear"
+                  class="text-xl md:text-2xl text-white/30 group-hover:text-morak-400 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-300 shrink-0"></iconify-icon>
+              </a>
+            </div>
           </div>
-          <iconify-icon icon="solar:arrow-right-up-linear"
-            class="text-xl md:text-2xl text-white/30 group-hover:text-siot-500 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-300 shrink-0"></iconify-icon>
-        </a>
-        <a href="#bizmoa"
-          class="group flex items-center justify-between gap-4 py-5 md:py-6 border-t border-white/10">
-          <div class="flex items-baseline gap-4 md:gap-6 min-w-0">
-            <span class="text-xs font-semibold tracking-widest text-white/30">02</span>
-            <span
-              class="text-xl md:text-3xl font-bold text-white group-hover:text-bizmoa-500 transition-colors duration-300">비즈모아
-              자동화</span>
-            <span class="hidden sm:inline text-sm text-white/35 truncate">IoT 시공 견적 자동화 SaaS</span>
-          </div>
-          <iconify-icon icon="solar:arrow-right-up-linear"
-            class="text-xl md:text-2xl text-white/30 group-hover:text-bizmoa-500 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-300 shrink-0"></iconify-icon>
-        </a>
-        <a href="#dailo"
-          class="group flex items-center justify-between gap-4 py-5 md:py-6 border-t border-white/10">
-          <div class="flex items-baseline gap-4 md:gap-6 min-w-0">
-            <span class="text-xs font-semibold tracking-widest text-white/30">03</span>
-            <span
-              class="text-xl md:text-3xl font-bold text-white group-hover:text-dailo-500 transition-colors duration-300">다일로
-              워크스페이스</span>
-            <span class="hidden sm:inline text-sm text-white/35 truncate">문서와 채팅의 결합, AI 지식 관리</span>
-          </div>
-          <iconify-icon icon="solar:arrow-right-up-linear"
-            class="text-xl md:text-2xl text-white/30 group-hover:text-dailo-500 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-300 shrink-0"></iconify-icon>
-        </a>
-        <a href="#morak"
-          class="group flex items-center justify-between gap-4 py-5 md:py-6 border-t border-b border-white/10">
-          <div class="flex items-baseline gap-4 md:gap-6 min-w-0">
-            <span class="text-xs font-semibold tracking-widest text-white/30">04</span>
-            <span
-              class="text-xl md:text-3xl font-bold text-white group-hover:text-morak-400 transition-colors duration-300">모락
-              커뮤니티</span>
-            <span class="hidden sm:inline text-sm text-white/35 truncate">기수제 모임 플랫폼 · 디지털 명함</span>
-          </div>
-          <iconify-icon icon="solar:arrow-right-up-linear"
-            class="text-xl md:text-2xl text-white/30 group-hover:text-morak-400 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-300 shrink-0"></iconify-icon>
-        </a>
-      </div>
-    </div>
+        </div>
 
-    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 hero-shadow pointer-events-none">
-      <div class="hero-reveal flex flex-col items-center gap-3" style="--d:1.4s">
-        <span class="text-[10px] font-semibold tracking-[0.35em] uppercase text-white/35">Scroll</span>
-        <span class="relative block w-px h-12 bg-white/15 overflow-hidden"><span class="scroll-dash"></span></span>
+        <div id="hero-cue" class="absolute bottom-7 left-1/2 -translate-x-1/2 z-10 hero-shadow pointer-events-none">
+          <div class="flex flex-col items-center gap-3">
+            <span class="text-[10px] font-semibold tracking-[0.35em] uppercase text-white/45">Scroll</span>
+            <span class="relative block w-px h-12 bg-white/15 overflow-hidden"><span class="scroll-dash"></span></span>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -2649,19 +2725,6 @@
       mq.addEventListener('change', e => e.matches ? start() : stop());
     })();
 
-    /* ─── 히어로 라인 리빌 종료 후 클리핑 해제 ─── */
-    (function () {
-      document.querySelectorAll('#hero .hero-line-inner').forEach(inner => {
-        const line = inner.closest('.hero-line');
-        if (!line) return;
-        inner.addEventListener('animationend', () => line.classList.add('revealed'), { once: true });
-      });
-      // 애니메이션이 실행되지 않는 환경(reduced-motion 등) 대비
-      setTimeout(() => {
-        document.querySelectorAll('#hero .hero-line').forEach(l => l.classList.add('revealed'));
-      }, 3000);
-    })();
-
     /* ─── 앵커 이동 보정 ───
        lazy 이미지가 로드되며 레이아웃이 밀리면 앵커 도착 위치가 어긋난다.
        이동 완료 후 목표 섹션 상단으로 위치를 재보정한다. */
@@ -2740,47 +2803,125 @@
 
   <!-- Scroll Animation Script -->
   <script>
-    /* ─── Hero Fluid Canvas (paint-flow effect) ─── */
+    /* ─── Hero: 스크롤 연동 영상 스크럽 ───
+       스크롤 진행도를 0~1 한 값으로 잡아 영상 재생 위치와 텍스트 리빌을 함께 몰아준다.
+       영상은 전 프레임 키프레임(-g 1)으로 인코딩돼 있어 currentTime 대입만으로 프레임 단위 탐색이 된다. */
     (function () {
-      const canvas = document.getElementById('hero-canvas');
-      if (!canvas || typeof WebGLFluid === 'undefined') return;
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-      WebGLFluid(canvas, {
-        TRIGGER: 'hover',
-        IMMEDIATE: true,
-        AUTO: false,
-        SPLAT_COUNT: 4,
-        SIM_RESOLUTION: 128,
-        DYE_RESOLUTION: 512,
-        DENSITY_DISSIPATION: 0.35,
-        VELOCITY_DISSIPATION: 1.2,
-        PRESSURE: 0.8,
-        CURL: 20,
-        SPLAT_RADIUS: 0.3,
-        SPLAT_FORCE: 1600,
-        SHADING: true,
-        COLORFUL: false,
-        SPLAT_COLOR: { r: 0.07, g: 0.36, b: 0.40 },
-        BACK_COLOR: { r: 10, g: 10, b: 15 },
-        TRANSPARENT: true,
-        BLOOM: true,
-        BLOOM_INTENSITY: 0.12,
-        BLOOM_THRESHOLD: 0.88,
-        SUNRAYS: true,
-        SUNRAYS_WEIGHT: 0.3
-      });
+      const track = document.getElementById('hero-track');
+      const stage = document.querySelector('#hero .hero-stage');
+      const video = document.getElementById('hero-video');
+      if (!track || !stage || !video) return;
 
-      // 캔버스는 pointer-events:none — 버튼 위에서도 물감이 끊기지 않도록
-      // 히어로 전체에서 받은 마우스 이동을 캔버스로 전달한다
-      const hero = document.getElementById('hero');
-      if (hero) {
-        hero.addEventListener('mousemove', e => {
-          canvas.dispatchEvent(new MouseEvent('mousemove', {
-            clientX: e.clientX,
-            clientY: e.clientY
-          }));
-        });
+      const veil = document.getElementById('hero-veil');
+      const cue = document.getElementById('hero-cue');
+      const eyebrow = document.querySelector('[data-hero="eyebrow"]');
+      const line1 = document.querySelector('[data-hero="line1"]');
+      const line2 = document.querySelector('[data-hero="line2"]');
+      const desc = document.querySelector('[data-hero="desc"]');
+      const rows = Array.prototype.slice.call(document.querySelectorAll('[data-hero="row"]'));
+
+      // 모션 최소화 설정: 스크럽 없이 마지막 장면 + 텍스트를 즉시 노출
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.documentElement.classList.add('hero-static');
+        const toEnd = () => {
+          try { video.currentTime = Math.max(0, video.duration - 0.05); } catch (e) { /* 탐색 실패 무시 */ }
+        };
+        if (video.readyState >= 1) toEnd();
+        else video.addEventListener('loadedmetadata', toEnd, { once: true });
+        return;
       }
+
+      const clamp01 = v => (v < 0 ? 0 : v > 1 ? 1 : v);
+      const seg = (p, a, b) => clamp01((p - a) / (b - a));   // [a,b] 구간을 0~1로 정규화
+      const easeOut = t => 1 - Math.pow(1 - t, 3);
+
+      const SCRUB_END = 0.6;  // 이 진행도에서 영상이 끝까지 재생되고, 이후는 텍스트 리빌·정지 구간
+      let duration = 0;
+
+      function fade(el, t, dist) {
+        if (!el) return;
+        const e = easeOut(t);
+        el.style.setProperty('--o', e.toFixed(3));
+        el.style.setProperty('--y', ((1 - e) * dist).toFixed(1) + 'px');
+      }
+
+      function maskUp(el, t) {
+        if (!el) return;
+        el.style.setProperty('--y', ((1 - easeOut(t)) * 110).toFixed(1) + '%');
+      }
+
+      function paint(p) {
+        if (duration) {
+          const t = Math.min(duration - 0.03, seg(p, 0, SCRUB_END) * duration);
+          // 미세한 차이까지 대입하면 탐색이 밀리므로 임계값을 둔다
+          if (Math.abs(video.currentTime - t) > 0.01) {
+            try { video.currentTime = t; } catch (e) { /* 탐색 실패 무시 */ }
+          }
+        }
+
+        if (veil) veil.style.opacity = seg(p, 0.3, 0.6).toFixed(3);
+        if (cue) cue.style.opacity = (1 - seg(p, 0.02, 0.14)).toFixed(3);
+
+        fade(eyebrow, seg(p, 0.34, 0.48), 20);
+        maskUp(line1, seg(p, 0.36, 0.56));
+        maskUp(line2, seg(p, 0.42, 0.62));
+        fade(desc, seg(p, 0.5, 0.66), 22);
+        rows.forEach((r, i) => {
+          const a = 0.56 + i * 0.035;
+          fade(r, seg(p, a, a + 0.16), 18);
+        });
+
+        // 리빌 전에는 투명한 링크가 클릭·탭을 가로채지 않게
+        const live = p > 0.58;
+        rows.forEach(r => { r.style.pointerEvents = live ? '' : 'none'; });
+      }
+
+      let target = 0, current = 0, raf = 0, settled = 0;
+
+      function measure() {
+        const span = track.offsetHeight - stage.offsetHeight;
+        if (span <= 0) return 0;
+        return clamp01(-track.getBoundingClientRect().top / span);
+      }
+
+      function frame() {
+        const delta = target - current;
+        if (Math.abs(delta) < 0.0006) {
+          current = target;
+          settled++;
+        } else {
+          current += delta * 0.2;   // 살짝 뒤따라오게 해 탐색 요청이 몰리지 않도록
+          settled = 0;
+        }
+        paint(current);
+        raf = settled > 3 ? 0 : requestAnimationFrame(frame);
+      }
+
+      function kick() {
+        target = measure();
+        settled = 0;
+        if (!raf) raf = requestAnimationFrame(frame);
+      }
+
+      function onMeta() {
+        duration = isFinite(video.duration) ? video.duration : 0;
+        kick();
+      }
+      if (video.readyState >= 1) onMeta();
+      else video.addEventListener('loadedmetadata', onMeta, { once: true });
+
+      // iOS는 사용자 제스처 안에서 한 번 재생을 거쳐야 탐색이 안정적으로 먹는다
+      window.addEventListener('touchstart', function prime() {
+        const played = video.play();
+        if (played && played.then) played.then(() => video.pause()).catch(() => { });
+        else { try { video.pause(); } catch (e) { /* 무시 */ } }
+      }, { once: true, passive: true });
+
+      window.addEventListener('scroll', kick, { passive: true });
+      window.addEventListener('resize', kick);
+
+      current = target = measure();
+      paint(current);
     })();
   </script>
   <script>
