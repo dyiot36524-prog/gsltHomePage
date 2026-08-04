@@ -113,10 +113,6 @@ export function renderHeader(active = '') {
                 <span class="mt-1.5 w-2 h-2 rounded-full shrink-0" style="background:#3b82f6"></span>
                 <span class="block"><span class="font-bold text-slate-900 group-hover/item:text-gslt-600 transition-colors">비즈모아 <span class="text-slate-400 font-medium text-xs">BizMoa</span></span><span class="block text-xs text-slate-500 mt-0.5">IoT 시공 견적 자동화 SaaS</span></span>
               </a>
-              <a href="dailo.html" class="flex items-start gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-colors group/item">
-                <span class="mt-1.5 w-2 h-2 rounded-full shrink-0" style="background:#8b5cf6"></span>
-                <span class="block"><span class="font-bold text-slate-900 group-hover/item:text-gslt-600 transition-colors">다일로 <span class="text-slate-400 font-medium text-xs">Dailo</span></span><span class="block text-xs text-slate-500 mt-0.5">AI 지식 워크스페이스</span></span>
-              </a>
               <a href="morak.html" class="flex items-start gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-colors group/item">
                 <span class="mt-1.5 w-2 h-2 rounded-full shrink-0" style="background:#00c2c2"></span>
                 <span class="block"><span class="font-bold text-slate-900 group-hover/item:text-gslt-600 transition-colors">모락 <span class="text-slate-400 font-medium text-xs">Morak</span></span><span class="block text-xs text-slate-500 mt-0.5">기수제 모임 커뮤니티</span></span>
@@ -139,7 +135,6 @@ export function renderHeader(active = '') {
       <div class="flex items-center gap-5 px-4 py-2.5 text-sm font-bold overflow-x-auto whitespace-nowrap text-slate-600">
         <a href="siot.html" class="hover:text-gslt-600 transition-colors">시옷</a>
         <a href="bizmoa.html" class="hover:text-gslt-600 transition-colors">비즈모아</a>
-        <a href="dailo.html" class="hover:text-gslt-600 transition-colors">다일로</a>
         <a href="morak.html" class="hover:text-gslt-600 transition-colors">모락</a>
         <span class="w-px h-4 bg-slate-200 shrink-0"></span>
         ${link('index.html', 'home', '홈')}
@@ -196,7 +191,6 @@ export function renderFooter() {
             <ul class="space-y-2">
               <li><a href="siot.html" class="hover:text-white transition-colors">시옷 (Siot)</a></li>
               <li><a href="bizmoa.html" class="hover:text-white transition-colors">비즈모아 (BizMoa)</a></li>
-              <li><a href="dailo.html" class="hover:text-white transition-colors">다일로 (Dailo)</a></li>
               <li><a href="morak.html" class="hover:text-white transition-colors">모락 (Morak)</a></li>
             </ul>
           </div>
