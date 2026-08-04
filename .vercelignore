@@ -1,6 +1,6 @@
 # Vercel CLI는 .vercelignore가 있으면 .gitignore를 더 이상 참고하지 않는다.
 # 따라서 .gitignore 규칙을 그대로 복제한 뒤, 사이트에 서빙할 필요 없는 것을 추가로 제외한다.
-# (img/ 에는 배포 대상이 아닌 원본 gif·webp가 550MB 넘게 있어 이 복제가 필수)
+# (img/ 에는 배포 대상이 아닌 원본 gif·webp·영상 마스터가 600MB 넘게 있어 이 복제가 필수)
 #
 # ⚠️ macOS NFD 함정: APFS는 한글 파일명을 자모 분리(NFD)로 저장하는데, git은
 #    core.precomposeunicode=true 로 NFC 변환해 읽으므로 NFC 패턴이 먹는다.
@@ -45,6 +45,12 @@ img/모락이미지/
 # 히어로 영상 원본 (키프레임 1개뿐이라 탐색 불가 — img/hero-scroll-*.mp4로 재인코딩해 사용)
 img/히어로.mp4
 .vercel
+
+# 히어로 영상 원본 마스터 (로컬 보관 — img/hero-scroll-*.mp4 로 재인코딩해 사용)
+# VP9/WebM은 all-intra 디코딩이 무거워 스크럽에 부적합, H.264로만 배포한다
+img/hero_2560x1440_60fps.*
+img/hero_1920x1080_60fps.*
+img/hero_upscaled_2560x1440.*
 
 # ── 위 규칙 중 한글 포함 항목의 NFD 형태 (macOS 디스크 실제 표기) ──
 오피스영상.mp4

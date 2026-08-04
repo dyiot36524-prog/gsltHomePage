@@ -555,8 +555,12 @@
       <div class="hero-stage">
         <video id="hero-video" poster="img/hero-poster.jpg" muted playsinline webkit-playsinline preload="auto"
           disablepictureinpicture aria-hidden="true" tabindex="-1">
-          <source src="img/hero-scroll-720.mp4" type="video/mp4" media="(max-width: 767px)">
-          <source src="img/hero-scroll-1280.mp4" type="video/mp4">
+          <!-- 화면 크기별 3단. media는 로드 시점에 한 번만 평가된다.
+               코덱은 전부 H.264 — 같은 화질의 VP9/WebM은 all-intra 디코딩이 무거워
+               2560에서 탐색이 126ms까지 늘어져(H.264는 10ms) 스크럽이 끊긴다. -->
+          <source src="img/hero-scroll-1280.mp4" type="video/mp4" media="(max-width: 767px)">
+          <source src="img/hero-scroll-1920.mp4" type="video/mp4" media="(max-width: 1439px)">
+          <source src="img/hero-scroll-2560.mp4" type="video/mp4">
         </video>
 
         <div class="hero-grade"></div>

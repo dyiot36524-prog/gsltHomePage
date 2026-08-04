@@ -33,3 +33,9 @@ img/모락이미지/
 # 히어로 영상 원본 (키프레임 1개뿐이라 탐색 불가 — img/hero-scroll-*.mp4로 재인코딩해 사용)
 img/히어로.mp4
 .vercel
+
+# 히어로 영상 원본 마스터 (로컬 보관 — img/hero-scroll-*.mp4 로 재인코딩해 사용)
+# VP9/WebM은 all-intra 디코딩이 무거워 스크럽에 부적합, H.264로만 배포한다
+img/hero_2560x1440_60fps.*
+img/hero_1920x1080_60fps.*
+img/hero_upscaled_2560x1440.*
