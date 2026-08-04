@@ -553,14 +553,18 @@
 
     <div id="hero-track" class="relative">
       <div class="hero-stage">
-        <video id="hero-video" poster="img/hero-poster.jpg" muted playsinline webkit-playsinline preload="auto"
+        <!-- poster는 반드시 영상의 '첫 프레임'이어야 한다. 마지막 프레임을 쓰면 로드 직후
+             끝 장면이 떠 있다가 스크럽이 t=0을 그리는 순간 첫 장면으로 튄다.
+             파일명의 v2는 캐시 버전 — 같은 이름에 다른 내용을 덮어쓰면 재방문자가
+             옛 영상을 계속 보게 되므로, 내용이 바뀌면 v3로 올린다. -->
+        <video id="hero-video" poster="img/hero-v2-poster.jpg" muted playsinline webkit-playsinline preload="auto"
           disablepictureinpicture aria-hidden="true" tabindex="-1">
           <!-- 화면 크기별 3단. media는 로드 시점에 한 번만 평가된다.
                코덱은 전부 H.264 — 같은 화질의 VP9/WebM은 all-intra 디코딩이 무거워
                2560에서 탐색이 126ms까지 늘어져(H.264는 10ms) 스크럽이 끊긴다. -->
-          <source src="img/hero-scroll-1280.mp4" type="video/mp4" media="(max-width: 767px)">
-          <source src="img/hero-scroll-1920.mp4" type="video/mp4" media="(max-width: 1439px)">
-          <source src="img/hero-scroll-2560.mp4" type="video/mp4">
+          <source src="img/hero-v2-1280.mp4" type="video/mp4" media="(max-width: 767px)">
+          <source src="img/hero-v2-1920.mp4" type="video/mp4" media="(max-width: 1439px)">
+          <source src="img/hero-v2-2560.mp4" type="video/mp4">
         </video>
 
         <div class="hero-grade"></div>
