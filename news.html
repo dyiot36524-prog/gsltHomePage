@@ -68,9 +68,17 @@
 
     <!-- 목록 -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="mb-8">
+      <div class="mb-8 flex flex-col sm:flex-row sm:items-center gap-4">
         <input id="news-search" type="search" placeholder="소식 검색"
           class="w-full max-w-sm px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm outline-none focus:border-gslt-400">
+        <div id="type-filter" class="flex items-center gap-2 text-sm">
+          <button type="button" data-type="all"
+            class="px-4 py-2 rounded-full border font-semibold transition-colors border-gslt-400 bg-gslt-50 text-gslt-700">전체</button>
+          <button type="button" data-type="article"
+            class="px-4 py-2 rounded-full border font-semibold transition-colors border-slate-200 text-slate-500 hover:border-gslt-300">자사 소식</button>
+          <button type="button" data-type="press"
+            class="px-4 py-2 rounded-full border font-semibold transition-colors border-slate-200 text-slate-500 hover:border-gslt-300">언론보도</button>
+        </div>
       </div>
       <div id="featured"></div>
       <div id="grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
@@ -90,7 +98,10 @@
   <div id="site-footer"></div>
 
   <script type="module">
-    import { renderHeader, renderFooter, fetchPosts, formatDate, escapeHtml } from './assets/site.js';
+    import {
+      renderHeader, renderFooter, fetchPosts, formatDate, escapeHtml,
+      isPress, postDateLabel, postHref, postMirrors
+    } from './assets/site.js';
 
     renderHeader('news');
     renderFooter();
@@ -112,38 +123,96 @@
            </div>`;
     }
 
+    // press는 외부 원문으로 나가므로 새 탭 + noopener. 내부 글은 기존 그대로.
+    function linkAttrs(p) {
+      return isPress(p)
+        ? `href="${escapeHtml(postHref(p))}" target="_blank" rel="noopener noreferrer"`
+        : `href="${escapeHtml(postHref(p))}"`;
+    }
+
+    function outletBadge(p) {
+      if (!isPress(p)) return '';
+      return `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-900 text-white text-[11px] font-bold">${escapeHtml(p.outlet || '언론보도')}</span>`;
+    }
+
+    // 전재 매체는 카드 밖에 둔다 — <a> 안에 <a>를 넣으면 HTML이 무효가 된다
+    function mirrorLinks(p) {
+      const ms = postMirrors(p);
+      if (!ms.length) return '';
+      return `<div class="flex flex-wrap items-center gap-x-3 gap-y-1 px-6 pb-5 -mt-2">
+        <span class="text-[11px] text-slate-400">전재</span>
+        ${ms.map(m => `<a href="${escapeHtml(m.url)}" target="_blank" rel="noopener noreferrer"
+             class="text-[11px] font-semibold text-slate-500 hover:text-gslt-600 underline underline-offset-2">${escapeHtml(m.label)}</a>`).join('')}
+      </div>`;
+    }
+
     function card(p) {
       return `
-      <a href="post.html?id=${p.id}" class="group block bg-white rounded-2xl overflow-hidden border border-slate-200/70 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500">
-        <div class="aspect-[16/9] overflow-hidden">${thumb(p)}</div>
-        <div class="p-6">
-          <p class="text-xs font-semibold text-slate-400 mb-2">${formatDate(p.createdAt)}</p>
-          <h3 class="font-bold text-lg leading-snug break-keep clamp-2 mb-2 group-hover:text-gslt-600 transition-colors">${escapeHtml(p.title)}</h3>
-          <p class="text-sm text-slate-500 break-keep clamp-2">${escapeHtml(p.excerpt)}</p>
-        </div>
-      </a>`;
+      <div class="group bg-white rounded-2xl overflow-hidden border border-slate-200/70 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500">
+        <a ${linkAttrs(p)} class="block">
+          <div class="aspect-[16/9] overflow-hidden relative">
+            ${thumb(p)}
+            ${isPress(p) ? `<div class="absolute top-3 left-3">${outletBadge(p)}</div>` : ''}
+          </div>
+          <div class="p-6">
+            <p class="text-xs font-semibold text-slate-400 mb-2">${escapeHtml(postDateLabel(p))}${isPress(p) && p.reporter ? ` · ${escapeHtml(p.reporter)} 기자` : ''}</p>
+            <h3 class="font-bold text-lg leading-snug break-keep clamp-2 mb-2 group-hover:text-gslt-600 transition-colors">${escapeHtml(p.title)}${isPress(p) ? ' <span aria-hidden="true" class="text-slate-300 font-normal">↗</span>' : ''}</h3>
+            <p class="text-sm text-slate-500 break-keep clamp-2">${escapeHtml(p.excerpt)}</p>
+          </div>
+        </a>
+        ${mirrorLinks(p)}
+      </div>`;
     }
 
     function featuredCard(p) {
       return `
-      <a href="post.html?id=${p.id}" class="group grid grid-cols-1 md:grid-cols-2 bg-white rounded-3xl overflow-hidden border border-slate-200/70 shadow-sm hover:shadow-xl transition-all duration-500 mb-12">
-        <div class="aspect-[16/9] md:aspect-auto md:min-h-[320px] overflow-hidden">${thumb(p)}</div>
+      <div class="group grid grid-cols-1 md:grid-cols-2 bg-white rounded-3xl overflow-hidden border border-slate-200/70 shadow-sm hover:shadow-xl transition-all duration-500 mb-12">
+        <a ${linkAttrs(p)} class="aspect-[16/9] md:aspect-auto md:min-h-[320px] overflow-hidden block">${thumb(p)}</a>
         <div class="p-8 md:p-12 flex flex-col justify-center">
           <div class="flex items-center gap-3 mb-4">
             <span class="block w-6 h-px bg-gslt-400"></span>
-            <span class="text-[11px] uppercase tracking-[0.25em] font-bold text-gslt-600">${p.pinned ? '고정된 소식' : 'Latest'}</span>
+            <span class="text-[11px] uppercase tracking-[0.25em] font-bold text-gslt-600">${p.pinned ? '고정된 소식' : (isPress(p) ? '언론보도' : 'Latest')}</span>
+            ${isPress(p) ? outletBadge(p) : ''}
           </div>
-          <p class="text-xs font-semibold text-slate-400 mb-3">${formatDate(p.createdAt)}</p>
-          <h2 class="font-black text-2xl md:text-3xl leading-snug break-keep mb-4 group-hover:text-gslt-600 transition-colors">${escapeHtml(p.title)}</h2>
-          <p class="text-slate-500 break-keep clamp-2">${escapeHtml(p.excerpt)}</p>
+          <p class="text-xs font-semibold text-slate-400 mb-3">${escapeHtml(postDateLabel(p))}${isPress(p) && p.reporter ? ` · ${escapeHtml(p.reporter)} 기자` : ''}</p>
+          <a ${linkAttrs(p)} class="block">
+            <h2 class="font-black text-2xl md:text-3xl leading-snug break-keep mb-4 group-hover:text-gslt-600 transition-colors">${escapeHtml(p.title)}${isPress(p) ? ' <span aria-hidden="true" class="text-slate-300 font-normal">↗</span>' : ''}</h2>
+            <p class="text-slate-500 break-keep clamp-2">${escapeHtml(p.excerpt)}</p>
+          </a>
+          ${postMirrors(p).length ? `<div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-5">
+            <span class="text-[11px] text-slate-400">전재</span>
+            ${postMirrors(p).map(m => `<a href="${escapeHtml(m.url)}" target="_blank" rel="noopener noreferrer"
+                 class="text-[11px] font-semibold text-slate-500 hover:text-gslt-600 underline underline-offset-2">${escapeHtml(m.label)}</a>`).join('')}
+          </div>` : ''}
         </div>
-      </a>`;
+      </div>`;
     }
 
-    let filtered = null; // null = 검색 없음
+    let searchQ = '';
+    let typeFilter = 'all'; // all | article | press
+
+    function matchesType(p) {
+      if (typeFilter === 'press') return isPress(p);
+      if (typeFilter === 'article') return !isPress(p);
+      return true;
+    }
+
+    function matchesSearch(p) {
+      if (!searchQ) return true;
+      return [p.title, p.excerpt, p.outlet].some(
+        v => String(v || '').toLowerCase().includes(searchQ));
+    }
+
+    function visiblePosts() {
+      return posts.filter(p => matchesType(p) && matchesSearch(p));
+    }
+
+    // 검색어도 없고 필터도 '전체'일 때만 대표 카드를 띄운다
+    const isDefaultView = () => !searchQ && typeFilter === 'all';
 
     function currentList() {
-      return filtered !== null ? filtered : posts.slice(1);
+      const list = visiblePosts();
+      return isDefaultView() ? list.slice(1) : list;
     }
 
     function renderMore() {
@@ -152,20 +221,37 @@
       grid.insertAdjacentHTML('beforeend', next.map(card).join(''));
       shown += next.length;
       moreWrap.classList.toggle('hidden', shown >= rest.length);
-      if (filtered !== null && !filtered.length) {
-        grid.innerHTML = '<p class="col-span-full py-16 text-center text-slate-400 text-sm">검색 결과가 없습니다.</p>';
+      if (!visiblePosts().length) {
+        grid.innerHTML = `<p class="col-span-full py-16 text-center text-slate-400 text-sm">${searchQ ? '검색 결과가 없습니다.' : '해당하는 소식이 없습니다.'}</p>`;
       }
     }
 
-    document.getElementById('news-search').addEventListener('input', e => {
-      const q = e.target.value.trim().toLowerCase();
-      filtered = q
-        ? posts.filter(p => (p.title || '').toLowerCase().includes(q) || (p.excerpt || '').toLowerCase().includes(q))
-        : null;
-      featured.classList.toggle('hidden', !!q);
+    function rerender() {
+      const def = isDefaultView();
+      const list = visiblePosts();
+      featured.innerHTML = def && list.length ? featuredCard(list[0]) : '';
+      featured.classList.toggle('hidden', !def || !list.length);
       grid.innerHTML = '';
       shown = 0;
       renderMore();
+    }
+
+    document.getElementById('news-search').addEventListener('input', e => {
+      searchQ = e.target.value.trim().toLowerCase();
+      rerender();
+    });
+
+    document.getElementById('type-filter').addEventListener('click', e => {
+      const btn = e.target.closest('button[data-type]');
+      if (!btn) return;
+      typeFilter = btn.dataset.type;
+      document.querySelectorAll('#type-filter button[data-type]').forEach(b => {
+        const on = b.dataset.type === typeFilter;
+        b.className = 'px-4 py-2 rounded-full border font-semibold transition-colors ' +
+          (on ? 'border-gslt-400 bg-gslt-50 text-gslt-700'
+              : 'border-slate-200 text-slate-500 hover:border-gslt-300');
+      });
+      rerender();
     });
 
     (async () => {
@@ -181,8 +267,7 @@
         empty.classList.remove('hidden');
         return;
       }
-      featured.innerHTML = featuredCard(posts[0]);
-      renderMore();
+      rerender();
       document.getElementById('more-btn').addEventListener('click', renderMore);
     })();
   </script>

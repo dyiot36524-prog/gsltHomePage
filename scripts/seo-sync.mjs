@@ -14,6 +14,12 @@ import { marked } from 'marked';
 import { mkdirSync, rmSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
 
 const BASE_URL = 'https://home.gslt.kr';
+
+/* 언론보도(press)는 우리가 본문을 소유하지 않는 외부 기사다.
+   - 정적 스냅샷을 만들지 않는다 (본문이 없어 thin content가 된다)
+   - sitemap에 넣지 않는다 (우리 페이지가 아니다)
+   - RSS/llms.txt에서는 원문 URL을 그대로 가리킨다 */
+const isPress = p => p && p.type === 'press' && /^https?:\/\//i.test(String(p.sourceUrl || ''));
 const PROJECT_ID = 'gslthomepage';
 const API_KEY = 'AIzaSyCjnuHSGhy97XOtoVC1fSwnGInLwVs1wok'; // 공개용 웹 API 키 (권한은 Firestore 규칙이 통제)
 
@@ -198,7 +204,7 @@ function buildSitemap(posts) {
   ];
   const urls = [
     ...staticPages.map(p => `  <url>\n    <loc>${p.loc}</loc>\n    <changefreq>${p.changefreq}</changefreq>\n    <priority>${p.priority}</priority>\n  </url>`),
-    ...posts.map(p => {
+    ...posts.filter(p => !isPress(p)).map(p => {
       const lastmod = dateISO(p.updatedAt || p.createdAt);
       return `  <url>\n    <loc>${BASE_URL}/p/${p.id}.html</loc>${lastmod ? `\n    <lastmod>${lastmod}</lastmod>` : ''}\n    <priority>0.7</priority>\n  </url>`;
     })
@@ -208,13 +214,16 @@ function buildSitemap(posts) {
 
 /* ── rss.xml (뉴스) ── */
 function buildRss(posts) {
-  const items = posts.filter(p => p.category === 'news').slice(0, 20).map(p => `    <item>
-      <title>${escXml(p.title)}</title>
-      <link>${BASE_URL}/p/${p.id}.html</link>
-      <guid isPermaLink="true">${BASE_URL}/p/${p.id}.html</guid>
+  const items = posts.filter(p => p.category === 'news').slice(0, 20).map(p => {
+    const link = isPress(p) ? p.sourceUrl : `${BASE_URL}/p/${p.id}.html`;
+    return `    <item>
+      <title>${escXml(p.title)}${isPress(p) ? ` (${escXml(p.outlet || '언론보도')})` : ''}</title>
+      <link>${escXml(link)}</link>
+      <guid isPermaLink="${isPress(p) ? 'false' : 'true'}">${escXml(isPress(p) ? `${BASE_URL}/news.html#${p.id}` : link)}</guid>
       <description>${escXml(p.excerpt || p.title)}</description>
       <pubDate>${dateRFC(p.createdAt)}</pubDate>
-    </item>`).join('\n');
+    </item>`;
+  }).join('\n');
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
   <channel>
@@ -231,9 +240,16 @@ ${items}
 /* ── llms.txt (AI 크롤러용 색인) ── */
 function buildLlms(posts) {
   const section = (cat, title) => {
-    const list = posts.filter(p => p.category === cat).slice(0, 30)
+    const list = posts.filter(p => p.category === cat && !isPress(p)).slice(0, 30)
       .map(p => `- [${p.title}](${BASE_URL}/p/${p.id}.html)${p.excerpt ? `: ${p.excerpt}` : ''}`).join('\n');
     return list ? `\n## ${title}\n\n${list}\n` : '';
+  };
+  // 언론보도는 원문 URL로 직접 연결한다
+  const pressSection = () => {
+    const list = posts.filter(isPress).slice(0, 30)
+      .map(p => `- [${p.title}](${p.sourceUrl}) — ${p.outlet || '매체 미상'}${p.publishedAt ? `, ${p.publishedAt}` : ''}${p.excerpt ? `: ${p.excerpt}` : ''}`)
+      .join('\n');
+    return list ? `\n## 언론보도\n\n${list}\n` : '';
   };
   return `# GSLT (지에스엘티)
 
@@ -253,7 +269,7 @@ function buildLlms(posts) {
 - [시옷 (Siot)](${BASE_URL}/siot.html): 배선 공사 없는 무선 IoT로 조명·블라인드·공조를 통합 제어하는 스마트 공간 솔루션. 1초 단위 실시간 모니터링, 99.9% 제어 안정성, 상황별 장면 모드 프리셋.
 - [비즈모아 (BizMoa)](${BASE_URL}/bizmoa.html): 건축 도면 위에 장비를 배치하면 견적서·계약서·납품확인서가 자동 생성되는 시공·설치업체용 올인원 B2B SaaS. 인건비 자동 산출, 프로젝트·권한 관리 포함.
 - [모락 (Morak)](https://morac.gslt.kr): 기수제 모임(원우회·동문회)을 위한 모바일 커뮤니티 플랫폼. 디지털 명함 QR 교환, 기수·직책 관리, 일정·참석 관리, 원우수첩 제공. 소개: ${BASE_URL}/morak.html
-${section('news', '최근 소식')}${section('portfolio', '시공사례 (포트폴리오)')}${section('downloads', '자료실')}
+${section('news', '최근 소식')}${pressSection()}${section('portfolio', '시공사례 (포트폴리오)')}${section('downloads', '자료실')}
 ## 페이지
 
 - [홈](${BASE_URL}/)
@@ -283,11 +299,12 @@ if (posts.length === 0 && existing > 0) {
 // p/ 디렉터리는 매번 재생성 → 비공개/삭제 글 스냅샷 자동 제거
 if (existsSync('p')) rmSync('p', { recursive: true });
 mkdirSync('p');
-for (const p of posts) {
+const ownedPosts = posts.filter(p => !isPress(p));
+for (const p of ownedPosts) {
   writeFileSync(`p/${p.id}.html`, snapshotPage(p));
 }
 writeFileSync('sitemap.xml', buildSitemap(posts));
 writeFileSync('rss.xml', buildRss(posts));
 writeFileSync('llms.txt', buildLlms(posts));
 
-console.log(`생성 완료: p/*.html ${posts.length}건, sitemap.xml, rss.xml, llms.txt`);
+console.log(`생성 완료: p/*.html ${ownedPosts.length}건(언론보도 ${posts.length - ownedPosts.length}건은 원문 링크라 스냅샷 제외), sitemap.xml, rss.xml, llms.txt`);

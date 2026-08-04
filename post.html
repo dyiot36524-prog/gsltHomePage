@@ -147,6 +147,17 @@
       } catch (e) { /* 미게시 글은 규칙에서 익명 접근이 거부됨 */ }
       if (!post) return notFound();
 
+      // 언론보도는 본문을 우리가 갖고 있지 않다. 목록에서는 원문으로 바로 나가지만
+      // 링크를 직접 열거나 예전 주소가 남아 있을 수 있으므로 여기서 원문으로 넘긴다.
+      if (post.type === 'press' && /^https?:\/\//i.test(String(post.sourceUrl || ''))) {
+        const robots = document.createElement('meta');
+        robots.name = 'robots';
+        robots.content = 'noindex';
+        document.head.appendChild(robots);
+        location.replace(post.sourceUrl);
+        return;
+      }
+
       // 비공개 글: 보안 규칙상 관리자만 여기까지 도달 — 미리보기 배너 표시
       if (post.published === false) {
         const robots = document.createElement('meta');

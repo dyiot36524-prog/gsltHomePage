@@ -60,10 +60,10 @@ export async function fetchPosts(category) {
   );
   const snap = await getDocs(q);
   const posts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  // 고정 글 우선, 이후 최신순
+  // 고정 글 우선, 이후 최신순 (press는 기사 발행일 기준)
   posts.sort((a, b) =>
     (b.pinned === true) - (a.pinned === true) ||
-    (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+    postTime(b) - postTime(a));
   return posts;
 }
 
@@ -72,6 +72,53 @@ export function formatDate(ts) {
   const d = new Date(ts.seconds * 1000);
   const p = n => String(n).padStart(2, '0');
   return `${d.getFullYear()}. ${p(d.getMonth() + 1)}. ${p(d.getDate())}`;
+}
+
+/* ─── 언론보도(press) 지원 ───
+   글은 두 종류다.
+   - type 없음 또는 'article' : 우리가 쓴 글. post.html 에서 본문을 렌더한다.
+   - type === 'press'         : 외부 언론 보도. 본문을 우리가 소유하지 않으므로
+                                저장하지 않고, 카드에서 원문(sourceUrl)으로 바로 내보낸다. */
+
+export function isPress(p) {
+  return p && p.type === 'press' && !!p.sourceUrl;
+}
+
+/** press는 기사 발행일(publishedAt, 'YYYY-MM-DD'), 그 외는 등록일(createdAt) */
+export function postDateLabel(p) {
+  if (isPress(p) && p.publishedAt) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(p.publishedAt));
+    if (m) return `${m[1]}. ${m[2]}. ${m[3]}`;
+  }
+  return formatDate(p && p.createdAt);
+}
+
+/** 정렬·비교용 epoch(초). press는 발행일 기준이라야 자사 글과 시간순이 섞이지 않는다. */
+export function postTime(p) {
+  if (isPress(p) && p.publishedAt) {
+    const t = Date.parse(`${String(p.publishedAt).slice(0, 10)}T00:00:00+09:00`);
+    if (!Number.isNaN(t)) return Math.floor(t / 1000);
+  }
+  return (p && p.createdAt && p.createdAt.seconds) || 0;
+}
+
+/** http(s) 링크만 통과시킨다. javascript: 등 스킴 주입 차단. */
+export function safeHttpUrl(u) {
+  const s = String(u || '').trim();
+  return /^https?:\/\//i.test(s) ? s : '';
+}
+
+/** 카드가 가리킬 목적지. press면 원문, 아니면 내부 상세 페이지. */
+export function postHref(p) {
+  return isPress(p) ? (safeHttpUrl(p.sourceUrl) || '#') : `post.html?id=${encodeURIComponent(p.id)}`;
+}
+
+/** 전재 매체 목록 (유효한 http 링크만) */
+export function postMirrors(p) {
+  if (!isPress(p) || !Array.isArray(p.mirrors)) return [];
+  return p.mirrors
+    .map(m => ({ label: String(m && m.label || '').trim(), url: safeHttpUrl(m && m.url) }))
+    .filter(m => m.label && m.url);
 }
 
 export function escapeHtml(s) {

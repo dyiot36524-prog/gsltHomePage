@@ -89,6 +89,8 @@
         <div class="flex items-center justify-between mb-5 gap-3 flex-wrap">
           <h2 id="panel-title" class="text-xl font-black"></h2>
           <div class="flex items-center gap-2">
+            <button id="seed-press-btn"
+              class="hidden px-4 py-2.5 rounded-full border border-gslt-400 text-gslt-700 text-sm font-bold hover:bg-gslt-50 transition-all">포브스 보도 2건 등록</button>
             <button id="seed-btn"
               class="px-4 py-2.5 rounded-full border border-slate-300 text-slate-600 text-sm font-bold hover:border-slate-500 transition-all">샘플 글 생성</button>
             <button id="new-btn"
@@ -114,6 +116,46 @@
           <button id="editor-close" class="text-sm font-semibold text-slate-500 hover:text-slate-900">목록으로 돌아가기</button>
         </div>
         <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4 max-w-4xl">
+          <div id="type-section" class="hidden">
+            <label class="block text-xs font-bold text-slate-500 mb-1.5">글 종류</label>
+            <div id="f-type" class="flex gap-2">
+              <button type="button" data-t="article"
+                class="px-4 py-2 rounded-xl border text-sm font-bold transition-all border-gslt-400 bg-gslt-50 text-gslt-700">자사 소식</button>
+              <button type="button" data-t="press"
+                class="px-4 py-2 rounded-xl border text-sm font-bold transition-all border-slate-200 text-slate-500 hover:border-gslt-300">언론보도</button>
+            </div>
+          </div>
+          <div id="press-section" class="hidden space-y-4 rounded-xl bg-slate-50 border border-slate-200 p-4">
+            <p class="text-xs text-slate-500 leading-relaxed">
+              <strong class="text-slate-700">기사 본문을 붙여넣지 마세요.</strong>
+              언론사 기사와 사진은 저작권이 있어 우리 사이트에 복제할 수 없습니다.
+              요약은 직접 쓰시고, 대표 이미지는 자사 이미지만 쓰세요. 방문자는 원문으로 바로 이동합니다.
+            </p>
+            <div>
+              <label class="block text-xs font-bold text-slate-500 mb-1.5">원문 URL <span class="text-rose-500">*</span></label>
+              <input id="f-source-url" class="field" placeholder="https://www.wowtv.co.kr/...">
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-xs font-bold text-slate-500 mb-1.5">매체명 <span class="text-rose-500">*</span></label>
+                <input id="f-outlet" class="field" placeholder="한국경제TV">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-500 mb-1.5">기자명</label>
+                <input id="f-reporter" class="field" placeholder="박준식">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-500 mb-1.5">기사 발행일 <span class="text-rose-500">*</span></label>
+                <input id="f-published-at" type="date" class="field">
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-500 mb-1.5">전재 매체 (같은 기사를 실은 다른 매체)</label>
+              <div id="mirror-list" class="space-y-2 mb-2"></div>
+              <button type="button" id="mirror-add"
+                class="px-4 py-2 rounded-xl border border-slate-300 text-slate-600 text-sm font-bold hover:border-gslt-400 transition-all">+ 전재 링크 추가</button>
+            </div>
+          </div>
           <div>
             <label class="block text-xs font-bold text-slate-500 mb-1.5">제목</label>
             <input id="f-title" class="field" placeholder="제목을 입력하세요">
@@ -313,6 +355,8 @@
       } else {
         $('posts-panel').classList.remove('hidden');
         $('panel-title').textContent = CATEGORY_LABEL[tab] + ' 관리';
+        // 언론보도 일괄 등록은 뉴스 탭에서만 노출
+        $('seed-press-btn').classList.toggle('hidden', tab !== 'news');
         loadList();
       }
     }
@@ -371,6 +415,51 @@
     $('new-btn').addEventListener('click', () => openEditor(null));
     $('editor-close').addEventListener('click', () => switchTab(currentTab));
 
+    /* ── 언론보도(press) 상태 ── */
+    let editingType = 'article';   // 'article' | 'press'
+    let mirrors = [];              // [{label, url}]
+
+    function setType(t) {
+      editingType = t === 'press' ? 'press' : 'article';
+      document.querySelectorAll('#f-type button[data-t]').forEach(b => {
+        const on = b.dataset.t === editingType;
+        b.className = 'px-4 py-2 rounded-xl border text-sm font-bold transition-all ' +
+          (on ? 'border-gslt-400 bg-gslt-50 text-gslt-700'
+              : 'border-slate-200 text-slate-500 hover:border-gslt-300');
+      });
+      const press = editingType === 'press';
+      $('press-section').classList.toggle('hidden', !press);
+      // 언론보도는 본문·첨부를 쓰지 않는다 (기사 복제 방지)
+      $('body-section').classList.toggle('hidden', press || currentTab === 'downloads');
+      $('files-section').classList.toggle('hidden', !press ? currentTab !== 'downloads' : true);
+    }
+
+    $('f-type').addEventListener('click', e => {
+      const b = e.target.closest('button[data-t]');
+      if (b) setType(b.dataset.t);
+    });
+
+    function renderMirrors() {
+      $('mirror-list').innerHTML = mirrors.map((m, i) => `
+        <div class="flex gap-2 items-center">
+          <input class="field !py-2 max-w-[9rem]" data-mi="${i}" data-mf="label" value="${escapeAttr(m.label)}" placeholder="다음뉴스">
+          <input class="field !py-2" data-mi="${i}" data-mf="url" value="${escapeAttr(m.url)}" placeholder="https://v.daum.net/v/...">
+          <button type="button" data-mrm="${i}" class="shrink-0 px-3 py-2 rounded-lg border border-rose-200 text-rose-600 text-xs font-bold hover:bg-rose-50">삭제</button>
+        </div>`).join('');
+      $('mirror-list').querySelectorAll('input[data-mi]').forEach(inp => {
+        inp.addEventListener('input', () => {
+          mirrors[Number(inp.dataset.mi)][inp.dataset.mf] = inp.value;
+        });
+      });
+      $('mirror-list').querySelectorAll('button[data-mrm]').forEach(btn => {
+        btn.addEventListener('click', () => { mirrors.splice(Number(btn.dataset.mrm), 1); renderMirrors(); });
+      });
+    }
+    function escapeAttr(s) {
+      return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+    $('mirror-add').addEventListener('click', () => { mirrors.push({ label: '', url: '' }); renderMirrors(); });
+
     async function openEditor(id) {
       editingId = id;
       editingCategory = currentTab;
@@ -400,10 +489,20 @@
       $('thumb-section').classList.toggle('hidden', isDownloads);
       renderFileList();
 
+      // 글 종류 선택은 뉴스 탭에서만 의미가 있다
+      $('type-section').classList.toggle('hidden', currentTab !== 'news');
+      $('f-source-url').value = p.sourceUrl || '';
+      $('f-outlet').value = p.outlet || '';
+      $('f-reporter').value = p.reporter || '';
+      $('f-published-at').value = p.publishedAt || '';
+      mirrors = Array.isArray(p.mirrors) ? p.mirrors.map(m => ({ label: m.label || '', url: m.url || '' })) : [];
+      renderMirrors();
+      setType(currentTab === 'news' ? (p.type || 'article') : 'article');
+
       $('posts-panel').classList.add('hidden');
       $('editor-panel').classList.remove('hidden');
 
-      if (!isDownloads) {
+      if (!isDownloads && editingType !== 'press') {
         ensureEditor();
         editor.setMarkdown(p.body || '');
       }
@@ -482,19 +581,53 @@
       if (!title) { status.textContent = '제목을 입력하세요.'; status.className = 'text-sm text-center text-rose-600'; return; }
       status.textContent = '저장 중...';
       status.className = 'text-sm text-center text-slate-500';
-      const body = editingCategory === 'downloads' ? '' : (editor ? editor.getMarkdown() : '');
+      const isPressPost = editingCategory === 'news' && editingType === 'press';
+
+      // 언론보도 필수값 검증 — 원문 없이 저장되면 목록에서 갈 곳이 없어진다
+      if (isPressPost) {
+        const src = $('f-source-url').value.trim();
+        const outlet = $('f-outlet').value.trim();
+        const pubAt = $('f-published-at').value.trim();
+        const bad = !/^https?:\/\//i.test(src) ? '원문 URL을 http(s):// 로 시작하는 주소로 입력하세요.'
+          : !outlet ? '매체명을 입력하세요.'
+          : !/^\d{4}-\d{2}-\d{2}$/.test(pubAt) ? '기사 발행일을 선택하세요.'
+          : mirrors.some(m => m.url.trim() && !/^https?:\/\//i.test(m.url.trim())) ? '전재 링크는 http(s):// 로 시작해야 합니다.'
+          : '';
+        if (bad) {
+          status.textContent = bad;
+          status.className = 'text-sm text-center text-rose-600';
+          return;
+        }
+      }
+
+      // press는 본문을 저장하지 않는다 (언론사 기사 복제 방지)
+      const body = (editingCategory === 'downloads' || isPressPost)
+        ? '' : (editor ? editor.getMarkdown() : '');
       const data = {
         category: editingCategory,
+        type: isPressPost ? 'press' : 'article',
         title,
         excerpt: $('f-excerpt').value.trim(),
         body,
         thumbnail: $('f-thumbnail').value.trim(),
         tags: $('f-tags').value.split(',').map(s => s.trim()).filter(Boolean),
-        attachments,
+        attachments: isPressPost ? [] : attachments,
         published: $('f-published').checked,
         pinned: $('f-pinned').checked,
         updatedAt: serverTimestamp()
       };
+      if (isPressPost) {
+        data.sourceUrl = $('f-source-url').value.trim();
+        data.outlet = $('f-outlet').value.trim();
+        data.reporter = $('f-reporter').value.trim();
+        data.publishedAt = $('f-published-at').value.trim();
+        data.mirrors = mirrors
+          .map(m => ({ label: m.label.trim(), url: m.url.trim() }))
+          .filter(m => m.label && /^https?:\/\//i.test(m.url));
+      } else {
+        // 자사 소식으로 되돌릴 때 남은 press 필드를 지운다
+        data.sourceUrl = ''; data.outlet = ''; data.reporter = ''; data.publishedAt = ''; data.mirrors = [];
+      }
       try {
         if (editingId) {
           await updateDoc(doc(db, 'posts', editingId), data);
@@ -515,6 +648,53 @@
       if (!confirm('이 글을 삭제할까요? 되돌릴 수 없습니다.')) return;
       await deleteDoc(doc(db, 'posts', editingId));
       switchTab(currentTab);
+    });
+
+    /* ══ 포브스 수상 보도 2건 일괄 등록 ══
+       각 링크는 원문 HTML을 직접 열어 제목·매체·발행일을 확인한 값이다.
+       요약(excerpt)은 기사 복제가 아니라 직접 작성한 문장이다. */
+    const PRESS_SEED = [
+      {
+        category: 'news', type: 'press', published: true, pinned: true,
+        title: "지에스엘티(GSLT), 포브스 '2026 소비자 선정 최고의 브랜드 대상' 수상",
+        excerpt: '무선 IoT 기반 스마트 공간 부문에서 포브스 브랜드 대상을 받았습니다. 브랜드 인지도를 넘어 현장 적용성과 시장 확장성을 함께 평가받은 결과입니다.',
+        outlet: '한국경제TV', reporter: '박준식', publishedAt: '2026-04-21',
+        sourceUrl: 'https://www.wowtv.co.kr/NewsCenter/News/Read?articleId=A202604210280',
+        mirrors: [
+          { label: '다음뉴스', url: 'https://v.daum.net/v/20260421095347151' },
+          { label: '네이트뉴스', url: 'https://news.nate.com/view/20260421n08695' }
+        ],
+        thumbnail: '', body: '', tags: ['수상', '포브스'], attachments: []
+      },
+      {
+        category: 'news', type: 'press', published: true, pinned: false,
+        title: "포브스코리아 '2026 소비자 선정 최고의 브랜드 대상' 선정 기업 소개",
+        excerpt: '포브스코리아·중앙일보가 선정한 2026 최고의 브랜드 수상 기업 소개 기사입니다. 지에스엘티는 무선 IoT 기반 스마트 통합관제 솔루션 기업으로 소개됐습니다.',
+        outlet: '포브스코리아', reporter: '', publishedAt: '2026-02-27',
+        sourceUrl: 'https://www.forbeskorea.co.kr/news/articleView.html?idxno=401647',
+        mirrors: [],
+        thumbnail: '', body: '', tags: ['수상', '포브스'], attachments: []
+      }
+    ];
+
+    $('seed-press-btn').addEventListener('click', async () => {
+      const btn = $('seed-press-btn');
+      if (!confirm('포브스 수상 보도 2건을 등록할까요?\n\n· 한국경제TV (2026-04-21) — 다음·네이트 전재 포함\n· 포브스코리아 (2026-02-27)\n\n이미 등록했다면 중복 생성됩니다.')) return;
+      btn.disabled = true;
+      btn.textContent = '등록 중...';
+      try {
+        for (const s of PRESS_SEED) {
+          await addDoc(collection(db, 'posts'), {
+            ...s, createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+          });
+        }
+        btn.textContent = '등록 완료';
+        setTimeout(() => { btn.disabled = false; btn.textContent = '포브스 보도 2건 등록'; switchTab(currentTab); }, 800);
+      } catch (e) {
+        alert('등록 실패: ' + e.message);
+        btn.disabled = false;
+        btn.textContent = '포브스 보도 2건 등록';
+      }
     });
 
     /* ══ 샘플 글 생성 ══ */
