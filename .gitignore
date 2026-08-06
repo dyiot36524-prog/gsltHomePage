@@ -43,3 +43,6 @@ img/hero_upscaled_2560x1440.*
 # Next 앱 빌드 산출물 (web/.gitignore 가 대부분 처리하지만 명시)
 web/node_modules/
 web/.next/
+
+# 디자인 검토용 캡처 (재생성 가능)
+.impeccable/shots/

@@ -1,16 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { NAV, SOLUTIONS, type NavKey } from '@/lib/site';
-
-/** 아이콘 CDN(iconify) 의존을 없애고 필요한 것만 인라인 SVG로 둔다. */
-function ChevronDown({ className = '' }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="none"
-      stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="m6 9 6 6 6-6" />
-    </svg>
-  );
-}
+import { ChevronDown } from '@/components/Icon';
 
 export default function Header({ active = '' as NavKey }: { active?: NavKey }) {
   const linkCls = (key: string) =>
@@ -39,7 +30,7 @@ export default function Header({ active = '' as NavKey }: { active?: NavKey }) {
                       <span className="mt-1.5 w-2 h-2 rounded-full shrink-0" style={{ background: s.dot }} />
                       <span className="block">
                         <span className="font-bold text-slate-900 group-hover/item:text-gslt-600 transition-colors">
-                          {s.name} <span className="text-slate-400 font-medium text-xs">{s.en}</span>
+                          {s.name} <span className="text-slate-500 font-medium text-xs">{s.en}</span>
                         </span>
                         <span className="block text-xs text-slate-500 mt-0.5">{s.desc}</span>
                       </span>
@@ -54,7 +45,7 @@ export default function Header({ active = '' as NavKey }: { active?: NavKey }) {
           </div>
 
           <Link href="/#contact"
-            className="hidden md:flex items-center gap-2 bg-gslt-500 hover:bg-gslt-600 text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:scale-[1.02] active:scale-[0.98] transition-all duration-500 z-10">
+            className="hidden md:flex items-center gap-2 bg-gslt-500 hover:bg-gslt-400 text-slate-900 px-5 py-2.5 rounded-full text-sm font-semibold hover:scale-[1.02] active:scale-[0.98] transition-all duration-500 z-10">
             도입 문의
           </Link>
         </div>

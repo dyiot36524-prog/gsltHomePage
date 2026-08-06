@@ -132,6 +132,22 @@ export function safeHttpUrl(u?: string): string {
   return /^https?:\/\//i.test(s) ? s : '';
 }
 
+/**
+ * 이미지 경로 정규화.
+ *
+ * 기존 글의 썸네일은 'img/bizmoa1.JPG'처럼 선행 슬래시가 없다. 예전 정적 사이트는
+ * 문서 루트에서 서빙돼 그대로 풀렸지만, /news/<id> 같은 중첩 라우트에서는
+ * /news/img/... 로 잘못 풀리고 next/image는 아예 거부한다.
+ * 관리자가 새로 올리는 이미지는 Cloudinary 절대 URL이라 그건 그대로 둔다.
+ */
+export function mediaUrl(u?: string): string {
+  const s = String(u || '').trim();
+  if (!s) return '';
+  if (/^https?:\/\//i.test(s)) return s;
+  if (/^[a-z][a-z0-9+.-]*:/i.test(s)) return ''; // javascript:, data: 등 차단
+  return '/' + s.replace(/^\.?\//, '');
+}
+
 /** 카드 목적지. press면 원문, 아니면 내부 상세. */
 export function postHref(p: Post): string {
   return isPress(p) ? safeHttpUrl(p.sourceUrl) || '#' : `/news/${p.id}`;

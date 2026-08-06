@@ -30,7 +30,7 @@ export default function Home() {
               className="group rounded-2xl border border-slate-200/70 bg-white p-8 hover:shadow-xl hover:-translate-y-1 transition-all duration-500">
               <span className="block w-2.5 h-2.5 rounded-full mb-5" style={{ background: s.dot }} />
               <p className="font-black text-xl mb-2 group-hover:text-gslt-600 transition-colors">
-                {s.name} <span className="text-slate-400 font-medium text-sm">{s.en}</span>
+                {s.name} <span className="text-slate-500 font-medium text-sm">{s.en}</span>
               </p>
               <p className="text-sm text-slate-500 break-keep">{s.desc}</p>
             </Link>
