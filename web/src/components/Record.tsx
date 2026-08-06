@@ -9,8 +9,9 @@ import { ArrowUpRight, ArrowRight, Download } from '@/components/Icon';
  * 카드가 아니라 괘선으로 나뉜 행이다. 왼쪽에 일자가 등번호처럼 서고, 구분 태그가 붙고,
  * 제목이 본문 크기로 이어진다. 글이 몇 건 없어도 문서처럼 읽혀서 빈약해 보이지 않는다.
  *
- * 대비 기준: 정보를 담는 글자는 slate-500(4.76:1) 이상, 동작 아이콘도 slate-500.
- * slate-400은 2.56:1, slate-300은 1.5:1이라 정보나 어포던스에 쓰지 않는다.
+ * 대비 기준: 정보를 담는 글자는 slate-500(4.76:1) 이상. slate-400은 2.56:1이라
+ * 정보에 쓰지 않는다. 다만 목록 화살표는 행 전체가 링크이고 제목이 어포던스를 지는
+ * 순수 장식이라 slate-400로 두고, 혼자 의미를 지는 내려받기 글리프만 slate-500로 올린다.
  */
 
 export type RecordMark = 'default' | 'press' | 'file';
@@ -48,13 +49,17 @@ export function Tag({ children, tone = 'default' }: { children: ReactNode; tone?
   );
 }
 
-/** 데스크톱에서만 보이는 열 이름 줄. 실제 기록 문서의 표머리와 같은 역할. */
-export function RecordHead({ columns }: { columns: [string, string, string] }) {
+/**
+ * 데스크톱에서만 보이는 열 이름 줄. 실제 기록 문서의 표머리와 같은 역할.
+ * 열은 2개 또는 3개다 — 행마다 값이 달라지지 않는 '구분' 열은 정보가 0이므로 아예 두지 않는다.
+ */
+export function RecordHead({ columns }: { columns: string[] }) {
+  const grid = columns.length === 3 ? 'md:grid-cols-[7.5rem_9rem_1fr]' : 'md:grid-cols-[7.5rem_1fr]';
   return (
-    <div className="hidden md:grid grid-cols-[7.5rem_9rem_1fr] gap-6 pb-3 border-b-2 border-slate-900 text-[11px] font-bold tracking-[0.14em] text-slate-600">
-      <span>{columns[0]}</span>
-      <span>{columns[1]}</span>
-      <span>{columns[2]}</span>
+    <div className={`hidden md:grid ${grid} gap-6 pb-3 border-b-2 border-slate-900 text-[11px] font-bold tracking-[0.14em] text-slate-600`}>
+      {columns.map((c) => (
+        <span key={c}>{c}</span>
+      ))}
     </div>
   );
 }
@@ -86,7 +91,8 @@ export function RecordRow({
   href: string;
   external?: boolean;
   date: string;
-  mark: string;
+  /** 없으면 구분 트랙을 통째로 뺀다 */
+  mark?: string;
   markTone?: RecordMark;
   title: string;
   excerpt?: string;
@@ -96,13 +102,18 @@ export function RecordRow({
   action?: 'read' | 'external' | 'download';
 }) {
   const ActionIcon = action === 'external' ? ArrowUpRight : action === 'download' ? Download : ArrowRight;
+  // 내려받기 글리프는 '이 행은 파일을 받는다'를 혼자 말하므로 4.76:1로 둔다.
+  // 목록 화살표는 행 전체가 링크이고 제목이 어포던스를 지므로 장식이다 — 되돌린다.
+  const iconTone = action === 'download' ? 'text-slate-500' : 'text-slate-400';
 
   return (
     <li>
       <Link
         href={href}
         {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-        className="group grid grid-cols-[4.5rem_1fr] md:grid-cols-[7.5rem_9rem_1fr_auto] gap-x-5 md:gap-x-6 gap-y-3 md:gap-y-0 py-7 md:py-8 items-start transition-colors duration-300 hover:bg-slate-50/80 -mx-4 px-4 md:-mx-6 md:px-6"
+        className={`group grid grid-cols-[4.5rem_1fr] ${
+          mark ? 'md:grid-cols-[7.5rem_9rem_1fr_auto]' : 'md:grid-cols-[7.5rem_1fr_auto]'
+        } gap-x-5 md:gap-x-6 gap-y-3 md:gap-y-0 py-7 md:py-8 items-start transition-colors duration-300 hover:bg-slate-50/80 -mx-4 px-4 md:-mx-6 md:px-6`}
       >
         {/* 모바일에서는 일자가 좌측 레일로 2행을 관통하고 나머지가 오른쪽 열에 쌓인다.
             데스크톱에서는 네 칸이 한 줄로 선다. */}
@@ -110,12 +121,12 @@ export function RecordRow({
           <DateStack date={date} />
         </div>
 
-        <div className="col-start-2 row-start-1 flex items-center justify-between gap-3 md:justify-start md:pt-1">
-          <Tag tone={markTone}>{mark}</Tag>
-          <ActionIcon className="w-5 h-5 shrink-0 text-slate-500 transition-all duration-300 group-hover:text-gslt-700 group-hover:translate-x-0.5 md:hidden" />
+        <div className={`col-start-2 row-start-1 flex items-center justify-between gap-3 md:justify-start md:pt-1 ${mark ? '' : 'md:hidden'}`}>
+          {mark ? <Tag tone={markTone}>{mark}</Tag> : <span />}
+          <ActionIcon className={`w-5 h-5 shrink-0 ${iconTone} transition-all duration-300 group-hover:text-gslt-700 group-hover:translate-x-0.5 md:hidden`} />
         </div>
 
-        <div className="col-start-2 row-start-2 md:col-start-3 md:row-start-1 min-w-0">
+        <div className={`col-start-2 row-start-2 ${mark ? 'md:col-start-3' : 'md:col-start-2'} md:row-start-1 min-w-0`}>
           <h3 className="text-lg md:text-xl font-bold text-slate-900 leading-snug break-keep transition-colors duration-300 group-hover:text-gslt-700">
             {title}
           </h3>
@@ -127,7 +138,7 @@ export function RecordRow({
           {meta ? <div className="mt-3">{meta}</div> : null}
         </div>
 
-        <div className="hidden md:flex md:col-start-4 md:row-start-1 items-center gap-4 md:pt-1">
+        <div className={`hidden md:flex ${mark ? 'md:col-start-4' : 'md:col-start-3'} md:row-start-1 items-center gap-4 md:pt-1`}>
           {thumbnail ? (
             <span className="relative block w-28 h-[4.5rem] shrink-0 overflow-hidden bg-slate-100">
               <Image
@@ -139,7 +150,7 @@ export function RecordRow({
               />
             </span>
           ) : null}
-          <ActionIcon className="w-5 h-5 shrink-0 text-slate-500 transition-all duration-300 group-hover:text-gslt-700 group-hover:translate-x-0.5" />
+          <ActionIcon className={`w-5 h-5 shrink-0 ${iconTone} transition-all duration-300 group-hover:text-gslt-700 group-hover:translate-x-0.5`} />
         </div>
       </Link>
     </li>
@@ -161,7 +172,7 @@ export function RecordEmpty({
   body: string;
   action?: ReactNode;
   /** 목록과 같은 표머리를 유지한다 */
-  columns?: [string, string, string];
+  columns?: string[];
 }) {
   return (
     <>

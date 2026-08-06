@@ -78,7 +78,7 @@ export default async function PortfolioPage({
           />
         ) : shown.length === 0 ? (
           <RecordEmpty
-            columns={['일자', '구분', '현장']}
+            columns={['일자', '현장']}
             title={posts.length === 0 ? '시공사례를 준비하고 있습니다' : '해당 태그의 기록이 없습니다'}
             body={
               posts.length === 0
@@ -105,14 +105,13 @@ export default async function PortfolioPage({
           />
         ) : (
           <>
-            <RecordHead columns={['일자', '구분', '현장']} />
+            <RecordHead columns={['일자', '현장']} />
             <RecordList>
               {shown.map((p) => (
                 <RecordRow
                   key={p.id}
                   href={`/news/${p.id}`}
                   date={postDateLabel(p)}
-                  mark={(p.tags && p.tags[0]) || '시공사례'}
                   title={p.title}
                   excerpt={p.excerpt}
                   thumbnail={mediaUrl(p.thumbnail) || undefined}

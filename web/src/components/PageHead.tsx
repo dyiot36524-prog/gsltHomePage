@@ -54,9 +54,13 @@ export function FilterBar({
   basePath: string;
   param?: string;
 }) {
+  // 값이 있는 갈래가 하나뿐이면 '전체'와 결과가 같아 컨트롤이 둘 다 무의미해진다.
+  const usable = items.filter((it) => it.count > 0 || it.value === current);
+  if (usable.filter((it) => it.value !== 'all').length < 2) return null;
+
   return (
     <nav className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm" aria-label="목록 필터">
-      {items.filter((it) => it.count > 0 || it.value === current).map((it) => {
+      {usable.map((it) => {
         const on = it.value === current;
         const href = it.value === 'all' ? basePath : `${basePath}?${param}=${encodeURIComponent(it.value)}`;
         return (
