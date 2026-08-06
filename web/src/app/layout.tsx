@@ -50,10 +50,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://firestore.googleapis.com" crossOrigin="" />
       </head>
       <body className="font-sans antialiased">
-        {/* 히어로 텍스트 초기 은닉. 마운트 후 숨기면 한 번 번쩍이므로 페인트 전에 클래스를 건다.
-            JS가 없으면 붙지 않아 텍스트가 그대로 보인다. */}
+        {/* 히어로 텍스트와 스크롤 리빌 요소의 초기 은닉. 마운트 후 숨기면 한 번 번쩍이므로
+            페인트 전에 클래스를 건다. JS가 없으면 붙지 않아 내용이 그대로 보인다 —
+            이 안전장치가 없으면 스크립트가 죽었을 때 제품 페이지 본문이 통째로 사라진다. */}
         <Script id="js-hero-flag" strategy="beforeInteractive">
-          {`document.documentElement.classList.add('js-hero')`}
+          {`document.documentElement.classList.add('js-hero','js-reveal')`}
         </Script>
         {/* React는 JSX 주석을 DOM으로 내보내지 않는다. 방향 계약이 빌드 산출물에 남아
             감사 가능하려면 실제 HTML 주석으로 주입해야 한다. */}

@@ -16,6 +16,9 @@ import { ArrowUpRight } from '@/components/Icon';
  * 마운트 후 숨기면 텍스트가 한 번 번쩍이기 때문이다.
  */
 
+/** navigator.connection — 표준 DOM 타입에 없어 필요한 필드만 좁혀 받는다 */
+type NetworkInfo = { saveData?: boolean; effectiveType?: string };
+
 const ROWS = [
   { href: '/siot', no: '01', name: '시옷 솔루션', desc: '무선 IoT 구축 · 통합 제어', hover: 'group-hover:text-siot-500' },
   { href: '/bizmoa', no: '02', name: '비즈모아 자동화', desc: 'IoT 시공 견적 자동화 SaaS', hover: 'group-hover:text-bizmoa-500' },
@@ -43,6 +46,47 @@ export default function Hero() {
     const cue = cueRef.current;
     const rows = rowsRef.current.filter(Boolean);
 
+    // ─── 영상 선다운로드를 초기 로드 뒤로 미룬다 ───
+    // 첫 화면은 poster + 텍스트로 이미 성립하는데, 장식 배경인 영상은 6~15MB로 페이지의
+    // 나머지 전부보다 무겁다. 마크업은 preload="metadata"로 두고(스크럽 구간을 잡는 duration은
+    // 여전히 필요하다) 페이지 load가 끝난 뒤에 'auto'로 올린다.
+    //
+    // 속성 변경만으로 충분하다 — video.load()는 부르지 않는다. 4G(4Mbps/80ms)로 조인 헤드리스
+    // 크롬에서 재보니 승격만으로 8초에 6.6초 분량이 쌓였고, load()를 부른 쪽(6.59초)과
+    // 차이가 없었다. load()는 currentTime을 리셋하고 loadedmetadata를 다시 띄우는 값만 치른다.
+    // (승격을 안 하면 0.32초에 머물러 탐색 지연이 4ms → 337ms로 벌어진다.)
+    let idleId = 0;
+    let idleIsTimeout = false;
+
+    const promotePreload = () => {
+      idleId = 0;
+      // 데이터 절약 모드·저속 회선은 미리 받지 않는다. 마크업의 preload="metadata"는 그대로라
+      // duration은 여전히 잡히고, 스크럽은 탐색할 때마다 그 구간만 range로 받아 이어간다.
+      const conn = (navigator as Navigator & { connection?: NetworkInfo }).connection;
+      if (conn?.saveData || conn?.effectiveType === 'slow-2g' || conn?.effectiveType === '2g') return;
+      video.preload = 'auto';
+    };
+
+    const queuePromote = () => {
+      if (typeof window.requestIdleCallback === 'function') {
+        idleId = window.requestIdleCallback(promotePreload, { timeout: 2000 });
+      } else {
+        idleIsTimeout = true;
+        idleId = window.setTimeout(promotePreload, 300);
+      }
+    };
+
+    if (document.readyState === 'complete') queuePromote();
+    else window.addEventListener('load', queuePromote, { once: true });
+
+    const stopPromote = () => {
+      window.removeEventListener('load', queuePromote);
+      if (!idleId) return;
+      if (idleIsTimeout) window.clearTimeout(idleId);
+      else window.cancelIdleCallback?.(idleId);
+      idleId = 0;
+    };
+
     // 모션 최소화 설정: 스크럽 없이 마지막 장면 + 텍스트를 즉시 노출
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       document.documentElement.classList.add('hero-static');
@@ -53,7 +97,11 @@ export default function Hero() {
       };
       if (video.readyState >= 1) toEnd();
       else video.addEventListener('loadedmetadata', toEnd, { once: true });
-      return () => document.documentElement.classList.remove('hero-static');
+      return () => {
+        stopPromote();
+        video.removeEventListener('loadedmetadata', toEnd);
+        document.documentElement.classList.remove('hero-static');
+      };
     }
 
     const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
@@ -163,6 +211,7 @@ export default function Hero() {
 
     return () => {
       disposed = true;
+      stopPromote();
       if (raf) cancelAnimationFrame(raf);
       video.removeEventListener('loadedmetadata', onMeta);
       window.removeEventListener('touchstart', prime);
@@ -177,7 +226,7 @@ export default function Hero() {
         <style>{`
           #hero-track { height: auto; }
           .hero-stage { position: relative; height: auto; min-height: 100svh; }
-          .hero-veil { opacity: .82; }
+          .hero-veil { opacity: 1; }
         `}</style>
       </noscript>
 
@@ -199,7 +248,7 @@ export default function Hero() {
             poster="/img/hero-v2-poster.jpg"
             muted
             playsInline
-            preload="auto"
+            preload="metadata"
             disablePictureInPicture
             aria-hidden="true"
             tabIndex={-1}
@@ -246,14 +295,14 @@ export default function Hero() {
                     } border-white/10`}
                   >
                     <div className="flex items-baseline gap-4 md:gap-6 min-w-0">
-                      <span className="text-xs font-semibold tracking-widest text-white/30">{r.no}</span>
+                      <span className="text-xs font-semibold tracking-widest text-white/50">{r.no}</span>
                       <span className={`hero-row-name font-bold text-white ${r.hover} transition-colors duration-300`}>
                         {r.name}
                       </span>
-                      <span className="hidden sm:inline text-sm text-white/35 truncate">{r.desc}</span>
+                      <span className="hidden sm:inline text-sm text-white/50 truncate">{r.desc}</span>
                     </div>
                     <ArrowUpRight
-                      className={`w-5 h-5 md:w-6 md:h-6 text-white/30 ${r.hover} group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-300 shrink-0`}
+                      className={`w-5 h-5 md:w-6 md:h-6 text-white/55 ${r.hover} group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-300 shrink-0`}
                     />
                   </Link>
                 ))}
@@ -267,7 +316,7 @@ export default function Hero() {
             className="absolute bottom-7 left-1/2 -translate-x-1/2 z-10 hero-shadow pointer-events-none"
           >
             <div className="flex flex-col items-center gap-3">
-              <span className="text-[10px] font-semibold tracking-[0.35em] uppercase text-white/45">Scroll</span>
+              <span className="text-[10px] font-semibold tracking-[0.35em] uppercase text-white/60">Scroll</span>
               <span className="relative block w-px h-12 bg-white/15 overflow-hidden">
                 <span className="scroll-dash" />
               </span>
