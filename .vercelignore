@@ -76,3 +76,6 @@ firestore.rules
 
 # 아직 공개하지 않는 작업물
 amp/
+
+# Next 이관 작업 중인 앱 (별도 프로젝트로 배포 예정)
+web/

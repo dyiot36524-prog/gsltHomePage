@@ -1,0 +1,47 @@
+/* 시옷 페이지 전용 연출. 원본 siot.html의 <style> 블록을 그대로 옮긴 것.
+   전역 .reveal 은 globals.css + Reveal 컴포넌트가 담당하므로 여기엔 없다. */
+
+/* 원본은 전역 ::selection 을 주황으로 덮어썼다. 다른 페이지로 새지 않도록 이 페이지 안으로만 한정한다. */
+.page ::selection {
+  background: #ffedd5;
+  color: #0f172a;
+}
+
+/* 라인 마스크 리빌 */
+.heroLine {
+  display: block;
+  overflow: hidden;
+  padding-inline: 0.15em;
+  margin-inline: -0.15em;
+}
+
+.heroLineInner {
+  display: block;
+  transform: translateY(120%);
+  animation: lineUp 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: var(--d, 0s);
+}
+
+@keyframes lineUp {
+  to { transform: translateY(0); }
+}
+
+.fadeUp {
+  opacity: 0;
+  animation: fadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: var(--d, 0s);
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(22px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heroLineInner,
+  .fadeUp {
+    animation: none;
+    transform: none;
+    opacity: 1;
+  }
+}

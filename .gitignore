@@ -39,3 +39,7 @@ img/히어로.mp4
 img/hero_2560x1440_60fps.*
 img/hero_1920x1080_60fps.*
 img/hero_upscaled_2560x1440.*
+
+# Next 앱 빌드 산출물 (web/.gitignore 가 대부분 처리하지만 명시)
+web/node_modules/
+web/.next/

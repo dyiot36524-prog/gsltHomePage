@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+/* ─── 디자인 토큰 ───
+   기존 index.html의 tailwind.config에 있던 커스텀 팔레트를 Tailwind v4의
+   CSS 기반 @theme으로 옮긴 것. 값은 그대로여야 기존 화면과 색이 어긋나지 않는다. */
+@theme {
+  --font-sans: Pretendard, system-ui, -apple-system, sans-serif;
+
+  --color-gslt-50: #effbfc;
+  --color-gslt-100: #d7f4f7;
+  --color-gslt-200: #b0e8ee;
+  --color-gslt-300: #7dd6e0;
+  --color-gslt-400: #4cc3d2;
+  --color-gslt-500: #28b8c5;
+  --color-gslt-600: #1e93a0;
+  --color-gslt-700: #1c7682;
+
+  --color-siot-50: #fff7ed;
+  --color-siot-100: #ffedd5;
+  --color-siot-400: #fb923c;
+  --color-siot-500: #f97316;
+  --color-siot-600: #ea580c;
+  --color-siot-700: #c2410c;
+
+  --color-bizmoa-50: #eff6ff;
+  --color-bizmoa-100: #dbeafe;
+  --color-bizmoa-400: #60a5fa;
+  --color-bizmoa-500: #3b82f6;
+  --color-bizmoa-600: #2563eb;
+  --color-bizmoa-700: #1d4ed8;
+
+  --color-morak-50: #e6fafa;
+  --color-morak-100: #c6f3f3;
+  --color-morak-400: #2bd4d4;
+  --color-morak-500: #00c2c2;
+  --color-morak-600: #00a3a3;
+  --color-morak-700: #008585;
+
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-fade-in-up: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+
+@keyframes fadeInUp {
+  0% { opacity: 0; transform: translateY(2rem); filter: blur(4px); }
+  100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: #fff;
+  color: #0f172a;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: #d7f4f7;
+  color: #0f172a;
+}
+
+/* 스크롤 진입 시 나타나는 요소 — IntersectionObserver가 .on을 붙인다 */
+.reveal {
+  opacity: 0;
+  transform: translateY(1.75rem);
+  transition: opacity .7s cubic-bezier(.16,1,.3,1), transform .7s cubic-bezier(.16,1,.3,1);
+}
+
+.reveal.on {
+  opacity: 1;
+  transform: none;
+}
+
+/* 두 줄 말줄임 (목록 카드) */
+.clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .reveal { opacity: 1; transform: none; transition: none; }
+}

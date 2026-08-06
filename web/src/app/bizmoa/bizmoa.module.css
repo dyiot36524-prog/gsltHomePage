@@ -1,0 +1,102 @@
+/* 비즈모아 페이지 전용 연출. 원본 bizmoa.html <style> 을 그대로 옮겼다. */
+
+/* 페이지 안에서만 선택 색을 파랑 계열로 */
+.page ::selection {
+  background: #dbeafe;
+  color: #0f172a;
+}
+
+/* 블루프린트(도면) 배경 */
+.blueprint {
+  background-color: #0a1930;
+  background-image:
+    linear-gradient(rgba(96, 165, 250, .14) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(96, 165, 250, .14) 1px, transparent 1px),
+    linear-gradient(rgba(96, 165, 250, .05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(96, 165, 250, .05) 1px, transparent 1px);
+  background-size: 120px 120px, 120px 120px, 24px 24px, 24px 24px;
+}
+
+/* 장비 마커 펄스 */
+.marker {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #60a5fa;
+  box-shadow: 0 0 12px rgba(96, 165, 250, .8);
+}
+
+.marker::after {
+  content: '';
+  position: absolute;
+  inset: -9px;
+  border-radius: 999px;
+  border: 2px solid rgba(96, 165, 250, .55);
+  animation: pulse 2.6s ease-out infinite;
+  animation-delay: inherit;
+}
+
+@keyframes pulse {
+  0% { transform: scale(.35); opacity: 1; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+/* 스캔 라인 */
+.scanline {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 160px;
+  background: linear-gradient(90deg, transparent, rgba(96, 165, 250, .13), transparent);
+  animation: scan 8s linear infinite;
+}
+
+@keyframes scan {
+  from { left: -15%; }
+  to { left: 110%; }
+}
+
+/* 라인 마스크 리빌 + 페이드 */
+.heroLine {
+  display: block;
+  overflow: hidden;
+  padding-inline: .15em;
+  margin-inline: -.15em;
+}
+
+.heroLineInner {
+  display: block;
+  transform: translateY(120%);
+  animation: lineUp 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: var(--d, 0s);
+}
+
+@keyframes lineUp {
+  to { transform: translateY(0); }
+}
+
+.fadeUp {
+  opacity: 0;
+  animation: fadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: var(--d, 0s);
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(22px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heroLineInner,
+  .fadeUp {
+    animation: none;
+    transform: none;
+    opacity: 1;
+  }
+
+  .marker::after,
+  .scanline {
+    animation: none;
+  }
+}
