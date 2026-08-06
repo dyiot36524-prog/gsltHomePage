@@ -28,6 +28,12 @@ export default function Reveal({
       el.classList.add('on');
       return;
     }
+    // .reveal의 초기 상태는 opacity:0이다. 관찰자를 못 만드는 환경에서 예외로 빠져나가면
+    // 콘텐츠가 영영 안 보이므로, 관찰을 포기하는 쪽이 아니라 최종 상태로 여는 쪽을 택한다.
+    if (typeof IntersectionObserver === 'undefined') {
+      el.classList.add('on');
+      return;
+    }
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {

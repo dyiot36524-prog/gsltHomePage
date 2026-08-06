@@ -88,7 +88,7 @@ export default async function PortfolioPage({
             action={
               posts.length === 0 ? (
                 <Link
-                  href="/?open=contact"
+                  href="/contact"
                   className="inline-flex items-center bg-gslt-500 hover:bg-gslt-400 text-slate-900 px-6 py-3 text-sm font-bold transition-colors"
                 >
                   사례 요청하기

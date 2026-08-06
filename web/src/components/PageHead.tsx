@@ -63,11 +63,13 @@ export function FilterBar({
       {usable.map((it) => {
         const on = it.value === current;
         const href = it.value === 'all' ? basePath : `${basePath}?${param}=${encodeURIComponent(it.value)}`;
+        // aria-current는 URL을 바꿔 '지금 보고 있는 목록'을 표현하므로 page가 정확한 값이다.
+        // true도 유효하지만 "현재 항목"이라는 뜻만 남고 무엇의 현재인지가 빠진다.
         return (
           <Link
             key={it.value}
             href={href}
-            aria-current={on ? 'true' : undefined}
+            aria-current={on ? 'page' : undefined}
             className={`inline-flex items-baseline gap-1.5 pb-1 border-b-2 transition-colors duration-200 ${
               on
                 ? 'border-gslt-500 text-slate-900 font-bold'
@@ -75,7 +77,9 @@ export function FilterBar({
             }`}
           >
             {it.label}
-            <span className={`text-xs tabular-nums ${on ? 'text-gslt-600' : 'text-slate-500'}`}>
+            {/* 건수는 0.75rem 본문 글자다. gslt-600은 흰 바탕 3.66:1이라 아이콘·큰 글자 전용이므로
+                (DESIGN.md '대비 사다리는 바탕을 따른다') 한 단계 내린 gslt-700(5.30:1)을 쓴다. */}
+            <span className={`text-xs tabular-nums ${on ? 'text-gslt-700' : 'text-slate-500'}`}>
               {it.count}
             </span>
           </Link>

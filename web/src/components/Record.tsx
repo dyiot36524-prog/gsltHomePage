@@ -29,7 +29,9 @@ function DateStack({ date }: { date: string }) {
     <span className="block tabular-nums leading-none">
       <span className="block text-[11px] font-medium text-slate-500 mb-1.5">{m[1]}</span>
       <span className="block text-2xl md:text-[1.75rem] font-black text-slate-900 tracking-tight transition-colors duration-300 group-hover:text-gslt-700">
-        {m[2]}<span className="text-slate-400 mx-px">.</span>{m[3]}
+        {/* 월·일 사이 구분점. 숫자가 바로 옆에 붙어 읽히므로 정보를 지지 않는 장식이고,
+            보조기기에는 "10 점 07"로 읽히면 방해가 되므로 숨긴다. */}
+        {m[2]}<span className="text-slate-400 mx-px" aria-hidden="true">.</span>{m[3]}
       </span>
     </span>
   );
@@ -127,9 +129,11 @@ export function RecordRow({
         </div>
 
         <div className={`col-start-2 row-start-2 ${mark ? 'md:col-start-3' : 'md:col-start-2'} md:row-start-1 min-w-0`}>
-          <h3 className="text-lg md:text-xl font-bold text-slate-900 leading-snug break-keep transition-colors duration-300 group-hover:text-gslt-700">
+          {/* 목록 페이지의 h1(제목) 바로 다음 단계다. h3로 두면 h1 → h3로 한 칸 건너뛰어
+              스크린리더의 제목 목록에 빈 층이 생긴다. 크기는 클래스가 정하므로 위계만 바로잡는다. */}
+          <h2 className="text-lg md:text-xl font-bold text-slate-900 leading-snug break-keep transition-colors duration-300 group-hover:text-gslt-700">
             {title}
-          </h3>
+          </h2>
           {excerpt ? (
             <p className="mt-1.5 text-sm text-slate-500 leading-relaxed break-keep line-clamp-2 max-w-[60ch]">
               {excerpt}

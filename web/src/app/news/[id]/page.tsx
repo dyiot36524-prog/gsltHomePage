@@ -196,7 +196,7 @@ export default async function PostPage({ params }: Params) {
             현장 조건에 맞는 구성을 무료로 제안해 드립니다.
           </p>
           <Link
-            href="/?open=contact"
+            href="/contact"
             className="group inline-flex items-center gap-2 bg-gslt-500 hover:bg-gslt-400 text-slate-900 px-6 py-3 text-sm font-bold transition-colors"
           >
             도입 문의

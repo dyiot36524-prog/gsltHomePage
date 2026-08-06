@@ -76,7 +76,7 @@ export default async function DownloadsPage() {
             body="필요한 자료가 있으시면 문의 주세요. 바로 보내드리겠습니다."
             action={
               <Link
-                href="/?open=contact"
+                href="/contact"
                 className="inline-flex items-center bg-gslt-500 hover:bg-gslt-400 text-slate-900 px-6 py-3 text-sm font-bold transition-colors"
               >
                 자료 요청하기
