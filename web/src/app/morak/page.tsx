@@ -101,7 +101,7 @@ export default function MorakPage() {
             <div>
               <div className={`${styles.fadeUp} flex items-center gap-4 mb-9`} style={d('.15s')}>
                 <span className="block w-12 h-px bg-morak-500" />
-                <span className="text-[11px] md:text-xs font-semibold tracking-[0.35em] uppercase text-morak-600">
+                <span className="text-[11px] md:text-xs font-semibold tracking-[0.35em] uppercase text-morak-800">
                   Morak · Community Platform
                 </span>
               </div>
@@ -109,8 +109,9 @@ export default function MorakPage() {
                 <span className={styles.heroLine}>
                   <span className={styles.heroLineInner} style={d('.3s')}>기수제 모임을</span>
                 </span>
+                {/* 흰 바탕의 morak-500은 2.21:1로 큰 글자 기준(3:1)에도 못 미쳐 morak-600(3.10:1)으로 내렸다 */}
                 <span className={styles.heroLine}>
-                  <span className={`${styles.heroLineInner} text-morak-500`} style={d('.45s')}>한곳에서.</span>
+                  <span className={`${styles.heroLineInner} text-morak-600`} style={d('.45s')}>한곳에서.</span>
                 </span>
               </h1>
               <p
@@ -125,18 +126,21 @@ export default function MorakPage() {
                   href="https://morac.gslt.kr"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-8 py-4 rounded-full bg-morak-500 hover:bg-morak-600 text-white font-bold transition-all"
+                  className="px-8 py-4 rounded-full bg-morak-500 hover:bg-morak-400 text-slate-900 font-bold transition-all"
                 >
                   모락 시작하기
                 </a>
+                {/* 테두리가 이 버튼의 유일한 식별 요소라 비텍스트 3:1이 필요하다 — slate-200은 1.23:1, slate-300도 1.48:1로 미달 */}
                 <Link
-                  href="/?open=contact"
-                  className="px-8 py-4 rounded-full border-2 border-slate-200 text-slate-600 font-bold hover:border-morak-400 hover:text-morak-600 transition-all"
+                  href="/contact"
+                  className="px-8 py-4 rounded-full border-2 border-slate-500 text-slate-600 font-bold hover:border-morak-600 hover:text-slate-900 transition-all"
                 >
                   도입 문의
                 </Link>
               </div>
-              <p className={`${styles.fadeUp} mt-6 text-xs text-slate-400`} style={d('1.05s')}>
+              {/* 히어로 배경이 순백이 아니라 민트빛이라 slate-500이 4.32:1까지 내려간다.
+                  12px 본문이라 4.5:1이 필요해 한 단계 내렸다. */}
+              <p className={`${styles.fadeUp} mt-6 text-xs text-slate-600`} style={d('1.05s')}>
                 웹 · 설치형 앱(PWA) · Google Play 지원, 핵심 기능 무료
               </p>
             </div>
@@ -160,12 +164,16 @@ export default function MorakPage() {
                 </div>
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="w-32 h-32 md:w-40 md:h-40 rounded-[2.4rem] bg-white shadow-2xl border border-slate-100 flex items-center justify-center">
+                    {/* 원본이 2271px인데 실제로는 80~112px로 그려진다. sizes가 없으면
+                        next/image가 선언 폭 기준으로 큰 변형을 고르고, priority까지 붙어
+                        그 큰 파일을 첫 화면에서 먼저 받는다. */}
                     <Image
                       src="/img/morak-logo.png"
                       alt="모락(Morak) 로고"
                       width={2271}
                       height={1121}
                       priority
+                      sizes="(max-width: 768px) 80px, 112px"
                       className="w-20 md:w-28 h-auto"
                     />
                   </div>
@@ -184,6 +192,7 @@ export default function MorakPage() {
               width={1124}
               height={600}
               loading="lazy"
+              sizes="(max-width: 1024px) 100vw, 1024px"
               className="w-full h-auto rounded-3xl border border-slate-200/70 shadow-xl"
             />
           </Reveal>
@@ -199,7 +208,7 @@ export default function MorakPage() {
             <Reveal className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {FEATURES.map((f) => (
                 <div key={f.tag} className="bg-white rounded-2xl border border-slate-200/70 p-7">
-                  <p className="text-xs font-black tracking-widest text-morak-600 mb-3">{f.tag}</p>
+                  <p className="text-xs font-black tracking-widest text-morak-800 mb-3">{f.tag}</p>
                   <p className="font-bold text-lg mb-2 break-keep">{f.title}</p>
                   <p className="text-sm text-slate-500 break-keep leading-relaxed">{f.desc}</p>
                 </div>
@@ -213,7 +222,7 @@ export default function MorakPage() {
           <div className="max-w-6xl mx-auto">
             <Reveal className="flex items-end justify-between gap-4 mb-8">
               <h2 className="text-2xl md:text-3xl font-black break-keep">화면 미리보기</h2>
-              <p className="text-sm text-slate-400 hidden sm:block shrink-0">좌우로 넘겨보세요</p>
+              <p className="text-sm text-slate-500 hidden sm:block shrink-0">좌우로 넘겨보세요</p>
             </Reveal>
             <Reveal className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory [scrollbar-width:thin]">
               {SHOTS.map((s) => (
@@ -224,6 +233,7 @@ export default function MorakPage() {
                   width={640}
                   height={1125}
                   loading="lazy"
+                  sizes="(max-width: 768px) 240px, 280px"
                   className="w-[240px] md:w-[280px] h-auto shrink-0 snap-start rounded-2xl border border-slate-200/70 shadow-lg"
                 />
               ))}
@@ -245,7 +255,7 @@ export default function MorakPage() {
                 href="https://morac.gslt.kr/legal/privacy"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="shrink-0 px-7 py-3.5 rounded-full border-2 border-slate-200 font-bold text-sm text-slate-600 hover:border-morak-400 hover:text-morak-600 transition-all"
+                className="shrink-0 px-7 py-3.5 rounded-full border-2 border-slate-500 font-bold text-sm text-slate-600 hover:border-morak-600 hover:text-slate-900 transition-all"
               >
                 개인정보 처리방침
               </a>
@@ -267,7 +277,7 @@ export default function MorakPage() {
               href="https://morac.gslt.kr"
               target="_blank"
               rel="noopener noreferrer"
-              className="shrink-0 px-8 py-4 rounded-full bg-morak-500 hover:bg-morak-600 text-white font-bold transition-all relative"
+              className="shrink-0 px-8 py-4 rounded-full bg-morak-500 hover:bg-morak-400 text-slate-900 font-bold transition-all relative"
             >
               모락 시작하기
             </a>

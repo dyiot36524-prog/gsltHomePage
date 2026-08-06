@@ -95,14 +95,16 @@ export default function BizmoaPage() {
               IoT·스마트홈 시공업체를 위한 올인원 SaaS입니다.
             </p>
             <div className={`${styles.fadeUp} flex flex-wrap items-center gap-4 mb-16`} style={d('.9s')}>
+              {/* 히어로 전체에 걸린 어두운 text-shadow가 밝은 버튼 면 위 먹색 글자에는 번짐으로 보여 끈다 */}
               <Link
-                href="/?open=contact"
-                className="px-8 py-4 rounded-full bg-bizmoa-500 hover:bg-bizmoa-600 text-white font-bold transition-all"
+                href="/contact"
+                className="px-8 py-4 rounded-full bg-bizmoa-500 hover:bg-bizmoa-400 text-slate-900 font-bold transition-all [text-shadow:none]"
               >
                 도입 문의하기
               </Link>
+              {/* 홈의 비즈모아 패널은 아직 이관 전이라 #bizmoa 앵커가 없다. 패널이 올라오면 앵커로 되돌린다 */}
               <Link
-                href="/#bizmoa"
+                href="/"
                 className="px-8 py-4 rounded-full border-2 border-white/15 text-white/80 font-bold hover:border-bizmoa-400 hover:text-bizmoa-400 transition-all"
               >
                 홈에서 살펴보기
@@ -113,10 +115,10 @@ export default function BizmoaPage() {
               style={d('1.1s')}
             >
               <span className="text-bizmoa-400">01 배치</span><span className="w-8 h-px bg-white/20" />
-              <span className="text-white/50">02 견적</span><span className="w-8 h-px bg-white/20" />
-              <span className="text-white/50">03 계약</span><span className="w-8 h-px bg-white/20" />
-              <span className="text-white/50">04 관리</span><span className="w-8 h-px bg-white/20" />
-              <span className="text-white/50">05 운영</span>
+              <span className="text-white/55">02 견적</span><span className="w-8 h-px bg-white/20" />
+              <span className="text-white/55">03 계약</span><span className="w-8 h-px bg-white/20" />
+              <span className="text-white/55">04 관리</span><span className="w-8 h-px bg-white/20" />
+              <span className="text-white/55">05 운영</span>
             </div>
           </div>
         </section>
@@ -146,21 +148,21 @@ export default function BizmoaPage() {
 
             <Reveal className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-14 max-w-5xl mx-auto">
               <div className="bg-white rounded-2xl border border-slate-200/70 p-7">
-                <p className="text-xs font-black tracking-widest text-bizmoa-500 mb-3">DRAWING</p>
+                <p className="text-xs font-black tracking-widest text-bizmoa-600 mb-3">DRAWING</p>
                 <p className="font-bold text-lg mb-2 break-keep">도면 위 드래그 배치</p>
                 <p className="text-sm text-slate-500 break-keep leading-relaxed">
                   층별 도면 관리와 AI 자동배치로 대규모 건물도 빠르게 설계합니다.
                 </p>
               </div>
               <div className="bg-white rounded-2xl border border-slate-200/70 p-7">
-                <p className="text-xs font-black tracking-widest text-bizmoa-500 mb-3">QUOTATION</p>
+                <p className="text-xs font-black tracking-widest text-bizmoa-600 mb-3">QUOTATION</p>
                 <p className="font-bold text-lg mb-2 break-keep">견적·서류 자동 생성</p>
                 <p className="text-sm text-slate-500 break-keep leading-relaxed">
                   장비+노무비 결합 견적서, 계약서, 납품확인서가 자동으로 만들어집니다.
                 </p>
               </div>
               <div className="bg-white rounded-2xl border border-slate-200/70 p-7">
-                <p className="text-xs font-black tracking-widest text-bizmoa-500 mb-3">MANAGE</p>
+                <p className="text-xs font-black tracking-widest text-bizmoa-600 mb-3">MANAGE</p>
                 <p className="font-bold text-lg mb-2 break-keep">프로젝트·권한 관리</p>
                 <p className="text-sm text-slate-500 break-keep leading-relaxed">
                   진행 상태·견적 이력을 한 화면에서, 역할별 권한으로 안전하게.
@@ -194,11 +196,11 @@ export default function BizmoaPage() {
             <div className={styles.marker} style={{ top: '70%', left: '90%', animationDelay: '1.5s' }} />
             <div className="text-center md:text-left relative">
               <p className="text-2xl md:text-3xl font-black break-keep mb-2">도면만 있으면 시작할 수 있습니다</p>
-              <p className="text-white/50 break-keep">데모와 도입 안내를 무료로 받아보세요.</p>
+              <p className="text-white/55 break-keep">데모와 도입 안내를 무료로 받아보세요.</p>
             </div>
             <Link
-              href="/?open=contact"
-              className="shrink-0 px-8 py-4 rounded-full bg-bizmoa-500 hover:bg-bizmoa-600 text-white font-bold transition-all relative"
+              href="/contact"
+              className="shrink-0 px-8 py-4 rounded-full bg-bizmoa-500 hover:bg-bizmoa-400 text-slate-900 font-bold transition-all relative"
             >
               무료 상담 신청
             </Link>
