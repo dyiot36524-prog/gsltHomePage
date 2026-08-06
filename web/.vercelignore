@@ -1,0 +1,8 @@
+# web/ 만 업로드하는 CLI 프리뷰 배포용.
+# .vercelignore가 있으면 Vercel CLI가 .gitignore를 참고하지 않는다.
+# public/img 는 .gitignore 대상이지만 배포에는 반드시 포함돼야 하므로,
+# 여기서는 제외하지 않는다 (상위 img/ 가 함께 올라가지 않기 때문).
+node_modules
+.next
+.env*
+.vercel

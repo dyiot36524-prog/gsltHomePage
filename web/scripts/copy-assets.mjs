@@ -22,6 +22,12 @@ const dest = path.resolve(here, '../public/img');
 const staging = `${dest}.staging`;
 
 if (!existsSync(src)) {
+  // web/ 만 업로드하는 배포(CLI 프리뷰)에서는 상위 img/ 가 없다.
+  // 그 경우 이미 복사돼 함께 올라온 public/img 를 그대로 쓴다.
+  if (existsSync(dest)) {
+    console.log(`copy-assets: 상위 img/ 가 없어 기존 ${dest} 를 그대로 사용합니다.`);
+    process.exit(0);
+  }
   console.error(`copy-assets: 원본을 찾을 수 없습니다 — ${src}`);
   process.exit(1);
 }
