@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { SITE } from '@/lib/site';
+import Script from 'next/script';
 import ScrollTop from '@/components/ScrollTop';
 import './globals.css';
 
@@ -36,7 +37,9 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ko">
+    // 아래 인라인 스크립트가 <html>에 js-hero를 붙이므로 서버 렌더 결과와 어긋난다.
+    // 의도된 차이라 하이드레이션 경고를 끈다.
+    <html lang="ko" suppressHydrationWarning>
       <head>
         {/* Pretendard: 한글 동적 서브셋 — 기존 사이트와 동일한 서체를 유지한다 */}
         <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="" />
@@ -47,6 +50,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://firestore.googleapis.com" crossOrigin="" />
       </head>
       <body className="font-sans antialiased">
+        {/* 히어로 텍스트 초기 은닉. 마운트 후 숨기면 한 번 번쩍이므로 페인트 전에 클래스를 건다.
+            JS가 없으면 붙지 않아 텍스트가 그대로 보인다. */}
+        <Script id="js-hero-flag" strategy="beforeInteractive">
+          {`document.documentElement.classList.add('js-hero')`}
+        </Script>
         {/* React는 JSX 주석을 DOM으로 내보내지 않는다. 방향 계약이 빌드 산출물에 남아
             감사 가능하려면 실제 HTML 주석으로 주입해야 한다. */}
         <div hidden dangerouslySetInnerHTML={{ __html: DIRECTION_CONTRACT }} />

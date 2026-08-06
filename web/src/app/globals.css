@@ -90,6 +90,142 @@ body {
   .reveal { opacity: 1; transform: none; transition: none; }
 }
 
+/* ─── 히어로: 스크롤 연동 영상 스크럽 ───
+   #hero-track이 스크롤 구간(길이)을 만들고 .hero-stage가 그 안에 sticky로 고정된다.
+   스크롤 진행도(0~1)를 JS가 계산해 영상 currentTime과 텍스트 리빌을 함께 몰아준다.
+   주의: #hero / #hero-track에 overflow:hidden을 주면 sticky가 깨진다. */
+#hero-track {
+  height: 380vh;
+}
+
+.hero-stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+}
+
+#hero-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  background: #05070c;
+}
+
+/* 상단 네비 / 하단 스크롤 큐 가독성용 그라데이션 */
+.hero-grade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to bottom,
+      rgba(5, 7, 12, .72) 0%, rgba(5, 7, 12, 0) 26%,
+      rgba(5, 7, 12, 0) 58%, rgba(5, 7, 12, .6) 100%);
+}
+
+/* 텍스트가 떠오를 때 영상을 눌러주는 암막 — JS가 opacity 제어.
+   왼쪽(텍스트)은 진하게, 오른쪽은 옅게 둬서 마지막 빌딩 컷이 배경으로 남게 한다. */
+.hero-veil {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(100deg,
+      rgba(5, 7, 12, .95) 0%, rgba(5, 7, 12, .88) 34%,
+      rgba(5, 7, 12, .62) 62%, rgba(5, 7, 12, .44) 100%);
+}
+
+/* 모바일은 텍스트가 화면 폭을 다 쓰므로 고르게 덮는다 */
+@media (max-width: 767px) {
+  .hero-veil {
+    background: linear-gradient(180deg,
+        rgba(5, 7, 12, .9) 0%, rgba(5, 7, 12, .86) 55%, rgba(5, 7, 12, .9) 100%);
+  }
+  #hero-track { height: 300vh; }
+}
+
+/* 라인 마스크 리빌 — --y를 JS가 스크롤 진행도로 밀어 넣는다 */
+.hero-line {
+  display: block;
+  overflow: hidden;
+  /* 리빌 중 섀도우가 옆면에서 잘리지 않게 좌우 여유 */
+  padding-inline: 0.15em;
+  margin-inline: -0.15em;
+}
+
+.hero-line-inner {
+  display: block;
+  transform: translateY(var(--y, 0%));
+}
+
+.hero-fade {
+  opacity: var(--o, 1);
+  transform: translateY(var(--y, 0px));
+}
+
+/* JS 동작 시에만 초기 은닉 — JS가 없으면 그대로 보인다 */
+.js-hero .hero-line-inner { --y: 110%; }
+.js-hero .hero-fade { --o: 0; --y: 22px; }
+
+/* 짧은 뷰포트(노트북·소형 폰)에서도 한 화면에 들어오도록 유동 타이포·여백 */
+.hero-title {
+  font-size: clamp(1.9rem, min(6vw, 9.2vh), 5.25rem);
+  line-height: 1.08;
+  margin-bottom: clamp(.85rem, 2.8vh, 2.5rem);
+}
+
+.hero-desc {
+  font-size: clamp(.8125rem, min(1.25vw, 2vh), 1.0625rem);
+  margin-bottom: clamp(.9rem, 3.2vh, 3rem);
+}
+
+.hero-row { padding-block: clamp(.5rem, 1.8vh, 1.4rem); }
+.hero-row-name { font-size: clamp(1rem, min(2vw, 3vh), 1.75rem); }
+
+/* 밝은 영상 프레임 위에서도 가독성 확보 */
+.hero-shadow {
+  text-shadow: 0 1px 2px rgba(4, 6, 12, 0.5), 0 3px 12px rgba(4, 6, 12, 0.55);
+}
+
+.hero-shadow .truncate {
+  text-shadow: 0 1px 2px rgba(4, 6, 12, 0.7);
+}
+
+/* 스크롤 큐 */
+.scroll-dash {
+  position: absolute;
+  inset: 0;
+  background: rgba(40, 184, 197, 0.9);
+  transform: translateY(-100%);
+  animation: scrollDash 2.2s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+@keyframes scrollDash {
+  0% { transform: translateY(-100%); }
+  55% { transform: translateY(100%); }
+  100% { transform: translateY(100%); }
+}
+
+/* 스크럽 비활성(모션 최소화·JS 미동작): 마지막 장면 + 텍스트 즉시 노출 */
+.hero-static #hero-track { height: auto; }
+
+.hero-static .hero-stage {
+  position: relative;
+  height: auto;
+  min-height: 100svh;
+}
+
+.hero-static .hero-line-inner { --y: 0% !important; }
+.hero-static .hero-fade { --o: 1 !important; --y: 0px !important; }
+.hero-static .hero-veil { opacity: .82 !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-dash { animation: none; }
+}
+
 /* ─── 게시글 본문 ───
    타이포그래피 플러그인의 기본값 대신 직접 짠다. 한글 본문이라 letter-spacing을 조금 좁히고,
    행간을 넉넉히 준다. 제목 위 여백이 아래보다 크게 — 문단이 제목에 붙어 읽히도록. */

@@ -37,7 +37,7 @@ export default function Footer() {
           <div>
             <div className="flex items-center gap-3 mb-3">
               <Image src="/img/gslt-logo-white.png" alt="GSLT" width={110} height={28}
-                className="h-7 w-auto object-contain" />
+                className="h-7 w-auto object-contain" style={{ width: 'auto', height: '1.75rem' }} />
               <span className="text-xs font-medium border-l border-white/10 pl-3 text-slate-500 uppercase tracking-widest">
                 {SITE.tagline}
               </span>
