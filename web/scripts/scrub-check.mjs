@@ -5,7 +5,10 @@
  * "스크롤에 따라 프레임이 실제로 바뀌는가"가 깨지지 않았는지 확인해야 한다.
  * currentTime 대입 후 seeked까지의 지연과, 실제로 그려진 화면이 달라지는지를 함께 본다.
  *
- *   node scripts/scrub-check.mjs [baseUrl]
+ * **배포본 URL로 돌려야 한다.** localhost는 지연이 없어 버퍼가 비어 있어도 탐색이 빨라,
+ * 실제로는 끊기는 상태가 로컬에서는 멀쩡하게 나온다. 실제로 그렇게 한 번 놓쳤다.
+ *
+ *   node scripts/scrub-check.mjs https://<배포주소>
  */
 import puppeteer from 'puppeteer-core';
 import { createHash } from 'node:crypto';
@@ -51,7 +54,10 @@ for (const vp of [
   const worst = Math.max(...seek.times);
   const avg = (seek.times.reduce((a, b) => a + b, 0) / seek.times.length).toFixed(1);
   console.log(`  탐색 8회: 평균 ${avg}ms · 최악 ${worst}ms  [${seek.times.join(', ')}]`);
-  if (worst > 400) { fail++; console.log(`  ✗ 최악 탐색이 ${worst}ms — 스크럽이 끊겨 보인다`); }
+  // 버퍼가 차 있으면 탐색은 10~25ms다. 100ms를 넘는다는 건 버퍼가 비어 매 탐색이 네트워크로
+  // 나간다는 뜻이고, 그 상태로는 스크롤에 그림이 붙지 않는다. 400ms처럼 느슨하게 잡으면
+  // 실제로 끊기는 상태가 통과로 나온다(415ms 회귀를 한 번 놓쳤다).
+  if (worst > 100) { fail++; console.log(`  ✗ 최악 탐색이 ${worst}ms — 버퍼가 비어 스크럽이 끊긴다`); }
 
   // 스크롤에 따라 실제로 다른 프레임이 그려지는가 (화면 해시 비교)
   const track = await page.evaluate(() => document.getElementById('hero-track')?.offsetHeight || 0);

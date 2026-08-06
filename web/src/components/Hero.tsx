@@ -51,10 +51,14 @@ export default function Hero() {
     // 나머지 전부보다 무겁다. 마크업은 preload="metadata"로 두고(스크럽 구간을 잡는 duration은
     // 여전히 필요하다) 페이지 load가 끝난 뒤에 'auto'로 올린다.
     //
-    // 속성 변경만으로 충분하다 — video.load()는 부르지 않는다. 4G(4Mbps/80ms)로 조인 헤드리스
-    // 크롬에서 재보니 승격만으로 8초에 6.6초 분량이 쌓였고, load()를 부른 쪽(6.59초)과
-    // 차이가 없었다. load()는 currentTime을 리셋하고 loadedmetadata를 다시 띄우는 값만 치른다.
-    // (승격을 안 하면 0.32초에 머물러 탐색 지연이 4ms → 337ms로 벌어진다.)
+    // 승격은 속성 변경만으로는 안 된다. 자원 선택 알고리즘이 이미 끝난 뒤라 크롬은 다시 돌지
+    // 않는다 — 배포본에서 재보니 preload='auto'를 걸어도 버퍼가 0.16초(모바일)/0.78초에
+    // 고정된 채 6초 동안 1바이트도 자라지 않았고, 그 상태로는 스크럽 탐색이 매번 range 요청이라
+    // 350~415ms까지 벌어진다. load()로 자원 선택을 다시 돌려야 실제로 받는다:
+    // 1초 안에 전 구간(9.93초)이 버퍼에 들어오고 탐색이 7~23ms로 떨어진다.
+    //
+    // (로컬에서는 이 차이가 안 보인다. localhost는 지연이 없어 range 요청이 즉시 끝나기 때문에
+    //  버퍼가 비어 있어도 탐색이 빠르다. 이 판단은 반드시 배포본에서 재야 한다.)
     let idleId = 0;
     let idleIsTimeout = false;
 
@@ -65,6 +69,9 @@ export default function Hero() {
       const conn = (navigator as Navigator & { connection?: NetworkInfo }).connection;
       if (conn?.saveData || conn?.effectiveType === 'slow-2g' || conn?.effectiveType === '2g') return;
       video.preload = 'auto';
+      // load()는 currentTime을 0으로 되돌리지만, loadedmetadata가 다시 떠서 onMeta → kick으로
+      // 스크롤 위치를 재계산해 그리므로 제자리를 찾아온다.
+      video.load();
     };
 
     const queuePromote = () => {
