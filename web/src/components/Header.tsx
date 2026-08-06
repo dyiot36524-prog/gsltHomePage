@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { NAV, SOLUTIONS, type NavKey } from '@/lib/site';
-import { ChevronDown } from '@/components/Icon';
+import SolutionsMenu from '@/components/SolutionsMenu';
 
 /**
  * overlay: 히어로 영상 위에 겹쳐 뜨는 모드. 배경을 지우고 흰 글씨로 바꾸며,
@@ -19,9 +19,11 @@ export default function Header({
       ? active === key
         ? 'text-white'
         : 'text-white/70 hover:text-white transition-colors'
+      // 14px 볼드는 작은 글자라 4.5:1이 필요하다. gslt-600은 흰 바탕 3.66:1로
+      // DESIGN.md가 '아이콘과 굵은 큰 글자 전용'으로 못박은 값이라 글자에는 gslt-700을 쓴다.
       : active === key
-        ? 'text-gslt-600'
-        : 'text-slate-600 hover:text-gslt-600 transition-colors';
+        ? 'text-gslt-700'
+        : 'text-slate-600 hover:text-gslt-700 transition-colors';
 
   return (
     <header>
@@ -42,57 +44,42 @@ export default function Header({
             />
           </Link>
 
-          <div className={`absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-9 text-sm font-bold ${overlay ? 'text-white/80' : 'text-slate-600'}`}>
-            <div className="relative group">
-              <button type="button" className={`flex items-center gap-1 transition-colors ${overlay ? 'hover:text-white' : 'hover:text-gslt-600'}`}>
-                솔루션
-                <ChevronDown className="w-3 h-3 transition-transform duration-300 group-hover:rotate-180" />
-              </button>
-              <div className="absolute left-1/2 -translate-x-1/2 top-full pt-4 opacity-0 invisible translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200">
-                <div className="w-72 bg-white rounded-2xl shadow-xl border border-slate-200/70 p-2">
-                  {SOLUTIONS.map((s) => (
-                    <Link key={s.href} href={s.href}
-                      className="flex items-start gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-colors group/item">
-                      <span className="mt-1.5 w-2 h-2 rounded-full shrink-0" style={{ background: s.dot }} />
-                      <span className="block">
-                        <span className="font-bold text-slate-900 group-hover/item:text-gslt-600 transition-colors">
-                          {s.name} <span className="text-slate-500 font-medium text-xs">{s.en}</span>
-                        </span>
-                        <span className="block text-xs text-slate-500 mt-0.5">{s.desc}</span>
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
+          {/* 중앙 네비는 lg(1024px)부터. md(768px)에서는 라벨 5개 + 로고 + CTA가 폭에 들어가지
+              않아 '포트폴리/오'처럼 어절 중간이 꺾였다. whitespace-nowrap은 그 안전장치다. */}
+          <div className={`absolute left-1/2 -translate-x-1/2 hidden lg:flex items-center gap-9 text-sm font-bold whitespace-nowrap ${overlay ? 'text-white/80' : 'text-slate-600'}`}>
+            <SolutionsMenu overlay={overlay} />
             {NAV.map((n) => (
               <Link key={n.key} href={n.href} className={linkCls(n.key)}>{n.label}</Link>
             ))}
           </div>
 
-          <Link href="/#contact"
-            className="hidden md:flex items-center gap-2 bg-gslt-500 hover:bg-gslt-400 text-slate-900 px-5 py-2.5 rounded-full text-sm font-semibold hover:scale-[1.02] active:scale-[0.98] transition-all duration-500 z-10">
+          <Link href="/contact"
+            className="hidden lg:flex items-center gap-2 bg-gslt-500 hover:bg-gslt-400 text-slate-900 px-5 py-2.5 rounded-full text-sm font-semibold hover:scale-[1.02] active:scale-[0.98] transition-all duration-500 z-10">
             도입 문의
           </Link>
         </div>
 
-        <div className={overlay ? 'md:hidden border-t border-white/10' : 'md:hidden border-t border-slate-100 bg-white/95'}>
-          <div className={`flex items-center gap-5 px-4 py-2.5 text-sm font-bold overflow-x-auto whitespace-nowrap ${overlay ? 'text-white/80' : 'text-slate-600'}`}>
+        <div className={overlay ? 'lg:hidden border-t border-white/10' : 'lg:hidden border-t border-slate-100 bg-white/95'}>
+          {/* 세로 여백을 줄이 아니라 링크에 준다. 줄 높이(40px)는 그대로지만 각 링크의
+              탭 영역이 20px → 40px가 된다. 손가락으로 누르는 유일한 내비게이션이다.
+              간격도 24px로 벌려 WCAG 2.2 2.5.8의 간격 예외를 실제로 만족시킨다. */}
+          <div className={`flex items-center gap-6 px-4 text-sm font-bold overflow-x-auto whitespace-nowrap ${overlay ? 'text-white/80' : 'text-slate-600'}`}>
             {SOLUTIONS.map((s) => (
-              <Link key={s.href} href={s.href} className={`transition-colors shrink-0 ${overlay ? 'hover:text-white' : 'hover:text-gslt-600'}`}>
+              <Link key={s.href} href={s.href}
+                className={`py-2.5 transition-colors shrink-0 ${overlay ? 'hover:text-white' : 'hover:text-gslt-700'}`}>
                 {s.name}
               </Link>
             ))}
-            <span className={`w-px h-4 shrink-0 ${overlay ? 'bg-white/20' : 'bg-slate-200'}`} />
+            <span className={`w-px h-4 shrink-0 ${overlay ? 'bg-white/20' : 'bg-slate-200'}`} aria-hidden="true" />
             {NAV.map((n) => (
-              <Link key={n.key} href={n.href} className={`${linkCls(n.key)} shrink-0`}>{n.label}</Link>
+              <Link key={n.key} href={n.href} className={`${linkCls(n.key)} py-2.5 shrink-0`}>{n.label}</Link>
             ))}
           </div>
         </div>
       </nav>
-      {/* 고정 헤더 높이만큼 본문을 밀어준다 (모바일은 2단이라 더 높다).
+      {/* 고정 헤더 높이만큼 본문을 밀어준다 (2단 가로 스크롤 줄이 붙는 lg 미만은 더 높다).
           overlay 모드는 영상 위에 겹쳐야 하므로 스페이서를 내지 않는다. */}
-      {overlay ? null : <div className="h-[6.5rem] md:h-16" aria-hidden="true" />}
+      {overlay ? null : <div className="h-[6.5rem] lg:h-16" aria-hidden="true" />}
     </header>
   );
 }
