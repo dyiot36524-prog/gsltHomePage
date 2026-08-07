@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import TimelineProgress from './TimelineProgress';
@@ -135,29 +136,61 @@ export default function AboutPage() {
             <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">Milestones</span>
           </div>
 
-          {/* 성과 하이라이트 3카드 */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-            <div className="relative overflow-hidden rounded-3xl bg-[#0a0a0f] p-8 group">
-              <span className="absolute -top-6 -right-2 text-[6.5rem] font-black tracking-tighter leading-none text-amber-400/10 select-none pointer-events-none" aria-hidden="true">1st</span>
-              <div className="absolute -bottom-24 -left-12 w-64 h-64 bg-amber-500 rounded-full blur-[110px] opacity-20 group-hover:opacity-40 transition-opacity duration-700 pointer-events-none"></div>
-              <p className="relative text-[11px] font-bold tracking-[0.25em] uppercase text-amber-400 mb-7">Forbes Korea · 2026</p>
-              <p className="relative text-2xl font-black leading-snug break-keep text-white mb-3">포브스 코리아<br />대상 수상</p>
-              <p className="relative text-sm text-white/50 break-keep">{"'무선 IoT 기반 스마트 공간' 부문 대상"}</p>
-              <span className="relative mt-7 inline-flex px-3.5 py-1.5 rounded-full border border-amber-400/40 text-amber-300 text-[11px] font-bold tracking-[0.2em] uppercase">Grand Prize</span>
+          {/* 포브스 대상은 이 회사가 외부에서 받은 가장 큰 검증이다. 국책과제 두 건과 같은 크기의
+              카드로 늘어놓으면 셋 다 그저 그런 배지가 된다. 지면을 넓게 쓰고 실물 배지를 함께 둔다.
+              나머지 둘은 그 아래에서 사실만 담백하게 잇는다. */}
+          <div className="relative overflow-hidden rounded-3xl bg-[#0a0a0f] p-8 md:p-12 lg:p-16 mb-6">
+            <div className="absolute -bottom-32 -left-20 w-[26rem] h-[26rem] bg-amber-500 rounded-full blur-[140px] opacity-20 pointer-events-none" aria-hidden="true"></div>
+            <div className="relative flex flex-col md:flex-row md:items-center gap-8 md:gap-12">
+              <Image
+                src="/img/forbes-badge-square.png"
+                alt=""
+                width={142}
+                height={141}
+                sizes="(max-width: 767px) 88px, 132px"
+                className="w-[5.5rem] h-[5.5rem] md:w-[8.25rem] md:h-[8.25rem] object-contain shrink-0"
+                aria-hidden="true"
+              />
+              <div className="min-w-0">
+                <p className="text-3xl md:text-5xl font-black leading-[1.15] break-keep text-white">
+                  포브스 코리아 2026<br />
+                  소비자 선정 최고의 브랜드 대상
+                </p>
+                <p className="mt-4 text-lg md:text-xl font-bold text-amber-400 break-keep">
+                  무선 IoT 기반 스마트 공간 부문
+                </p>
+                <p className="mt-5 text-sm md:text-base text-slate-300 break-keep leading-relaxed max-w-2xl">
+                  포브스코리아 2026-02-27 선정, 한국경제TV 2026-04-21 보도.
+                  배선 공사 없이 기존 공간을 스마트 공간으로 바꾸는 무선 IoT 구축 역량을 평가받았습니다.
+                </p>
+                <Link
+                  href="/news"
+                  className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-white border-b-2 border-amber-400 pb-1 hover:text-amber-400 transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                >
+                  보도 원문 보기
+                </Link>
+              </div>
             </div>
-            <div className="relative overflow-hidden rounded-3xl bg-white border border-slate-200/70 p-8 group hover:shadow-xl hover:-translate-y-1 transition-all duration-500">
-              <span className="absolute -top-6 -right-2 text-[6.5rem] font-black tracking-tighter leading-none text-blue-600/10 select-none pointer-events-none" aria-hidden="true">R&D</span>
-              <p className="text-[11px] font-bold tracking-[0.25em] uppercase text-blue-600 mb-7">중소벤처기업부 · 2026</p>
-              <p className="text-2xl font-black leading-snug break-keep text-slate-900 mb-3">디딤돌 R&D<br />국책과제 선정</p>
-              <p className="text-sm text-slate-500 break-keep">창업성장기술개발사업 — 무선 IoT 스마트 공간 기술 고도화</p>
-              <span className="mt-7 inline-flex px-3.5 py-1.5 rounded-full border border-blue-200 bg-blue-50 text-blue-600 text-[11px] font-bold tracking-[0.2em] uppercase">Selected</span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
+            <div className="rounded-3xl bg-white border border-slate-200/70 p-8">
+              <p className="text-xl md:text-2xl font-black leading-snug break-keep text-slate-900">
+                디딤돌 R&amp;D 국책과제 선정
+              </p>
+              <p className="mt-2 text-sm font-bold text-bizmoa-600">중소벤처기업부 · 2026</p>
+              <p className="mt-3 text-sm text-slate-500 break-keep leading-relaxed">
+                창업성장기술개발사업 — 무선 IoT 스마트 공간 기술 고도화
+              </p>
             </div>
-            <div className="relative overflow-hidden rounded-3xl bg-white border border-slate-200/70 p-8 group hover:shadow-xl hover:-translate-y-1 transition-all duration-500">
-              <span className="absolute -top-6 -right-2 text-[6.5rem] font-black tracking-tighter leading-none text-emerald-600/10 select-none pointer-events-none" aria-hidden="true">SEED</span>
-              <p className="text-[11px] font-bold tracking-[0.25em] uppercase text-emerald-700 mb-7">중소벤처기업부 · 2025</p>
-              <p className="text-2xl font-black leading-snug break-keep text-slate-900 mb-3">초기창업패키지<br />선발 · 졸업</p>
-              <p className="text-sm text-slate-500 break-keep">기술 고도화·사업화 지원 프로그램 수행 완료</p>
-              <span className="mt-7 inline-flex px-3.5 py-1.5 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 text-[11px] font-bold tracking-[0.2em] uppercase">Graduated</span>
+            <div className="rounded-3xl bg-white border border-slate-200/70 p-8">
+              <p className="text-xl md:text-2xl font-black leading-snug break-keep text-slate-900">
+                초기창업패키지 선발 · 졸업
+              </p>
+              <p className="mt-2 text-sm font-bold text-emerald-700">중소벤처기업부 · 2025</p>
+              <p className="mt-3 text-sm text-slate-500 break-keep leading-relaxed">
+                기술 고도화·사업화 지원 프로그램 수행 완료
+              </p>
             </div>
           </div>
 
