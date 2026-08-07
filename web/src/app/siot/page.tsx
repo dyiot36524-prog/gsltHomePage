@@ -117,11 +117,22 @@ export default function SiotPage() {
                 <h2 className="text-3xl md:text-4xl font-black break-keep leading-tight mb-5">전체 공간을<br />한눈에</h2>
                 <p className="text-slate-500 leading-relaxed break-keep mb-6">모든 층, 모든 방의 장비 상태가 하나의 관제 화면에 모입니다.
                   온도·조명·전력 상태를 실시간으로 확인하고 이상 신호를 즉시 감지합니다.</p>
-                <ul className="space-y-2 text-sm text-slate-600">
-                  <li className="flex gap-3"><span className="text-siot-500 font-black" aria-hidden="true">—</span>1초 단위 실시간 모니터링</li>
-                  <li className="flex gap-3"><span className="text-siot-500 font-black" aria-hidden="true">—</span>이상 신호 즉시 감지·알림</li>
-                  <li className="flex gap-3"><span className="text-siot-500 font-black" aria-hidden="true">—</span>중앙 집중식 관제</li>
-                </ul>
+                {/* 항목 이름만 있던 것을 기존 사이트의 이름+설명 짝으로 되돌렸다.
+                    "무엇이 되는가"만 있고 "어떻게 되는가"가 없으면 판단할 근거가 안 된다. */}
+                <dl className="border-t border-slate-200">
+                  <div className="border-b border-slate-200 py-3">
+                    <dt className="font-bold text-slate-900 text-[15px] break-keep">실시간 모니터링</dt>
+                    <dd className="mt-1 text-sm text-slate-500 break-keep leading-relaxed">모든 IoT 장비의 상태를 1초 단위로 파악</dd>
+                  </div>
+                  <div className="border-b border-slate-200 py-3">
+                    <dt className="font-bold text-slate-900 text-[15px] break-keep">이상 신호 즉시 감지</dt>
+                    <dd className="mt-1 text-sm text-slate-500 break-keep leading-relaxed">건물 전체의 장비 상태를 한 화면에서 보고, 이상이 생기면 곧바로 알립니다</dd>
+                  </div>
+                  <div className="border-b border-slate-200 py-3">
+                    <dt className="font-bold text-slate-900 text-[15px] break-keep">중앙 집중식 관제</dt>
+                    <dd className="mt-1 text-sm text-slate-500 break-keep leading-relaxed">다운타임 제로를 목표로 한 완전한 공간 관리 체계</dd>
+                  </div>
+                </dl>
               </div>
               <div className="rounded-2xl overflow-hidden border border-slate-200/70 shadow-xl bg-white">
                 <Image src="/img/siot3.png" alt="시옷 메인 관제 화면" width={1440} height={1674} sizes="(max-width: 1024px) 100vw, 544px"
@@ -135,11 +146,20 @@ export default function SiotPage() {
                 <h2 className="text-3xl md:text-4xl font-black break-keep leading-tight mb-5">조명부터 공조까지<br />통합 제어</h2>
                 <p className="text-slate-500 leading-relaxed break-keep mb-6">장치 종류가 달라도 제어는 하나의 방식으로.
                   스마트폰과 웹에서 공간의 모든 디테일을 손끝으로 조절합니다.</p>
-                <ul className="space-y-2 text-sm text-slate-600">
-                  <li className="flex gap-3"><span className="text-siot-500 font-black" aria-hidden="true">—</span>조명 · 블라인드 · 공조 통합</li>
-                  <li className="flex gap-3"><span className="text-siot-500 font-black" aria-hidden="true">—</span>장치 무제한 확장</li>
-                  <li className="flex gap-3"><span className="text-siot-500 font-black" aria-hidden="true">—</span>모바일 · 웹 어디서나</li>
-                </ul>
+                <dl className="border-t border-slate-200">
+                  <div className="border-b border-slate-200 py-3">
+                    <dt className="font-bold text-slate-900 text-[15px] break-keep">장치 통합 관리</dt>
+                    <dd className="mt-1 text-sm text-slate-500 break-keep leading-relaxed">브랜드·프로토콜을 초월한 단일 인터페이스. 조명·블라인드·공조기기·전기 설비까지</dd>
+                  </div>
+                  <div className="border-b border-slate-200 py-3">
+                    <dt className="font-bold text-slate-900 text-[15px] break-keep">장치 무제한 확장</dt>
+                    <dd className="mt-1 text-sm text-slate-500 break-keep leading-relaxed">장비를 더해도 배선 공사가 따르지 않습니다</dd>
+                  </div>
+                  <div className="border-b border-slate-200 py-3">
+                    <dt className="font-bold text-slate-900 text-[15px] break-keep">직관적 UI</dt>
+                    <dd className="mt-1 text-sm text-slate-500 break-keep leading-relaxed">복잡한 설정 없이, 별도 교육 없이 누구나 즉시 사용 가능</dd>
+                  </div>
+                </dl>
               </div>
               <div className="lg:order-1 rounded-2xl overflow-hidden border border-slate-200/70 shadow-xl bg-white">
                 <Image src="/img/siot1.png" alt="시옷 통합 제어 대시보드" width={1440} height={1144} sizes="(max-width: 1024px) 100vw, 544px"
@@ -153,11 +173,20 @@ export default function SiotPage() {
                 <h2 className="text-3xl md:text-4xl font-black break-keep leading-tight mb-5">원클릭으로 완성되는<br />공간 환경</h2>
                 <p className="text-slate-500 leading-relaxed break-keep mb-6">회의·집중·휴식 등 상황별 환경을 프리셋으로 저장해 두고,
                   버튼 하나로 모든 장치를 동시에 전환합니다.</p>
-                <ul className="space-y-2 text-sm text-slate-600">
-                  <li className="flex gap-3"><span className="text-siot-500 font-black" aria-hidden="true">—</span>상황별 프리셋 저장</li>
-                  <li className="flex gap-3"><span className="text-siot-500 font-black" aria-hidden="true">—</span>모든 장치 동시 전환</li>
-                  <li className="flex gap-3"><span className="text-siot-500 font-black" aria-hidden="true">—</span>무한 커스터마이징</li>
-                </ul>
+                <dl className="border-t border-slate-200">
+                  <div className="border-b border-slate-200 py-3">
+                    <dt className="font-bold text-slate-900 text-[15px] break-keep">상황별 프리셋</dt>
+                    <dd className="mt-1 text-sm text-slate-500 break-keep leading-relaxed">회의·프레젠테이션·집중·휴식 등 맞춤 환경을 미리 저장</dd>
+                  </div>
+                  <div className="border-b border-slate-200 py-3">
+                    <dt className="font-bold text-slate-900 text-[15px] break-keep">즉각적 전환</dt>
+                    <dd className="mt-1 text-sm text-slate-500 break-keep leading-relaxed">모든 장치가 동시에 최적 상태로 변환. 개별 조작 없이 공간이 즉시 변합니다</dd>
+                  </div>
+                  <div className="border-b border-slate-200 py-3">
+                    <dt className="font-bold text-slate-900 text-[15px] break-keep">무한 커스터마이징</dt>
+                    <dd className="mt-1 text-sm text-slate-500 break-keep leading-relaxed">원하는 만큼 프리셋을 추가하고 편집</dd>
+                  </div>
+                </dl>
               </div>
               <div className="rounded-2xl overflow-hidden border border-slate-200/70 shadow-xl bg-white">
                 <Image src="/img/siot2.png" alt="시옷 장면 모드 프리셋" width={1440} height={900} sizes="(max-width: 1024px) 100vw, 544px"
