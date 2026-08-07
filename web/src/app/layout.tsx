@@ -19,7 +19,9 @@ export const metadata: Metadata = {
     images: ['/img/og-image.png'],
   },
   twitter: { card: 'summary_large_image' },
-  icons: { icon: '/img/gslt-symbol.png' },
+  // 아이콘은 파일 컨벤션(favicon.ico · icon.png · apple-icon.png, 이 디렉터리)이 맡는다.
+  // 여기서 metadata.icons로 다시 지정하면 중복 <link> 태그가 나가고,
+  // 594×615 비정사각 원본을 그대로 물리는 문제도 생긴다.
 };
 
 /** 이 사이트 콘텐츠 서피스가 무엇을 하기로 했는지의 계약. 편집할 때마다 먼저 읽는다. */
