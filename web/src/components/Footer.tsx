@@ -29,9 +29,15 @@ function Column({ title, links }: { title: string; links: { href: string; label:
   );
 }
 
-export default function Footer() {
+/**
+ * flush: 바로 위 구간이 이미 어두운 면으로 끝날 때 쓴다. 기본 여백(mt-24)은 흰 지면
+ * 콘텐츠 페이지용이라, 검정 계기면 뒤에 그대로 두면 body 흰색이 96px 띠로 드러난다.
+ */
+export default function Footer({ flush = false }: { flush?: boolean }) {
   return (
-    <footer className="pt-14 pb-8 bg-[#050505] text-slate-400 border-t border-white/5 mt-24">
+    <footer
+      className={`pt-14 pb-8 bg-[#050505] text-slate-400 border-t border-white/5 ${flush ? '' : 'mt-24'}`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row justify-between items-start gap-10 pb-10 border-b border-white/5">
           <div>
