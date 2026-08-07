@@ -82,6 +82,43 @@ const SHOTS = [
   { src: '/img/morak-shot-5.png', alt: '채팅 — 만남이 대화로, 대화가 인연으로' },
 ];
 
+/**
+ * 기존 사이트 홈의 모락 구간에 있던 네 개의 심화 블록. 문구와 화면 짝을 그대로 옮겼다.
+ * 전부 실제 모락 앱 화면 캡처다.
+ */
+const SCREENS = [
+  {
+    src: '/img/morak-screen-home.png',
+    title: '앱을 열면 이번 주가 먼저 보입니다',
+    desc: '주간 하이라이트와 통합 캘린더가 첫 화면에 놓입니다. 여러 모임의 일정과 멤버 생일이 한 달력에 모여, 무엇을 챙겨야 하는지 바로 잡힙니다.',
+    alt: '모락 홈 대시보드 화면. 주간 하이라이트와 여러 모임 일정이 합쳐진 통합 캘린더가 보인다.',
+  },
+  {
+    src: '/img/morak-screen-groups.png',
+    title: '내 모임, 한눈에 정리됩니다',
+    desc: '가입한 모임이 커버 사진과 함께 카드로 쌓입니다. 오너·임원 역할과 기수 뱃지, 다가오는 일정 날짜까지 카드에서 바로 확인하고, 관심사·지역으로 새로운 모임도 찾아볼 수 있습니다.',
+    alt: '모락 모임 목록 화면. 가입한 모임이 커버 사진과 기수 뱃지가 붙은 카드로 쌓여 있다.',
+  },
+  {
+    src: '/img/morak-screen-space.png',
+    title: '모임마다 하나의 공간이 생깁니다',
+    desc: '멤버·일정·검색·관리 메뉴와 공지·자유·자기소개 게시판을 갖춘 전용 공간. 멤버 수, 기수, 창립연도, 활동률 통계가 모임 첫 화면에서 한눈에 잡힙니다.',
+    alt: '모락 모임 공간 화면. 상단에 멤버 수와 창립연도 통계가 있고 아래에 게시판 메뉴가 놓여 있다.',
+  },
+  {
+    src: '/img/morak-screen-members.png',
+    title: '명함이 인맥이 되는 멤버 관리',
+    desc: '모임에서 받은 명함과 인맥을 한곳에서 검색하고 관리합니다. 전화·이메일·주소를 저장하고, 필요하면 내 폰 연락처로 바로 내보낼 수 있습니다.',
+    alt: '모락 멤버 관리 화면. 받은 명함이 목록으로 정리돼 있고 검색창이 위에 있다.',
+  },
+  {
+    src: '/img/morak-screen-chat.png',
+    title: '기수가 보이는 채팅',
+    desc: '대화 상대 이름 옆에 "12기 · 회장" 같은 기수·직책 뱃지가 함께 보여, 누구와 이야기하는지 헷갈리지 않습니다. 1:1 대화와 모임 단체방을 모두 지원합니다.',
+    alt: '모락 채팅 화면. 대화 상대 이름 옆에 기수와 직책 뱃지가 함께 표시돼 있다.',
+  },
+] as const;
+
 export default function MorakPage() {
   return (
     <>
@@ -214,6 +251,47 @@ export default function MorakPage() {
                 </div>
               ))}
             </Reveal>
+          </div>
+        </section>
+
+        {/* 네 개의 화면 — 기존 사이트 홈의 모락 구간에 있던 심화 설명을 문구와 화면 그대로 옮긴 것.
+            위의 기능 목록이 "무엇이 있는가"라면 여기는 "실제로 어떻게 보이는가"다.
+            폰 화면이라 세로로 길다 — 가로 이미지와 같은 틀에 넣지 않고 비율을 그대로 살린다. */}
+        <section className="pb-24 md:pb-32 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-6xl mx-auto space-y-16 md:space-y-24">
+            {SCREENS.map((s, i) => (
+              <Reveal
+                key={s.src}
+                // 좌우를 번갈아 놓되 트랙 폭을 함께 뒤집는다. order만 바꾸면 폰 화면이
+                // 넓은 쪽 트랙으로 들어가 240px짜리가 860px로 부푼다.
+                // 폰 화면은 세로로 길고 설명은 두세 줄이라, 가운데 정렬하면 글 위아래로
+                // 250px씩 빈다. 위를 맞춰 읽는 줄이 화면 상단과 같은 높이에서 시작하게 한다.
+                className={`grid grid-cols-1 gap-8 md:gap-14 items-start ${
+                  i % 2 === 1
+                    ? 'md:grid-cols-[minmax(0,1fr)_15rem]'
+                    : 'md:grid-cols-[15rem_minmax(0,1fr)]'
+                }`}
+              >
+                <figure className={`mx-auto md:mx-0 w-[13rem] md:w-[15rem] ${i % 2 === 1 ? 'md:order-2' : ''}`}>
+                  <div className="rounded-[1.75rem] overflow-hidden border border-slate-200 shadow-xl bg-white">
+                    <Image
+                      src={s.src}
+                      alt={s.alt}
+                      width={520}
+                      height={1153}
+                      sizes="(max-width: 767px) 208px, 240px"
+                      className="w-full h-auto block"
+                    />
+                  </div>
+                </figure>
+                <div className={i % 2 === 1 ? 'md:order-1' : ''}>
+                  <h3 className="text-2xl md:text-3xl font-black text-slate-900 break-keep leading-tight mb-4">
+                    {s.title}
+                  </h3>
+                  <p className="text-slate-600 break-keep leading-relaxed max-w-[60ch]">{s.desc}</p>
+                </div>
+              </Reveal>
+            ))}
           </div>
         </section>
 
