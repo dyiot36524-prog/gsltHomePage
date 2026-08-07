@@ -48,6 +48,83 @@ const HERO_MARKERS = [
   { top: '55%', left: '88%', delay: '3s' },
 ];
 
+/**
+ * 배치 → 견적 → 계약 → 관리 → 운영. 기존 사이트의 비즈모아 쇼케이스에 있던 5단계를
+ * 문구·세부 기능·연결된 화면까지 그대로 옮긴 것이다. 문구를 새로 짓지 않았다.
+ * shots는 전부 실제 비즈모아 화면 캡처이고, 원본이 각 단계에 붙여 두었던 짝을 유지한다.
+ */
+const STEPS = [
+  {
+    no: '01',
+    title: '도면 위에 장비를 드래그하여 배치',
+    desc: '건축 도면 위에 IoT 장비를 컬러 마커로 직관적으로 배치합니다. 대규모 건물도 층 단위로 빠르게 설계할 수 있습니다.',
+    items: [
+      { name: '층별 도면 관리', desc: '건물의 층마다 도면을 등록해 오가며 배치' },
+      { name: 'AI 자동배치 추천', desc: '최적 위치를 자동 추천받아 설계 시간 단축' },
+      { name: '장비 카테고리 트리', desc: '품목별 트리에서 장비를 골라 바로 도면 위로' },
+    ],
+    punch: '드래그 한 번으로 배치 완료.',
+    shots: [{ src: '/img/bizmoa5.JPG', alt: '비즈모아 도면 편집기 — 건축 도면 위에 IoT 장비가 컬러 마커로 배치된 화면' }],
+  },
+  {
+    no: '02',
+    title: '장비 + 노무비 결합 견적서 자동 생성',
+    desc: '배치를 마치는 순간, 장비 단가와 직종별 인건비가 결합된 견적서가 즉시 만들어집니다.',
+    items: [
+      { name: '장비 + 노무비 자동 합산', desc: '배치된 장비 단가와 직종별 인건비가 즉시 합산' },
+      { name: '소비자용 · 관리자용 분리', desc: '뷰를 구분하고 할인율을 견적별로 적용' },
+      { name: 'Excel · PDF 내보내기', desc: '완성된 견적서를 고객에게 바로 전달' },
+    ],
+    punch: '견적서, 배치 즉시 생성.',
+    shots: [{ src: '/img/bizmoa6.JPG', alt: '비즈모아 견적서 화면 — 장비 단가와 인건비가 항목별로 합산된 견적 내역' }],
+  },
+  {
+    no: '03',
+    title: '계약서부터 납품까지 원클릭 자동 생성',
+    desc: '견적이 확정되면 정식 계약서와 납품확인서가 자동으로 작성됩니다. 현장 검수까지 시스템 안에서 끝납니다.',
+    items: [
+      { name: '계약서 자동 작성', desc: '견적 데이터가 그대로 정식 계약서로 변환' },
+      { name: '납품 검수 체크리스트', desc: '품목별 납품 확인으로 현장 관리 완결' },
+      { name: 'PDF 정식 문서 출력', desc: '서명만 하면 되는 문서로 바로 출력' },
+    ],
+    punch: '계약·납품 서류, 원클릭.',
+    shots: [
+      { src: '/img/bizmoa7.JPG', alt: '비즈모아 계약서 화면 — 견적 데이터가 옮겨진 정식 계약서 양식' },
+      { src: '/img/bizmoa8.JPG', alt: '비즈모아 납품확인서 화면 — 품목별 납품 확인 체크리스트' },
+    ],
+  },
+  {
+    no: '04',
+    title: '프로젝트 한눈에, 견적 이력까지',
+    desc: '진행 중인 모든 현장의 상태와 금액을 카드 한 장씩으로 파악하고, 견적 수정 이력은 버전으로 남습니다.',
+    items: [
+      { name: '카드형 프로젝트 대시보드', desc: '진행 상태 · 투입 인력 · 금액을 카드로 요약' },
+      { name: '견적 버전 이력 관리', desc: '수정할 때마다 버전으로 보존, 이력 추적' },
+      { name: '진행률 추적', desc: '프로젝트별 진척도를 숫자로 확인' },
+    ],
+    punch: '모든 프로젝트, 한 화면.',
+    shots: [
+      { src: '/img/bizmoa3.JPG', alt: '비즈모아 프로젝트 카드 화면 — 현장별 진행 상태와 금액이 카드로 정리된 대시보드' },
+      { src: '/img/bizmoa4.JPG', alt: '비즈모아 견적 이력 화면 — 견적 수정 버전이 시간순으로 남은 목록' },
+    ],
+  },
+  {
+    no: '05',
+    title: '인건비 산출부터 권한 관리까지',
+    desc: '단가 체계와 팀 권한을 한 번 세팅하면, 모든 프로젝트가 같은 기준으로 운영됩니다.',
+    items: [
+      { name: '직급별 단가 자동 계산', desc: '시급 · 일급 · 월급이 공식에 따라 산출' },
+      { name: '견적서 노무비 자동 반영', desc: '견적 작성 시 인건비가 자동으로 포함' },
+      { name: '3단계 접근 권한', desc: '관리자 · 매니저 · 관리담당 역할별 제어' },
+    ],
+    punch: '권한 3단계, 데이터는 안전하게.',
+    shots: [
+      { src: '/img/bizmoa2.JPG', alt: '비즈모아 인건비 단가표 화면 — 직급별 시급·일급·월급 단가 설정' },
+      { src: '/img/bizmoa9.JPG', alt: '비즈모아 사용자 관리 화면 — 관리자·매니저·관리담당 권한 설정' },
+    ],
+  },
+] as const;
+
 export default function BizmoaPage() {
   return (
     <>
@@ -146,29 +223,67 @@ export default function BizmoaPage() {
               />
             </Reveal>
 
-            <Reveal className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-14 max-w-5xl mx-auto">
-              <div className="bg-white rounded-2xl border border-slate-200/70 p-7">
-                <p className="text-xs font-black tracking-widest text-bizmoa-600 mb-3">DRAWING</p>
-                <p className="font-bold text-lg mb-2 break-keep">도면 위 드래그 배치</p>
-                <p className="text-sm text-slate-500 break-keep leading-relaxed">
-                  층별 도면 관리와 AI 자동배치로 대규모 건물도 빠르게 설계합니다.
-                </p>
-              </div>
-              <div className="bg-white rounded-2xl border border-slate-200/70 p-7">
-                <p className="text-xs font-black tracking-widest text-bizmoa-600 mb-3">QUOTATION</p>
-                <p className="font-bold text-lg mb-2 break-keep">견적·서류 자동 생성</p>
-                <p className="text-sm text-slate-500 break-keep leading-relaxed">
-                  장비+노무비 결합 견적서, 계약서, 납품확인서가 자동으로 만들어집니다.
-                </p>
-              </div>
-              <div className="bg-white rounded-2xl border border-slate-200/70 p-7">
-                <p className="text-xs font-black tracking-widest text-bizmoa-600 mb-3">MANAGE</p>
-                <p className="font-bold text-lg mb-2 break-keep">프로젝트·권한 관리</p>
-                <p className="text-sm text-slate-500 break-keep leading-relaxed">
-                  진행 상태·견적 이력을 한 화면에서, 역할별 권한으로 안전하게.
-                </p>
-              </div>
-            </Reveal>
+          </div>
+        </section>
+
+        {/* 5단계 — 배치에서 운영까지.
+            도면에서 시작한 데이터가 견적·계약·납품·정산까지 끊기지 않고 이어진다는 것이
+            이 제품의 전부다. 그래서 기능을 카드로 나열하지 않고 순서대로 밟는다.
+            번호를 쓰는 이유도 그것이다 — 여기서는 순서가 정보다.
+            화면은 전부 실제 비즈모아 화면이다. */}
+        <section className="pb-24 md:pb-32 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-6xl mx-auto space-y-16 md:space-y-24">
+            {STEPS.map((s, i) => (
+              <Reveal
+                key={s.no}
+                // 단계마다 화면이 한 장 또는 두 장이라 높이가 다르다. 가운데 정렬하면
+                // 짧은 쪽 아래로 빈 구간이 크게 남으므로 위를 맞춘다.
+                className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-start"
+              >
+                <div className={i % 2 === 1 ? 'lg:order-2' : ''}>
+                  <div className="flex items-baseline gap-4 mb-4">
+                    <span className="text-4xl md:text-5xl font-black tabular-nums text-bizmoa-500 leading-none">
+                      {s.no}
+                    </span>
+                    <h3 className="text-2xl md:text-4xl font-black text-slate-900 break-keep leading-tight">
+                      {s.title}
+                    </h3>
+                  </div>
+                  <p className="text-slate-600 break-keep leading-relaxed mb-7 max-w-[60ch]">
+                    {s.desc}
+                  </p>
+                  <dl className="border-t border-slate-200">
+                    {s.items.map((it) => (
+                      <div key={it.name} className="border-b border-slate-200 py-3.5">
+                        <dt className="font-bold text-slate-900 text-[15px] break-keep">{it.name}</dt>
+                        <dd className="mt-1 text-sm text-slate-500 break-keep leading-relaxed">{it.desc}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                  <p className="mt-6 text-lg md:text-xl font-black text-slate-900 break-keep">
+                    {s.punch}
+                  </p>
+                </div>
+
+                <div className={`space-y-4 min-w-0 ${i % 2 === 1 ? 'lg:order-1' : ''}`}>
+                  {s.shots.map((shot) => (
+                    <figure
+                      key={shot.src}
+                      className="rounded-2xl overflow-hidden border border-slate-200/70 shadow-xl bg-white"
+                    >
+                      <Image
+                        src={shot.src}
+                        alt={shot.alt}
+                        width={2518}
+                        height={1319}
+                        sizes="(max-width: 1024px) 100vw, 512px"
+                        className="w-full h-auto block"
+                      />
+                    </figure>
+                  ))}
+                </div>
+              </Reveal>
+            ))}
           </div>
         </section>
 
