@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Reveal from '@/components/Reveal';
+import AmbientVideo from '@/components/AmbientVideo';
 import { SITE } from '@/lib/site';
 import NodeCanvas from './NodeCanvas';
 import CountUp from './CountUp';
@@ -164,6 +165,38 @@ export default function SiotPage() {
               </div>
             </Reveal>
           </div>
+        </section>
+
+        {/* 공간 영상 — 기능 설명을 흰 지면에서 읽고 난 뒤, 실제 공간의 공기를 한 번 보여준다.
+            영상은 연출 자료라 "우리 시공 현장"이라고 말하지 않는다. 문구는 전부 제품 이야기다. */}
+        <section className="bg-[#0a0a0f] py-16 md:py-20 px-4 sm:px-6 lg:px-8">
+          <Reveal className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[
+              {
+                src: '/img/office2.mp4',
+                title: '사라지는 컨트롤 패널',
+                desc: '조명·블라인드·공조를 스마트폰 하나로. 복잡한 스위치 없이 언제 어디서나 공간을 바꿉니다.',
+              },
+              {
+                src: '/img/office4.mp4',
+                title: '무겁고 복잡한 시스템을 넘어',
+                desc: '기존 스마트 시스템이 닿지 못한 세밀한 공간 제어를 시옷의 미니 IoT가 맡습니다.',
+              },
+            ].map((v) => (
+              <figure key={v.src} className="relative h-[300px] rounded-2xl overflow-hidden border border-white/10 group">
+                <AmbientVideo
+                  src={v.src}
+                  className="absolute inset-0 w-full h-full object-cover opacity-75 group-hover:scale-105 transition-transform duration-[2s] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                />
+                {/* 글자가 앉는 아래쪽을 확실히 눌러 준다 — 영상 프레임이 밝아져도 대비가 무너지지 않게 */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/55 to-transparent" />
+                <figcaption className="absolute bottom-0 left-0 right-0 p-6 z-10">
+                  <p className="text-lg font-bold text-white mb-1.5 break-keep">{v.title}</p>
+                  <p className="text-slate-300 text-sm break-keep leading-relaxed">{v.desc}</p>
+                </figcaption>
+              </figure>
+            ))}
+          </Reveal>
         </section>
 
         {/* 프로세스 배너 */}
