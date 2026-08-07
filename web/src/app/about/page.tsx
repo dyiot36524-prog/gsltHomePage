@@ -139,37 +139,35 @@ export default function AboutPage() {
           {/* 포브스 대상은 이 회사가 외부에서 받은 가장 큰 검증이다. 국책과제 두 건과 같은 크기의
               카드로 늘어놓으면 셋 다 그저 그런 배지가 된다. 지면을 넓게 쓰고 실물 배지를 함께 둔다.
               나머지 둘은 그 아래에서 사실만 담백하게 잇는다. */}
-          <div className="relative overflow-hidden rounded-3xl bg-[#0a0a0f] p-8 md:p-12 lg:p-16 mb-6">
-            <div className="absolute -bottom-32 -left-20 w-[26rem] h-[26rem] bg-amber-500 rounded-full blur-[140px] opacity-20 pointer-events-none" aria-hidden="true"></div>
-            <div className="relative flex flex-col md:flex-row md:items-center gap-8 md:gap-12">
-              <Image
-                src="/img/forbes-badge-square.png"
-                alt=""
-                width={142}
-                height={141}
-                sizes="(max-width: 767px) 88px, 132px"
-                className="w-[5.5rem] h-[5.5rem] md:w-[8.25rem] md:h-[8.25rem] object-contain shrink-0"
-                aria-hidden="true"
-              />
-              <div className="min-w-0">
-                <p className="text-3xl md:text-5xl font-black leading-[1.15] break-keep text-white">
-                  포브스 코리아 2026<br />
-                  소비자 선정 최고의 브랜드 대상
-                </p>
-                <p className="mt-4 text-lg md:text-xl font-bold text-amber-400 break-keep">
-                  무선 IoT 기반 스마트 공간 부문
-                </p>
-                <p className="mt-5 text-sm md:text-base text-slate-300 break-keep leading-relaxed max-w-2xl">
-                  포브스코리아 2026-02-27 선정, 한국경제TV 2026-04-21 보도.
-                  배선 공사 없이 기존 공간을 스마트 공간으로 바꾸는 무선 IoT 구축 역량을 평가받았습니다.
-                </p>
-                <Link
-                  href="/news"
-                  className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-white border-b-2 border-amber-400 pb-1 hover:text-amber-400 transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
-                >
-                  보도 원문 보기
-                </Link>
-              </div>
+          {/* 수상 이미지는 크게 앞세우되, 수상명은 반드시 HTML 글자로도 남긴다.
+              그림 안의 글자는 검색엔진도 스크린리더도 읽지 못한다 — 이 회사의 가장 큰
+              검증을 이미지에만 담으면 아무 데도 기록되지 않는 셈이다. */}
+          <div className="overflow-hidden rounded-3xl bg-[#0a0a0f] mb-6">
+            <Image
+              src="/img/forbes-award-2026.png"
+              alt="포브스 코리아 어워즈 수상 이미지. 트로피와 포브스 코리아 로고, 2026 최고의 브랜드 대상 엠블럼, 그리고 수상사 (주)지에스엘티 표기."
+              width={2560}
+              height={1600}
+              sizes="(max-width: 1279px) 100vw, 1152px"
+              className="w-full h-auto block"
+            />
+            <div className="p-8 md:p-12">
+              <p className="text-2xl md:text-4xl font-black leading-[1.2] break-keep text-white">
+                포브스 코리아 2026 소비자 선정 최고의 브랜드 대상
+              </p>
+              <p className="mt-3 text-lg md:text-xl font-bold text-amber-400 break-keep">
+                무선 IoT 기반 스마트 공간 부문
+              </p>
+              <p className="mt-4 text-sm md:text-base text-slate-300 break-keep leading-relaxed max-w-2xl">
+                포브스코리아 2026-02-27 선정, 한국경제TV 2026-04-21 보도.
+                배선 공사 없이 기존 공간을 스마트 공간으로 바꾸는 무선 IoT 구축 역량을 평가받았습니다.
+              </p>
+              <Link
+                href="/news"
+                className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-white border-b-2 border-amber-400 pb-1 hover:text-amber-400 transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+              >
+                보도 원문 보기
+              </Link>
             </div>
           </div>
 
