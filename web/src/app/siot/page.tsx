@@ -65,9 +65,18 @@ export default function SiotPage() {
             style={{ textShadow: '0 1px 2px rgba(4,6,12,.5), 0 3px 12px rgba(4,6,12,.55)' }}
           >
             <div className={`${styles.fadeUp} flex items-center gap-4 mb-9`} style={d('.15s')}>
-              <span className="block w-12 h-px bg-siot-500" />
+              <span className="block w-12 h-px bg-siot-500 shrink-0" />
+              {/* 시옷 로고. 마크가 이미 '이IOT' 워드마크라 글자 앞에 '시옷'을 또 적지 않는다. */}
+              <Image
+                src="/img/siot_logo_white.png"
+                alt="시옷"
+                width={320}
+                height={82}
+                sizes="110px"
+                className="h-5 md:h-6 w-auto shrink-0"
+              />
               <span className="text-[11px] md:text-xs font-semibold tracking-[0.35em] uppercase text-siot-400">
-                Siot · Wireless IoT Construction
+                · Wireless IoT Construction
               </span>
             </div>
             <h1 className="font-black tracking-tight leading-[1.1] break-keep text-white text-4xl sm:text-6xl lg:text-7xl mb-8">

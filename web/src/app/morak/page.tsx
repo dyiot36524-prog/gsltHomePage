@@ -137,7 +137,15 @@ export default function MorakPage() {
           <div className="max-w-6xl mx-auto w-full relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
             <div>
               <div className={`${styles.fadeUp} flex items-center gap-4 mb-9`} style={d('.15s')}>
-                <span className="block w-12 h-px bg-morak-500" />
+                <span className="block w-12 h-px bg-morak-500 shrink-0" />
+                <Image
+                  src="/img/morak-icon.png"
+                  alt="모락"
+                  width={512}
+                  height={512}
+                  sizes="24px"
+                  className="h-5 w-5 md:h-6 md:w-6 shrink-0"
+                />
                 <span className="text-[11px] md:text-xs font-semibold tracking-[0.35em] uppercase text-morak-800">
                   Morak · Community Platform
                 </span>

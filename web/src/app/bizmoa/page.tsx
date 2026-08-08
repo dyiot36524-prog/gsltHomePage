@@ -151,7 +151,15 @@ export default function BizmoaPage() {
             style={{ textShadow: '0 1px 2px rgba(4,10,24,.5), 0 3px 12px rgba(4,10,24,.55)' }}
           >
             <div className={`${styles.fadeUp} flex items-center gap-4 mb-9`} style={d('.15s')}>
-              <span className="block w-12 h-px bg-bizmoa-500" />
+              <span className="block w-12 h-px bg-bizmoa-500 shrink-0" />
+              <Image
+                src="/img/bizmoaLogo2-nav.png"
+                alt="비즈모아"
+                width={72}
+                height={72}
+                sizes="24px"
+                className="h-5 w-5 md:h-6 md:w-6 shrink-0"
+              />
               <span className="text-[11px] md:text-xs font-semibold tracking-[0.35em] uppercase text-bizmoa-400">
                 BizMoa · Quotation Automation
               </span>
