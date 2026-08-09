@@ -20,9 +20,9 @@ import { ArrowUpRight } from '@/components/Icon';
 type NetworkInfo = { saveData?: boolean; effectiveType?: string };
 
 const ROWS = [
-  { href: '/siot', no: '01', name: '시옷 솔루션', desc: '무선 IoT 구축 · 통합 제어', hover: 'group-hover:text-siot-500' },
-  { href: '/bizmoa', no: '02', name: '비즈모아 자동화', desc: 'IoT 시공 견적 자동화 SaaS', hover: 'group-hover:text-bizmoa-500' },
-  { href: '/morak', no: '03', name: '모락 커뮤니티', desc: '기수제 모임 플랫폼 · 디지털 명함', hover: 'group-hover:text-morak-400' },
+  { href: '/siot', name: '시옷 솔루션', desc: '무선 IoT 구축 · 통합 제어', hover: 'group-hover:text-siot-500' },
+  { href: '/bizmoa', name: '비즈모아 자동화', desc: 'IoT 시공 견적 자동화 SaaS', hover: 'group-hover:text-bizmoa-500' },
+  { href: '/morak', name: '모락 커뮤니티', desc: '기수제 모임 플랫폼 · 디지털 명함', hover: 'group-hover:text-morak-400' },
 ] as const;
 
 export default function Hero() {
@@ -289,7 +289,10 @@ export default function Hero() {
                 지에스엘티는 오피스·주거·빌딩, 모든 공간을 스마트 공간으로 완성하는 IoT 구축 전문기업입니다.
               </p>
 
-              <div>
+              {/* 제품 세 개는 순서가 아니라 나란한 선택지다 — 01/02/03 번호를 붙이지 않는다.
+                  이름 칸에 고정 폭을 줘 설명이 한 줄로 서게 하고(전에는 이름 길이에 따라
+                  들쭉날쭉했다), 행 폭을 본문과 같은 자로 묶어 화살표가 멀리 떠 있지 않게 한다. */}
+              <div className="max-w-3xl">
                 {ROWS.map((r, i) => (
                   <Link
                     key={r.href}
@@ -297,19 +300,20 @@ export default function Hero() {
                     ref={(el) => {
                       if (el) rowsRef.current[i] = el;
                     }}
-                    className={`hero-fade hero-row group flex items-center justify-between gap-4 border-t ${
+                    className={`hero-fade hero-row group flex items-center gap-4 border-t ${
                       i === ROWS.length - 1 ? 'border-b' : ''
                     } border-white/10`}
                   >
-                    <div className="flex items-baseline gap-4 md:gap-6 min-w-0">
-                      <span className="text-xs font-semibold tracking-widest text-white/50">{r.no}</span>
-                      <span className={`hero-row-name font-bold text-white ${r.hover} transition-colors duration-300`}>
-                        {r.name}
-                      </span>
-                      <span className="hidden sm:inline text-sm text-white/50 truncate">{r.desc}</span>
-                    </div>
+                    <span
+                      className={`hero-row-name font-bold text-white shrink-0 sm:w-[13rem] ${r.hover} transition-colors duration-300`}
+                    >
+                      {r.name}
+                    </span>
+                    <span className="hidden sm:block flex-1 min-w-0 text-sm text-white/55 truncate">
+                      {r.desc}
+                    </span>
                     <ArrowUpRight
-                      className={`w-5 h-5 md:w-6 md:h-6 text-white/55 ${r.hover} group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-300 shrink-0`}
+                      className={`w-5 h-5 md:w-6 md:h-6 ml-auto sm:ml-0 text-white/55 ${r.hover} group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-300 shrink-0`}
                     />
                   </Link>
                 ))}
@@ -322,8 +326,10 @@ export default function Hero() {
             ref={cueRef}
             className="absolute bottom-7 left-1/2 -translate-x-1/2 z-10 hero-shadow pointer-events-none"
           >
+            {/* 영문 대문자 마이크로 라벨(tracking .35em)은 어느 템플릿에나 붙어 있는 장식이다.
+                이 사이트는 한국어로 말하므로 한국어로, 자간도 보통으로 둔다. */}
             <div className="flex flex-col items-center gap-3">
-              <span className="text-[10px] font-semibold tracking-[0.35em] uppercase text-white/60">Scroll</span>
+              <span className="text-xs font-semibold text-white/60">스크롤</span>
               <span className="relative block w-px h-12 bg-white/15 overflow-hidden">
                 <span className="scroll-dash" />
               </span>

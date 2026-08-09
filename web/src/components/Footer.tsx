@@ -44,7 +44,9 @@ export default function Footer({ flush = false }: { flush?: boolean }) {
             <div className="flex items-center gap-3 mb-3">
               <Image src="/img/gslt-logo-white.png" alt="GSLT" width={110} height={28}
                 className="h-7 w-auto object-contain" style={{ width: 'auto', height: '1.75rem' }} />
-              <span className="text-xs font-medium border-l border-white/10 pl-3 text-slate-400 uppercase tracking-widest">
+              {/* 실제 브랜드 태그라인이다. 대문자로 바꾸고 자간을 넓히는 건 원본 표기를
+                  뭉개면서 템플릿 마이크로 라벨처럼 보이게 만든다 — 적힌 대로 쓴다. */}
+              <span className="text-xs font-medium border-l border-white/10 pl-3 text-slate-400">
                 {SITE.tagline}
               </span>
             </div>
