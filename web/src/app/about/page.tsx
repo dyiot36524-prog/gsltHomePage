@@ -38,10 +38,6 @@ const pageCss = `
 }
 @media (prefers-reduced-motion: reduce) { .tl-now::after { animation: none; } }
 
-.page-outline {
-  -webkit-text-stroke: 2px rgba(40, 184, 197, 0.14);
-  color: transparent;
-}
 `;
 
 export default function AboutPage() {
@@ -51,98 +47,11 @@ export default function AboutPage() {
       <Header active="about" />
 
       <main className="pt-6 md:pt-24">
-        {/* 타이틀 밴드 */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative overflow-hidden mb-14 md:mb-20">
-          <span className="page-outline hidden md:block absolute -top-6 right-0 text-[9rem] font-black tracking-tighter leading-none select-none pointer-events-none">ABOUT</span>
-          <div className="relative">
-            <div className="flex items-center gap-4 mb-5">
-              <span className="block w-10 h-px bg-gslt-400"></span>
-              <span className="text-[11px] uppercase tracking-[0.3em] font-bold text-gslt-700">About GSLT</span>
-            </div>
-            <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-tight break-keep mb-5">공간을 IoT로 짓는<br />구축 전문기업</h1>
-            <p className="text-slate-500 text-lg break-keep max-w-2xl">지에스엘티(GSLT)는 배선 공사 없는 무선 IoT로 오피스·주거·빌딩을
-              스마트 공간으로 완성합니다. 상담부터 유지보수까지, 구축의 전 과정을 책임집니다.</p>
-          </div>
-        </div>
-
-        {/* 핵심 수치 */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20 md:mb-28">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div className="bg-white rounded-2xl border border-slate-200/70 p-7 text-center">
-              <p className="text-3xl md:text-4xl font-black mb-1">2023<span className="text-base font-medium text-slate-500 ml-1">년</span></p>
-              <p className="text-sm text-slate-500 font-medium">설립</p>
-            </div>
-            <div className="bg-white rounded-2xl border border-slate-200/70 p-7 text-center">
-              <p className="text-3xl md:text-4xl font-black mb-1">3<span className="text-base font-medium text-slate-500 ml-1">개</span></p>
-              <p className="text-sm text-slate-500 font-medium">자체 솔루션</p>
-            </div>
-            <div className="bg-white rounded-2xl border border-slate-200/70 p-7 text-center">
-              <p className="text-3xl md:text-4xl font-black mb-1">99.9<span className="text-base font-medium text-slate-500 ml-1">%</span></p>
-              <p className="text-sm text-slate-500 font-medium">IoT 제어 안정성</p>
-            </div>
-            <div className="bg-white rounded-2xl border border-slate-200/70 p-7 text-center">
-              <p className="text-2xl md:text-3xl font-black mb-1 text-gslt-600">Forbes</p>
-              <p className="text-sm text-slate-500 font-medium break-keep">코리아 대상 · 무선 IoT 부문</p>
-            </div>
-          </div>
-        </div>
-
-        {/* IoT 구축 프로세스 */}
-        <div className="bg-[#0a0a0f] py-20 md:py-28 mb-20 md:mb-28">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center gap-4 mb-4">
-              <span className="block w-10 h-px bg-gslt-400"></span>
-              <span className="text-[11px] uppercase tracking-[0.3em] font-bold text-gslt-300/80">Process</span>
-            </div>
-            <h2 className="text-3xl md:text-5xl font-black tracking-tight text-white break-keep mb-4">IoT 구축, 이렇게 진행됩니다</h2>
-            <p className="text-white/50 break-keep mb-14 max-w-2xl">무선 IoT라서 대규모 공사가 없습니다. 지금 쓰는 공간 그대로,
-              다섯 단계면 스마트 공간이 됩니다.</p>
-
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-              <div className="border-t border-white/15 pt-6">
-                <p className="text-gslt-400 text-xs font-black tracking-widest mb-3">STEP 01</p>
-                <p className="text-white font-bold text-lg mb-2">상담·요구 분석</p>
-                <p className="text-white/55 text-sm break-keep leading-relaxed">공간 용도와 원하는 제어 범위를 듣고 최적 구성을 제안합니다.</p>
-              </div>
-              <div className="border-t border-white/15 pt-6">
-                <p className="text-gslt-400 text-xs font-black tracking-widest mb-3">STEP 02</p>
-                <p className="text-white font-bold text-lg mb-2">현장 실측</p>
-                <p className="text-white/55 text-sm break-keep leading-relaxed">현장을 방문해 공간 구조와 설비 환경을 확인합니다.</p>
-              </div>
-              <div className="border-t border-white/15 pt-6">
-                <p className="text-gslt-400 text-xs font-black tracking-widest mb-3">STEP 03</p>
-                <p className="text-white font-bold text-lg mb-2">설계·견적</p>
-                <p className="text-white/55 text-sm break-keep leading-relaxed">도면 위에 장비를 배치하고 견적을 산출합니다. 비즈모아로 견적서가 즉시 나옵니다.</p>
-              </div>
-              <div className="border-t border-white/15 pt-6">
-                <p className="text-gslt-400 text-xs font-black tracking-widest mb-3">STEP 04</p>
-                <p className="text-white font-bold text-lg mb-2">시공·설치</p>
-                <p className="text-white/55 text-sm break-keep leading-relaxed">배선 공사 없이 무선 장비를 설치하고 통합 제어를 세팅합니다.</p>
-              </div>
-              <div className="border-t border-white/15 pt-6">
-                <p className="text-gslt-400 text-xs font-black tracking-widest mb-3">STEP 05</p>
-                <p className="text-white font-bold text-lg mb-2">검수·유지보수</p>
-                <p className="text-white/55 text-sm break-keep leading-relaxed">현장 검수 후 인계하며, 1초 단위 모니터링으로 계속 관리합니다.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 성과 & 연혁 */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20 md:mb-28">
-          <div className="flex items-center gap-4 mb-10">
-            <h2 className="text-2xl md:text-3xl font-black">성과와 걸어온 길</h2>
-            <div className="flex-1 h-px bg-slate-200"></div>
-            <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">Milestones</span>
-          </div>
-
-          {/* 포브스 대상은 이 회사가 외부에서 받은 가장 큰 검증이다. 국책과제 두 건과 같은 크기의
-              카드로 늘어놓으면 셋 다 그저 그런 배지가 된다. 지면을 넓게 쓰고 실물 배지를 함께 둔다.
-              나머지 둘은 그 아래에서 사실만 담백하게 잇는다. */}
-          {/* 수상 이미지는 크게 앞세우되, 수상명은 반드시 HTML 글자로도 남긴다.
-              그림 안의 글자는 검색엔진도 스크린리더도 읽지 못한다 — 이 회사의 가장 큰
-              검증을 이미지에만 담으면 아무 데도 기록되지 않는 셈이다. */}
-          <div className="overflow-hidden rounded-3xl bg-[#0a0a0f] mb-6">
+        {/* 회사소개의 첫 화면은 수상이다. 이 회사가 외부에서 받은 가장 큰 검증을
+            페이지 맨 앞에 세운다. 수상명은 그림 안에만 두지 않고 HTML 글자로도 남긴다 —
+            검색엔진도 스크린리더도 그림 속 글자는 읽지 못한다. */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-14 md:mb-20">
+          <div className="overflow-hidden rounded-3xl bg-[#0a0a0f]">
             <Image
               src="/img/forbes-award-2026.png"
               alt="포브스 코리아 어워즈 수상 이미지. 트로피와 포브스 코리아 로고, 2026 최고의 브랜드 대상 엠블럼, 그리고 수상사 (주)지에스엘티 표기."
@@ -150,6 +59,7 @@ export default function AboutPage() {
               height={1600}
               sizes="(max-width: 1279px) 100vw, 1152px"
               className="w-full h-auto block"
+              priority
             />
             <div className="p-8 md:p-12">
               <p className="text-2xl md:text-4xl font-black leading-[1.2] break-keep text-white">
@@ -170,7 +80,91 @@ export default function AboutPage() {
               </Link>
             </div>
           </div>
+        </div>
 
+        {/* 제목 위 아이브로(About GSLT)와 배경 워터마크(ABOUT)를 걷어냈다. 제목이 스스로 선다.
+            핵심 수치는 같은 크기 카드 넉 장으로 늘어놓지 않는다 — 큰 숫자 + 작은 라벨을
+            격자에 까는 건 어느 회사 소개에나 붙는 배열이라 이 회사에 대해 아무것도 말하지 않는다.
+            사실은 한 줄 제원표로 잇는다. */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20 md:mb-28">
+          <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-tight break-keep mb-5">공간을 IoT로 짓는<br />구축 전문기업</h1>
+          <p className="text-slate-600 text-lg break-keep max-w-2xl">지에스엘티(GSLT)는 배선 공사 없는 무선 IoT로 오피스·주거·빌딩을
+            스마트 공간으로 완성합니다. 상담부터 유지보수까지, 구축의 전 과정을 책임집니다.</p>
+
+          <dl className="mt-10 flex flex-wrap items-baseline gap-x-8 gap-y-4 border-t border-slate-300 pt-5 max-w-2xl">
+            <div className="flex items-baseline gap-2">
+              <dt className="text-sm text-slate-600">설립</dt>
+              <dd className="text-lg font-black tabular-nums text-slate-900">2023년</dd>
+            </div>
+            <span className="w-px h-4 bg-slate-300" aria-hidden="true" />
+            <div className="flex items-baseline gap-2">
+              <dt className="text-sm text-slate-600">자체 솔루션</dt>
+              <dd className="text-lg font-black tabular-nums text-slate-900">3개</dd>
+            </div>
+            <span className="w-px h-4 bg-slate-300" aria-hidden="true" />
+            <div className="flex items-baseline gap-2">
+              <dt className="text-sm text-slate-600">IoT 제어 안정성</dt>
+              <dd className="text-lg font-black tabular-nums text-slate-900">99.9%</dd>
+            </div>
+          </dl>
+        </div>
+
+        {/* IoT 구축 프로세스 */}
+        <div className="bg-[#0a0a0f] py-20 md:py-28 mb-20 md:mb-28">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl md:text-5xl font-black tracking-tight text-white break-keep mb-4">IoT 구축, 이렇게 진행됩니다</h2>
+            <p className="text-white/50 break-keep mb-14 max-w-2xl">무선 IoT라서 대규모 공사가 없습니다. 지금 쓰는 공간 그대로,
+              다섯 단계면 스마트 공간이 됩니다.</p>
+
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+              <div className="border-t border-white/15 pt-6">
+                <p className="font-bold text-lg mb-2 flex items-baseline gap-2.5">
+                  <span className="text-gslt-400 tabular-nums text-sm shrink-0">01</span>
+                  <span className="text-white">상담·요구 분석</span>
+                </p>
+                <p className="text-white/55 text-sm break-keep leading-relaxed">공간 용도와 원하는 제어 범위를 듣고 최적 구성을 제안합니다.</p>
+              </div>
+              <div className="border-t border-white/15 pt-6">
+                <p className="font-bold text-lg mb-2 flex items-baseline gap-2.5">
+                  <span className="text-gslt-400 tabular-nums text-sm shrink-0">02</span>
+                  <span className="text-white">현장 실측</span>
+                </p>
+                <p className="text-white/55 text-sm break-keep leading-relaxed">현장을 방문해 공간 구조와 설비 환경을 확인합니다.</p>
+              </div>
+              <div className="border-t border-white/15 pt-6">
+                <p className="font-bold text-lg mb-2 flex items-baseline gap-2.5">
+                  <span className="text-gslt-400 tabular-nums text-sm shrink-0">03</span>
+                  <span className="text-white">설계·견적</span>
+                </p>
+                <p className="text-white/55 text-sm break-keep leading-relaxed">도면 위에 장비를 배치하고 견적을 산출합니다. 비즈모아로 견적서가 즉시 나옵니다.</p>
+              </div>
+              <div className="border-t border-white/15 pt-6">
+                <p className="font-bold text-lg mb-2 flex items-baseline gap-2.5">
+                  <span className="text-gslt-400 tabular-nums text-sm shrink-0">04</span>
+                  <span className="text-white">시공·설치</span>
+                </p>
+                <p className="text-white/55 text-sm break-keep leading-relaxed">배선 공사 없이 무선 장비를 설치하고 통합 제어를 세팅합니다.</p>
+              </div>
+              <div className="border-t border-white/15 pt-6">
+                <p className="font-bold text-lg mb-2 flex items-baseline gap-2.5">
+                  <span className="text-gslt-400 tabular-nums text-sm shrink-0">05</span>
+                  <span className="text-white">검수·유지보수</span>
+                </p>
+                <p className="text-white/55 text-sm break-keep leading-relaxed">현장 검수 후 인계하며, 1초 단위 모니터링으로 계속 관리합니다.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 성과 & 연혁 */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20 md:mb-28">
+          <div className="flex items-center gap-4 mb-10">
+            <h2 className="text-2xl md:text-3xl font-black">성과와 걸어온 길</h2>
+            <div className="flex-1 h-px bg-slate-200"></div>
+          </div>
+
+          {/* 포브스 대상은 이 페이지 맨 위로 올라갔다. 여기서 또 크게 반복하면 광고가 된다 —
+              연혁 항목으로만 남기고, 국책과제 두 건을 사실 그대로 잇는다. */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
             <div className="rounded-3xl bg-white border border-slate-200/70 p-8">
               <p className="text-xl md:text-2xl font-black leading-snug break-keep text-slate-900">
@@ -222,7 +216,6 @@ export default function AboutPage() {
           <div className="flex items-center gap-4 mb-10">
             <h2 className="text-2xl md:text-3xl font-black">솔루션</h2>
             <div className="flex-1 h-px bg-slate-200"></div>
-            <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">Solutions</span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Link href="/siot" className="group bg-white rounded-2xl border border-slate-200/70 p-8 hover:shadow-xl hover:-translate-y-1 transition-all duration-500">
@@ -251,24 +244,23 @@ export default function AboutPage() {
           <div className="flex items-center gap-4 mb-10">
             <h2 className="text-2xl md:text-3xl font-black">오시는 길</h2>
             <div className="flex-1 h-px bg-slate-200"></div>
-            <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">Location</span>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
             <div className="lg:col-span-2 space-y-5">
               <div>
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">주소</p>
+                <p className="text-xs font-bold text-slate-500 mb-1.5">주소</p>
                 <p className="font-bold break-keep">경기도 성남시 중원구 둔촌대로 388번길 24<br />우림라이온스밸리 3차 501호</p>
               </div>
               <div>
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">전화</p>
+                <p className="text-xs font-bold text-slate-500 mb-1.5">전화</p>
                 <p className="font-bold"><a href="tel:070-4659-4804" className="hover:text-gslt-600 transition-colors">070-4659-4804</a></p>
               </div>
               <div>
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">이메일</p>
+                <p className="text-xs font-bold text-slate-500 mb-1.5">이메일</p>
                 <p className="font-bold"><a href="mailto:gs7078103107@gmail.com" className="hover:text-gslt-600 transition-colors">gs7078103107@gmail.com</a></p>
               </div>
               <div>
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">대표자</p>
+                <p className="text-xs font-bold text-slate-500 mb-1.5">대표자</p>
                 <p className="font-bold">최광수</p>
               </div>
             </div>
