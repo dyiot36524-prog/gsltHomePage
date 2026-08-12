@@ -36,6 +36,7 @@ export default function Hero() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const veilRef = useRef<HTMLDivElement>(null);
   const cueRef = useRef<HTMLDivElement>(null);
+  const kickerRef = useRef<HTMLSpanElement>(null);
   const line1Ref = useRef<HTMLSpanElement>(null);
   const line2Ref = useRef<HTMLSpanElement>(null);
   const descRef = useRef<HTMLParagraphElement>(null);
@@ -153,9 +154,11 @@ export default function Hero() {
       if (veil) veil.style.opacity = seg(p, 0.3, 0.6).toFixed(3);
       if (cue) cue.style.opacity = (1 - seg(p, 0.02, 0.14)).toFixed(3);
 
-      maskUp(line1Ref.current, seg(p, 0.36, 0.56));
-      maskUp(line2Ref.current, seg(p, 0.42, 0.62));
-      fade(descRef.current, seg(p, 0.5, 0.66), 22);
+      // 조건절 → 결론 두 줄 → 설명 순으로 조금씩 어긋나게 올라온다
+      maskUp(kickerRef.current, seg(p, 0.32, 0.5));
+      maskUp(line1Ref.current, seg(p, 0.38, 0.58));
+      maskUp(line2Ref.current, seg(p, 0.44, 0.64));
+      fade(descRef.current, seg(p, 0.52, 0.68), 22);
       rows.forEach((r, i) => {
         const a = 0.56 + i * 0.035;
         fade(r, seg(p, a, a + 0.16), 18);
@@ -306,25 +309,37 @@ export default function Hero() {
           <div className="hero-grade" />
           <div className="hero-veil" ref={veilRef} />
 
-          <div className="relative z-10 h-full flex flex-col justify-center px-4 sm:px-6 lg:px-8 pt-24 pb-16">
+          {/* 화면 정중앙에 h1 → 문단 → 목록을 쌓는 대신 아래쪽에 앉힌다. 위를 비워
+              빌딩 컷이 숨 쉬고, 글은 어두워진 바닥에 놓인다 — 스크롤로 재생되는 필름의
+              자막판에 가까운 구조다. */}
+          {/* 모바일 하단 여백이 넉넉해야 마지막 행이 떠 있는 '맨 위로' 버튼(bottom-6, 48px)에
+              가리지 않는다. 아래로 붙이는 구성이라 이 여백이 곧 안전 거리다. */}
+          <div className="relative z-10 h-full flex flex-col justify-end px-4 sm:px-6 lg:px-8 pt-24 pb-24 md:pb-14">
             <div className="max-w-6xl mx-auto w-full hero-shadow">
-              <h1 className="hero-title font-black tracking-tight break-keep text-white">
+              <h1 className="hero-title font-black break-keep text-white">
                 <span className="hero-line">
-                  <span className="hero-line-inner" ref={line1Ref}>오피스에서 빌딩까지,</span>
+                  <span className="hero-line-inner hero-title-setup text-white/75" ref={kickerRef}>
+                    맞춤형 공간 설계부터 디바이스 구축까지,
+                  </span>
                 </span>
                 <span className="hero-line">
-                  <span className="hero-line-inner text-gslt-400" ref={line2Ref}>공간을 IoT로 짓습니다.</span>
+                  {/* 강조는 한 줄 전체가 아니라 이 네 글자에만 준다 */}
+                  <span className="hero-line-inner" ref={line1Ref}>
+                    당신에게 <span className="text-gslt-400">딱 맞춘</span>
+                  </span>
+                </span>
+                <span className="hero-line">
+                  <span className="hero-line-inner" ref={line2Ref}>공간 지능 솔루션.</span>
                 </span>
               </h1>
 
+              {/* 제품 이름 셋은 바로 아래 목록이 다시 부른다. 여기서는 회사가 무엇을 하는지만 말한다. */}
               <p
-                className="hero-fade hero-desc max-w-2xl text-white/55 leading-relaxed break-keep"
+                className="hero-fade hero-desc max-w-xl text-white/70 leading-relaxed break-keep"
                 ref={descRef}
               >
-                배선 공사 없는 무선 IoT 구축 <strong className="text-white font-semibold">시옷</strong>,
-                IoT 시공 견적 자동화 <strong className="text-white font-semibold">비즈모아</strong>,
-                모임을 연결하는 <strong className="text-white font-semibold">모락</strong>.
-                지에스엘티는 오피스·주거·빌딩, 모든 공간을 스마트 공간으로 완성하는 IoT 구축 전문기업입니다.
+                지에스엘티는 오피스·주거·빌딩, 모든 공간을 배선 공사 없이
+                스마트 공간으로 완성하는 IoT 구축 전문기업입니다.
               </p>
 
               {/* 제품 세 개는 순서가 아니라 나란한 선택지다 — 01/02/03 번호를 붙이지 않는다.

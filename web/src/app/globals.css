@@ -135,22 +135,26 @@ body {
 }
 
 /* 텍스트가 떠오를 때 영상을 눌러주는 암막 — JS가 opacity 제어.
-   왼쪽(텍스트)은 진하게, 오른쪽은 옅게 둬서 마지막 빌딩 컷이 배경으로 남게 한다. */
+   글이 화면 아래쪽에 앉으므로 아래를 진하게, 위를 열어 둔다. 빌딩 컷의 윗부분이
+   그대로 살아 있고 글은 어두운 바닥 위에 놓인다 — 영화 자막판과 같은 구조다.
+   (예전에는 왼쪽을 진하게 하는 가로 그라데이션이었는데, 글이 가운데 정렬이라
+    오른쪽으로 넘어가는 줄이 옅은 구간에 걸쳐 대비가 흔들렸다.) */
 .hero-veil {
   position: absolute;
   inset: 0;
   pointer-events: none;
   opacity: 0;
-  background: linear-gradient(100deg,
-      rgba(5, 7, 12, .95) 0%, rgba(5, 7, 12, .88) 34%,
-      rgba(5, 7, 12, .62) 62%, rgba(5, 7, 12, .44) 100%);
+  background: linear-gradient(to top,
+      rgba(5, 7, 12, .97) 0%, rgba(5, 7, 12, .93) 30%,
+      rgba(5, 7, 12, .68) 58%, rgba(5, 7, 12, .28) 82%, rgba(5, 7, 12, .12) 100%);
 }
 
-/* 모바일은 텍스트가 화면 폭을 다 쓰므로 고르게 덮는다 */
 @media (max-width: 767px) {
+  /* 모바일은 글이 화면 폭을 다 쓰고 세로로도 길어 더 넓게 덮는다 */
   .hero-veil {
-    background: linear-gradient(180deg,
-        rgba(5, 7, 12, .9) 0%, rgba(5, 7, 12, .86) 55%, rgba(5, 7, 12, .9) 100%);
+    background: linear-gradient(to top,
+        rgba(5, 7, 12, .97) 0%, rgba(5, 7, 12, .94) 46%,
+        rgba(5, 7, 12, .78) 72%, rgba(5, 7, 12, .4) 100%);
   }
   #hero-track { height: 300vh; }
 }
@@ -178,16 +182,30 @@ body {
 .js-hero .hero-line-inner { --y: 110%; }
 .js-hero .hero-fade { --o: 0; --y: 22px; }
 
-/* 짧은 뷰포트(노트북·소형 폰)에서도 한 화면에 들어오도록 유동 타이포·여백 */
+/* 짧은 뷰포트(노트북·소형 폰)에서도 한 화면에 들어오도록 유동 타이포·여백.
+   캐치프레이즈는 두 줄을 같은 크기로 세우지 않는다. 앞 절("…구축까지,")은 조건을 까는
+   말이고 뒷 문장이 결론이라, 크기 차이로 그 관계를 그대로 보여준다.
+   같은 크기 두 줄에 둘째 줄만 브랜드색으로 칠하는 배열은 어느 랜딩에나 있는 기본형이다. */
 .hero-title {
-  font-size: clamp(1.9rem, min(6vw, 9.2vh), 5.25rem);
-  line-height: 1.08;
-  margin-bottom: clamp(.85rem, 2.8vh, 2.5rem);
+  font-size: clamp(1.9rem, min(5.4vw, 8.4vh), 4.75rem);
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+  margin-bottom: clamp(.9rem, 3vh, 2.25rem);
+}
+
+/* 앞 절 — 결론 줄의 약 1/3 크기. 라벨이 아니라 문장의 일부라 마침표 대신 쉼표로 이어진다. */
+.hero-title-setup {
+  display: block;
+  font-size: clamp(.8125rem, min(1.75vw, 2.6vh), 1.375rem);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+  margin-bottom: clamp(.5rem, 1.6vh, 1.1rem);
 }
 
 .hero-desc {
-  font-size: clamp(.8125rem, min(1.25vw, 2vh), 1.0625rem);
-  margin-bottom: clamp(.9rem, 3.2vh, 3rem);
+  font-size: clamp(.8125rem, min(1.2vw, 1.9vh), 1.0625rem);
+  margin-bottom: clamp(.9rem, 3.2vh, 2.75rem);
 }
 
 .hero-row { padding-block: clamp(.5rem, 1.8vh, 1.4rem); }
