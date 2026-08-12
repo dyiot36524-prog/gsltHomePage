@@ -250,7 +250,12 @@ for (const vp of VIEWPORTS) {
   for (const route of ROUTES) {
     let res;
     try {
-      res = await page.goto(BASE + route, { waitUntil: 'networkidle0', timeout: 45000 });
+      // networkidle0을 쓰지 않는다. 히어로가 영상 파일 전체를 fetch해 Blob URL로 갈아끼우는데,
+      // blob: 미디어 소스는 puppeteer의 연결 집계에서 열린 채로 남아 유휴 상태가 오지 않는다.
+      // (실측: 홈은 load 547ms · 실제 네트워크 유휴 1.6초인데 networkidle0은 45초를 넘긴다.)
+      // load 이벤트 + 고정 정착 시간으로 바꾼다 — 페이지가 느린 게 아니라 계측 조건이 안 맞았다.
+      res = await page.goto(BASE + route, { waitUntil: 'load', timeout: 45000 });
+      await new Promise((r) => setTimeout(r, 1200));
     } catch (e) {
       console.log(`\n▸ ${route}\n   ✗ 로드 실패: ${e.message.split('\n')[0]}`);
       fail++; continue;

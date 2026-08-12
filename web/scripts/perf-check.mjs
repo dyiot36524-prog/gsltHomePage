@@ -50,20 +50,26 @@ for (const vp of [
   loaded = true;
   const loadAt = Date.now() - t0;
   const mb = (b) => (b / 1048576).toFixed(2) + 'MB';
-  // load 이후 승격이 실제로 일어나 버퍼링이 시작되는지도 본다
-  await new Promise((r) => setTimeout(r, 2500));
+  // load 이후 파일 전체가 실제로 메모리에 올라오는지 본다.
+  // preload 승격은 더 이상 쓰지 않는다 — 속성만 바꿔서는 크롬이 다시 받지 않았고,
+  // 스크럽 중에는 seek이 순차 다운로드를 계속 끊어 버퍼가 0.35초에서 자라지 않았다.
+  // 지금은 fetch로 파일 전체를 따로 받아 Blob URL로 갈아끼운다. 그래서 확인할 것은
+  // "preload가 auto가 됐는가"가 아니라 "전 구간이 버퍼에 들어왔는가"다.
+  await new Promise((r) => setTimeout(r, 4000));
   const state = await page.evaluate(() => {
     const v = document.getElementById('hero-video');
     if (!v) return { err: 'hero-video 없음' };
+    let total = 0;
+    for (let i = 0; i < v.buffered.length; i++) total += v.buffered.end(i) - v.buffered.start(i);
     return {
-      preload: v.preload,
-      buffered: v.buffered.length ? +v.buffered.end(0).toFixed(2) : 0,
+      memoryBacked: v.currentSrc.startsWith('blob:'),
+      buffered: +total.toFixed(2),
       duration: Number.isFinite(v.duration) ? +v.duration.toFixed(2) : null,
       seekable: v.seekable.length ? +v.seekable.end(0).toFixed(2) : 0,
     };
   });
   console.log(`  ${vp.name.padEnd(8)} load=${loadAt}ms · load 전 영상 ${mb(bytesBeforeLoad)} / 이후 누적 ${mb(bytesTotal)}`);
-  console.log(`           승격후 preload=${state.preload} duration=${state.duration}s buffered=${state.buffered}s seekable=${state.seekable}s`);
+  console.log(`           duration=${state.duration}s · 버퍼 ${state.buffered}s · ${state.memoryBacked ? '메모리(Blob)' : '네트워크 스트리밍'}`);
   // Chrome은 preload="metadata"에서도 moov를 찾느라 대략 1MB 청크를 한 번 받는다.
   // 잡아야 하는 실패는 "통째로 받는 것"(모바일 6.22MB / 데스크톱 14.88MB)이므로
   // 청크 경계에서 시비 걸지 않도록 2MB에 선을 긋는다.
@@ -72,7 +78,11 @@ for (const vp of [
     console.log(`   ✗ load 전에 ${mb(bytesBeforeLoad)}를 받았다 — 여전히 임계 경로에 있다`);
   }
   if (!state.duration) { fail++; console.log('   ✗ duration을 못 얻었다 — 스크럽이 동작하지 않는다'); }
-  if (state.preload !== 'auto') { fail++; console.log(`   ✗ load 이후에도 preload가 ${state.preload} — 승격이 안 됐다`); }
+  // 전 구간이 버퍼에 들어와야 스크럽이 네트워크에서 자유로워진다. duration의 95%를 기준으로 본다.
+  if (state.duration && state.buffered < state.duration * 0.95) {
+    fail++;
+    console.log(`   ✗ 4초가 지나도 버퍼가 ${state.buffered}s/${state.duration}s — 스크럽이 네트워크에 매달린다`);
+  }
   if (state.seekable <= 0) { fail++; console.log('   ✗ seekable 구간이 없다 — currentTime 탐색이 불가능하다'); }
   await page.close();
 }

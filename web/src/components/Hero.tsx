@@ -9,7 +9,12 @@ import { ArrowUpRight } from '@/components/Icon';
  *
  * #hero-track이 스크롤 구간을 만들고 .hero-stage가 그 안에 sticky로 고정된다.
  * 스크롤 진행도(0~1) 하나를 잡아 영상 currentTime과 텍스트 리빌을 함께 몰아준다.
- * 영상은 전 프레임 키프레임(-g 1)이라 currentTime 대입만으로 프레임 단위 탐색이 된다.
+ *
+ * 영상은 짧은 GOP(-g 12, 30fps라 0.4초마다 키프레임)로 인코딩돼 있다. 예전에는 전 프레임을
+ * 키프레임(-g 1)으로 두었는데, 그러면 10초짜리가 2560에서 14.2MB(12Mbps)까지 부풀어
+ * 회선이 느린 곳에서는 스크롤해도 영상이 따라오지 못했다. 짧은 GOP로 바꿔 8.0MB로 줄이면서
+ * 오히려 화질은 올라갔다(마스터 대비 SSIM 0.9752 → 0.9756). 탐색 시 최대 11프레임을
+ * 더 디코딩하지만 H.264에서는 밀리초 단위다.
  *
  * 클라이언트 컴포넌트지만 마크업은 서버에서도 렌더되므로 크롤러는 헤드라인·본문을 그대로 본다.
  * 초기 은닉은 layout의 인라인 스크립트가 붙이는 .js-hero 클래스가 담당한다 —
@@ -46,52 +51,52 @@ export default function Hero() {
     const cue = cueRef.current;
     const rows = rowsRef.current.filter(Boolean);
 
-    // ─── 영상 선다운로드를 초기 로드 뒤로 미룬다 ───
-    // 첫 화면은 poster + 텍스트로 이미 성립하는데, 장식 배경인 영상은 6~15MB로 페이지의
-    // 나머지 전부보다 무겁다. 마크업은 preload="metadata"로 두고(스크럽 구간을 잡는 duration은
-    // 여전히 필요하다) 페이지 load가 끝난 뒤에 'auto'로 올린다.
+    // ─── 영상 전체를 따로 받아, 스크럽을 네트워크에서 떼어낸다 ───
+    // 스크럽은 매 프레임 currentTime을 바꾼다. 그때마다 브라우저는 진행 중이던 순차
+    // 다운로드를 버리고 그 지점의 range를 새로 요청한다. 그래서 "진입하자마자 스크롤"하면
+    // 버퍼가 0.35초에서 영원히 자라지 않고 탐색이 매번 네트워크로 나가 영상이 멈춘 것처럼
+    // 보인다. 가만히 두면 1초 만에 9.93초가 차는 것과 정반대다 — 스크롤이 버퍼링을 스스로 막는다.
+    // (배포본 실측: 대기 후 스크롤 = 버퍼 9.93s·탐색 15~26ms / 진입 직후 스크롤 = 버퍼 0.35s)
     //
-    // 승격은 속성 변경만으로는 안 된다. 자원 선택 알고리즘이 이미 끝난 뒤라 크롬은 다시 돌지
-    // 않는다 — 배포본에서 재보니 preload='auto'를 걸어도 버퍼가 0.16초(모바일)/0.78초에
-    // 고정된 채 6초 동안 1바이트도 자라지 않았고, 그 상태로는 스크럽 탐색이 매번 range 요청이라
-    // 350~415ms까지 벌어진다. load()로 자원 선택을 다시 돌려야 실제로 받는다:
-    // 1초 안에 전 구간(9.93초)이 버퍼에 들어오고 탐색이 7~23ms로 떨어진다.
-    //
-    // (로컬에서는 이 차이가 안 보인다. localhost는 지연이 없어 range 요청이 즉시 끝나기 때문에
-    //  버퍼가 비어 있어도 탐색이 빠르다. 이 판단은 반드시 배포본에서 재야 한다.)
-    let idleId = 0;
-    let idleIsTimeout = false;
+    // 그래서 video 요소의 로딩에 맡기지 않고 fetch로 파일 전체를 따로 받는다. 이 다운로드는
+    // 사용자가 아무리 스크럽해도 중단되지 않는다. 다 받으면 Blob URL로 갈아끼워 이후 모든
+    // 탐색이 메모리에서 끝난다. 화질은 그대로 두고 랙만 없앤다.
+    const controller = new AbortController();
+    let blobUrl = '';
+    let fetched = false;
+    /** 파일 전체가 메모리에 올라왔는가. 그 전까지는 탐색이 네트워크로 나간다. */
+    let memoryBacked = false;
+    /** 받아는 뒀고, 스크럽이 멈추는 틈을 기다리는 중 */
+    let pendingSwap = false;
 
-    const promotePreload = () => {
-      idleId = 0;
-      // 데이터 절약 모드·저속 회선은 미리 받지 않는다. 마크업의 preload="metadata"는 그대로라
-      // duration은 여전히 잡히고, 스크럽은 탐색할 때마다 그 구간만 range로 받아 이어간다.
-      const conn = (navigator as Navigator & { connection?: NetworkInfo }).connection;
-      if (conn?.saveData || conn?.effectiveType === 'slow-2g' || conn?.effectiveType === '2g') return;
-      video.preload = 'auto';
-      // load()는 currentTime을 0으로 되돌리지만, loadedmetadata가 다시 떠서 onMeta → kick으로
-      // 스크롤 위치를 재계산해 그리므로 제자리를 찾아온다.
-      video.load();
-    };
+    const conn = (navigator as Navigator & { connection?: NetworkInfo }).connection;
+    const stingy =
+      conn?.saveData === true || conn?.effectiveType === 'slow-2g' || conn?.effectiveType === '2g';
 
-    const queuePromote = () => {
-      if (typeof window.requestIdleCallback === 'function') {
-        idleId = window.requestIdleCallback(promotePreload, { timeout: 2000 });
-      } else {
-        idleIsTimeout = true;
-        idleId = window.setTimeout(promotePreload, 300);
-      }
-    };
+    const cacheWholeFile = () => {
+      // 데이터 절약 모드·저속 회선에서는 통째로 받지 않는다. 마크업의 preload="metadata"가
+      // 그대로 남아 duration은 잡히고, 스크럽은 구간별 range로 이어간다(느리지만 동작한다).
+      if (fetched || stingy) return;
+      fetched = true;
+      // <source>의 media 조건을 브라우저가 이미 평가해 고른 주소다. 우리가 다시 고르지 않는다.
+      const src = video.currentSrc;
+      if (!src) return;
 
-    if (document.readyState === 'complete') queuePromote();
-    else window.addEventListener('load', queuePromote, { once: true });
-
-    const stopPromote = () => {
-      window.removeEventListener('load', queuePromote);
-      if (!idleId) return;
-      if (idleIsTimeout) window.clearTimeout(idleId);
-      else window.cancelIdleCallback?.(idleId);
-      idleId = 0;
+      // 우선순위를 낮추지 않는다. 이 영상이 곧 첫 화면의 내용이고, 늦게 받을수록
+      // 스크럽이 네트워크에 매달리는 시간이 길어진다. 낮췄을 때 4G에서 blob이
+      // 18초까지 밀려 초반 탐색이 2.7초씩 걸렸다.
+      fetch(src, { signal: controller.signal })
+        .then((r) => (r.ok ? r.blob() : null))
+        .then((blob) => {
+          if (!blob || disposed) return;
+          blobUrl = URL.createObjectURL(blob);
+          // 바로 갈아끼우지 않는다. src를 바꾸면 요소가 리셋돼 메타데이터를 다시 읽는 동안
+          // frame 0으로 돌아가는데, 그 순간 사용자가 스크롤 중이면 한 프레임 깜빡인다
+          // (실측: 80ms 샘플 하나 분량이 매번 잡혔다). 스크럽이 멈춘 틈에 조용히 바꾼다.
+          pendingSwap = true;
+          if (!raf) applySwap();
+        })
+        .catch(() => { /* 중단·실패는 무시 — 기존 스트리밍 경로가 그대로 남는다 */ });
     };
 
     // 모션 최소화 설정: 스크럽 없이 마지막 장면 + 텍스트를 즉시 노출
@@ -104,8 +109,9 @@ export default function Hero() {
       };
       if (video.readyState >= 1) toEnd();
       else video.addEventListener('loadedmetadata', toEnd, { once: true });
+      // 모션 최소화에서는 스크럽이 없으니 파일을 통째로 받을 이유도 없다.
       return () => {
-        stopPromote();
+        controller.abort();
         video.removeEventListener('loadedmetadata', toEnd);
         document.documentElement.classList.remove('hero-static');
       };
@@ -133,8 +139,11 @@ export default function Hero() {
     const paint = (p: number) => {
       if (duration) {
         const t = Math.min(duration - 0.03, seg(p, 0, SCRUB_END) * duration);
-        // 미세한 차이까지 대입하면 탐색이 밀리므로 임계값을 둔다
-        if (Math.abs(video.currentTime - t) > 0.01) {
+        // 미세한 차이까지 대입하면 탐색이 밀리므로 임계값을 둔다.
+        // 파일이 아직 메모리에 없는 동안에는 탐색 하나하나가 range 요청이라, 촘촘히 보내면
+        // 정작 파일 전체를 받아오는 다운로드의 대역폭을 뺏어 느린 상태가 오래 간다.
+        // 그동안은 성기게(0.25초 단위) 움직이고, 메모리에 올라온 뒤 프레임 단위로 붙는다.
+        if (Math.abs(video.currentTime - t) > (memoryBacked ? 0.01 : 0.25)) {
           try {
             video.currentTime = t;
           } catch { /* 탐색 실패 무시 */ }
@@ -171,6 +180,27 @@ export default function Hero() {
       return clamp01(-track.getBoundingClientRect().top / span);
     };
 
+    /** 받아 둔 파일을 요소에 물린다. 리셋이 한 프레임 보이므로 정지 상태에서만 부른다. */
+    const applySwap = () => {
+      if (!pendingSwap || !blobUrl || disposed) return;
+      pendingSwap = false;
+      const at = video.currentTime;
+      video.addEventListener(
+        'loadedmetadata',
+        () => {
+          try {
+            video.currentTime = at;
+          } catch { /* 탐색 실패 무시 */ }
+          memoryBacked = true;
+          kick();
+        },
+        { once: true }
+      );
+      // src를 직접 주면 <source> 목록보다 우선한다. load()로 새 소스를 물린다.
+      video.src = blobUrl;
+      video.load();
+    };
+
     const frame = () => {
       if (disposed) return;
       const delta = target - current;
@@ -182,7 +212,10 @@ export default function Hero() {
         settled = 0;
       }
       paint(current);
-      raf = settled > 3 ? 0 : requestAnimationFrame(frame);
+      const halting = settled > 3;
+      raf = halting ? 0 : requestAnimationFrame(frame);
+      // 루프가 멈추는 순간 = 사용자가 스크롤을 놓은 순간. 여기서 갈아끼우면 티가 나지 않는다.
+      if (halting) applySwap();
     };
 
     const kick = () => {
@@ -195,6 +228,9 @@ export default function Hero() {
     const onMeta = () => {
       duration = Number.isFinite(video.duration) ? video.duration : 0;
       kick();
+      // currentSrc는 메타데이터가 온 뒤에야 확정된다. 이 시점에 전체 받기를 시작한다 —
+      // 페이지 load까지 기다리면 그 사이에 사용자가 이미 스크롤을 시작해 버린다.
+      cacheWholeFile();
     };
     if (video.readyState >= 1) onMeta();
     else video.addEventListener('loadedmetadata', onMeta);
@@ -218,7 +254,9 @@ export default function Hero() {
 
     return () => {
       disposed = true;
-      stopPromote();
+      controller.abort();
+      // Blob URL을 놓아주지 않으면 영상 크기만큼(6~15MB) 메모리가 그대로 남는다.
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
       if (raf) cancelAnimationFrame(raf);
       video.removeEventListener('loadedmetadata', onMeta);
       window.removeEventListener('touchstart', prime);
@@ -252,7 +290,7 @@ export default function Hero() {
           <video
             id="hero-video"
             ref={videoRef}
-            poster="/img/hero-v2-poster.jpg"
+            poster="/img/hero-v3-poster.jpg"
             muted
             playsInline
             preload="metadata"
@@ -260,9 +298,9 @@ export default function Hero() {
             aria-hidden="true"
             tabIndex={-1}
           >
-            <source src="/img/hero-v2-1280.mp4" type="video/mp4" media="(max-width: 767px)" />
-            <source src="/img/hero-v2-1920.mp4" type="video/mp4" media="(max-width: 1439px)" />
-            <source src="/img/hero-v2-2560.mp4" type="video/mp4" />
+            <source src="/img/hero-v3-1280.mp4" type="video/mp4" media="(max-width: 767px)" />
+            <source src="/img/hero-v3-1920.mp4" type="video/mp4" media="(max-width: 1439px)" />
+            <source src="/img/hero-v3-2560.mp4" type="video/mp4" />
           </video>
 
           <div className="hero-grade" />
