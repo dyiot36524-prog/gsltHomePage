@@ -317,7 +317,7 @@ export default function Hero() {
           <div className="relative z-10 h-full flex flex-col justify-end px-4 sm:px-6 lg:px-8 pt-24 pb-24 md:pb-14">
             <div className="max-w-6xl mx-auto w-full hero-shadow">
               <h1 className="hero-title font-black break-keep text-white">
-                <span className="hero-line">
+                <span className="hero-line hero-line-setup">
                   <span className="hero-line-inner hero-title-setup text-white/75" ref={kickerRef}>
                     맞춤형 공간 설계부터 디바이스 구축까지,
                   </span>

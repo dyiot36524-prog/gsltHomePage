@@ -200,6 +200,12 @@ body {
   font-weight: 600;
   letter-spacing: 0.01em;
   line-height: 1.4;
+}
+
+/* 여백은 마스크(.hero-line) 쪽에 준다. 안쪽 요소에 margin을 주면 마스크 박스가 그만큼
+   커지는데 translateY(110%)는 '글자 자신의 높이' 기준이라 그 여백만큼 못 가린다.
+   실제로 스크롤 최상단에서 앞 절이 잘린 채 비쳤다. */
+.hero-line-setup {
   margin-bottom: clamp(.5rem, 1.6vh, 1.1rem);
 }
 

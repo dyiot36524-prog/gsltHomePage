@@ -96,8 +96,9 @@ export default function SiotPage() {
             </p>
             <div className={`${styles.fadeUp} flex flex-wrap items-center gap-4 mb-16`} style={d('.9s')}>
               <Link href="/contact" className="px-8 py-4 rounded-full bg-siot-500 hover:bg-siot-400 text-slate-900 font-bold transition-all">도입 문의하기</Link>
-              {/* 원래 /#siot 로 갔지만 Next 홈에는 아직 시옷 섹션이 없다. 실제로 존재하는 시공 기록으로 보낸다. */}
-              <Link href="/portfolio" className="px-8 py-4 rounded-full border-2 border-white/15 text-white/80 font-bold hover:border-siot-500 hover:text-siot-400 transition-all">시공사례 보기</Link>
+              {/* 포트폴리오는 올릴 사례가 쌓일 때까지 메뉴에서 숨긴 상태다. 숨긴 곳으로
+                  보내지 않고, 구축 과정을 실제로 설명하는 회사소개로 보낸다. */}
+              <Link href="/about" className="px-8 py-4 rounded-full border-2 border-white/15 text-white/80 font-bold hover:border-siot-500 hover:text-siot-400 transition-all">구축 과정 보기</Link>
             </div>
             <div className={`${styles.fadeUp} grid grid-cols-3 max-w-xl gap-6`} style={d('1.1s')}>
               <div>

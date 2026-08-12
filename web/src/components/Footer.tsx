@@ -1,11 +1,13 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { COMPANY, SITE, SOLUTIONS } from '@/lib/site';
+import { getMenuVisibility, type MenuKey } from '@/lib/posts';
 
-const NEWS_LINKS = [
-  { href: '/news', label: '뉴스' },
-  { href: '/downloads', label: '자료실' },
-  { href: '/portfolio', label: '포트폴리오' },
+/** 상단 메뉴와 같은 설정을 따른다 — 헤더에서 숨긴 항목이 푸터에만 남으면 앞뒤가 안 맞는다. */
+const NEWS_LINKS: { href: string; label: string; menu: MenuKey }[] = [
+  { href: '/news', label: '뉴스', menu: 'news' },
+  { href: '/downloads', label: '자료실', menu: 'downloads' },
+  { href: '/portfolio', label: '포트폴리오', menu: 'portfolio' },
 ];
 
 const LEGAL_LINKS = [
@@ -33,7 +35,9 @@ function Column({ title, links }: { title: string; links: { href: string; label:
  * flush: 바로 위 구간이 이미 어두운 면으로 끝날 때 쓴다. 기본 여백(mt-24)은 흰 지면
  * 콘텐츠 페이지용이라, 검정 계기면 뒤에 그대로 두면 body 흰색이 96px 띠로 드러난다.
  */
-export default function Footer({ flush = false }: { flush?: boolean }) {
+export default async function Footer({ flush = false }: { flush?: boolean }) {
+  const menus = await getMenuVisibility();
+  const newsLinks = NEWS_LINKS.filter((l) => menus[l.menu]);
   return (
     <footer
       className={`pt-14 pb-8 bg-[#050505] text-slate-400 border-t border-white/5 ${flush ? '' : 'mt-24'}`}
@@ -59,7 +63,7 @@ export default function Footer({ flush = false }: { flush?: boolean }) {
           <div className="flex flex-col sm:flex-row gap-10 text-sm">
             <Column title="솔루션"
               links={SOLUTIONS.map((s) => ({ href: s.href, label: `${s.name} (${s.en})` }))} />
-            <Column title="소식" links={NEWS_LINKS} />
+            <Column title="소식" links={newsLinks} />
             <Column title="법적 고지" links={LEGAL_LINKS} />
           </div>
         </div>

@@ -98,6 +98,45 @@ async function runQuery(body: unknown): Promise<Post[]> {
     });
 }
 
+/**
+ * 상단 메뉴 노출 설정. 관리자 페이지의 '메뉴 설정' 탭이 settings/menus 문서에 쓴다.
+ *
+ * 이관하면서 이 연결이 빠져 있었다 — 관리자에서 끄고 켜도 사이트는 그대로였다.
+ * 보안 규칙상 settings는 누구나 읽을 수 있으므로 인증 없이 서버에서 그대로 읽는다.
+ *
+ * 문서가 없을 때의 기본값에서 포트폴리오만 꺼 둔다. 올릴 시공사례가 아직 없어서
+ * 빈 목록으로 안내하느니 메뉴에서 빼는 편이 낫다. 관리자에서 켜면 그 값이 이긴다.
+ */
+export type MenuKey = 'news' | 'downloads' | 'portfolio';
+
+const MENU_FALLBACK: Record<MenuKey, boolean> = {
+  news: true,
+  downloads: true,
+  portfolio: false,
+};
+
+export async function getMenuVisibility(): Promise<Record<MenuKey, boolean>> {
+  try {
+    const res = await fetch(
+      `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}` +
+        `/databases/(default)/documents/settings/menus?key=${API_KEY}`,
+      { next: { revalidate: REVALIDATE } },
+    );
+    // 문서가 아직 없으면 404다. 오류가 아니라 '아직 설정한 적 없음'이므로 기본값을 쓴다.
+    if (!res.ok) return MENU_FALLBACK;
+    const doc = (await res.json()) as { fields?: Record<string, FsValue> };
+    const out = { ...MENU_FALLBACK };
+    for (const key of Object.keys(out) as MenuKey[]) {
+      const raw = doc.fields?.[key];
+      if (raw && 'booleanValue' in raw) out[key] = raw.booleanValue !== false;
+    }
+    return out;
+  } catch {
+    // 설정을 못 읽었다고 메뉴가 통째로 사라지면 안 된다. 기본값으로 계속 간다.
+    return MENU_FALLBACK;
+  }
+}
+
 export function isPress(p: Post): boolean {
   return p.type === 'press' && /^https?:\/\//i.test(String(p.sourceUrl || ''));
 }

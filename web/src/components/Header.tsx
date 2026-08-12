@@ -1,19 +1,24 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { NAV, SOLUTIONS, type NavKey } from '@/lib/site';
+import { getMenuVisibility, type MenuKey } from '@/lib/posts';
 import SolutionsMenu from '@/components/SolutionsMenu';
 
 /**
  * overlay: 히어로 영상 위에 겹쳐 뜨는 모드. 배경을 지우고 흰 글씨로 바꾸며,
  * 아래 스페이서도 내지 않는다 — 영상이 화면 맨 위부터 차야 하기 때문이다.
  */
-export default function Header({
+export default async function Header({
   active = '' as NavKey,
   overlay = false,
 }: {
   active?: NavKey;
   overlay?: boolean;
 }) {
+  // 관리자가 끈 메뉴는 내지 않는다. menu 키가 없는 항목(홈·회사소개)은 항상 보인다.
+  const menus = await getMenuVisibility();
+  const nav = NAV.filter((n) => !('menu' in n) || menus[(n as { menu: MenuKey }).menu]);
+
   const linkCls = (key: string) =>
     overlay
       ? active === key
@@ -48,7 +53,7 @@ export default function Header({
               않아 '포트폴리/오'처럼 어절 중간이 꺾였다. whitespace-nowrap은 그 안전장치다. */}
           <div className={`absolute left-1/2 -translate-x-1/2 hidden lg:flex items-center gap-9 text-sm font-bold whitespace-nowrap ${overlay ? 'text-white/80' : 'text-slate-600'}`}>
             <SolutionsMenu overlay={overlay} />
-            {NAV.map((n) => (
+            {nav.map((n) => (
               <Link key={n.key} href={n.href} className={linkCls(n.key)}>{n.label}</Link>
             ))}
           </div>
@@ -71,7 +76,7 @@ export default function Header({
               </Link>
             ))}
             <span className={`w-px h-4 shrink-0 ${overlay ? 'bg-white/20' : 'bg-slate-200'}`} aria-hidden="true" />
-            {NAV.map((n) => (
+            {nav.map((n) => (
               <Link key={n.key} href={n.href} className={`${linkCls(n.key)} py-2.5 shrink-0`}>{n.label}</Link>
             ))}
           </div>
