@@ -6,6 +6,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Reveal from '@/components/Reveal';
 import styles from './bizmoa.module.css';
+import { SITE } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: '비즈모아(BizMoa) - IoT 시공 견적 자동화 SaaS',
@@ -27,7 +28,7 @@ const ld = {
   '@context': 'https://schema.org',
   '@type': 'SoftwareApplication',
   name: '비즈모아 (BizMoa)',
-  url: 'https://home.gslt.kr/bizmoa',
+  url: `${SITE.url}/bizmoa`,
   applicationCategory: 'BusinessApplication',
   operatingSystem: 'Web',
   description:

@@ -10,6 +10,8 @@ import { renderMarkdown } from '@/lib/markdown';
 import {
   getPost, getPosts, isPress, mediaUrl, postDateLabel, postTime, safeHttpUrl, type Post,
 } from '@/lib/posts';
+import { SITE } from '@/lib/site';
+import { jsonLd, breadcrumbSchema } from '@/lib/schema';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -61,24 +63,34 @@ export default async function PostPage({ params }: Params) {
     : post.category === 'downloads' ? { href: '/downloads', label: '자료실' }
     : { href: '/news', label: 'GSLT 소식' };
 
-  const ld = {
-    '@context': 'https://schema.org',
-    '@type': post.category === 'news' ? 'NewsArticle' : 'Article',
-    headline: post.title,
-    description: post.excerpt || post.title,
-    datePublished: post.createdAt instanceof Date ? post.createdAt.toISOString() : undefined,
-    dateModified: post.updatedAt instanceof Date ? post.updatedAt.toISOString() : undefined,
-    author: { '@type': 'Organization', name: '지에스엘티(GSLT)' },
-    publisher: { '@type': 'Organization', name: '지에스엘티(GSLT)' },
-    mainEntityOfPage: `https://home.gslt.kr/news/${id}`,
-    ...(mediaUrl(post.thumbnail) ? { image: [mediaUrl(post.thumbnail)] } : {}),
-  };
+  // 주소를 하드코딩하지 않는다. 구 도메인(home.gslt.kr)이 박혀 있어 검색엔진이
+  // 정리될 주소를 이 글의 정본으로 알고 있었다.
+  const ld = jsonLd(
+    {
+      '@type': post.category === 'news' ? 'NewsArticle' : 'Article',
+      headline: post.title,
+      description: post.excerpt || post.title,
+      datePublished: post.createdAt instanceof Date ? post.createdAt.toISOString() : undefined,
+      dateModified: post.updatedAt instanceof Date ? post.updatedAt.toISOString() : undefined,
+      inLanguage: 'ko-KR',
+      author: { '@id': `${SITE.url}/#organization` },
+      publisher: { '@id': `${SITE.url}/#organization` },
+      mainEntityOfPage: `${SITE.url}/news/${id}`,
+      url: `${SITE.url}/news/${id}`,
+      ...(mediaUrl(post.thumbnail) ? { image: [mediaUrl(post.thumbnail)] } : {}),
+    },
+    breadcrumbSchema([
+      { name: '홈', path: '/' },
+      { name: backTo.label, path: backTo.href },
+      { name: post.title, path: `/news/${id}` },
+    ]),
+  );
 
   return (
     <>
       <Header active={post.category === 'portfolio' ? 'portfolio' : post.category === 'downloads' ? 'downloads' : 'news'} />
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ld }} />
 
         <div className="pt-10 md:pt-14">
           <Link

@@ -1,0 +1,41 @@
+# GSLT (지에스엘티)
+
+> 무선 IoT 구축 전문기업. 배선 공사 없이 오피스·주거(스마트홈)·빌딩을 스마트 공간으로
+> 완성한다. IoT 통합 제어 솔루션 '시옷(Siot)', IoT 시공업체용 견적 자동화 SaaS
+> '비즈모아(BizMoa)', 모임 커뮤니티 플랫폼 '모락(Morak)'을 개발·공급하며,
+> 포브스 코리아 '무선 IoT 기반 스마트 공간' 부문 대상을 수상했다.
+
+- 업종: IoT 구축 / 스마트오피스·스마트홈·빌딩 자동화 시공 및 솔루션 개발
+- 회사명: 지에스엘티(GSLT) / 대표자: 최광수
+- 주소: 경기도 성남시 중원구 둔촌대로 388번길 24, 우림라이온스밸리 3차 501호
+- 연락처: 070-4659-4804 / gs7078103107@gmail.com
+- 웹사이트: https://www.gslt.kr/
+
+## 솔루션
+
+- [시옷 (Siot)](https://www.gslt.kr/siot.html): 배선 공사 없는 무선 IoT로 조명·블라인드·공조를 통합 제어하는 스마트 공간 솔루션. 1초 단위 실시간 모니터링, 99.9% 제어 안정성, 상황별 장면 모드 프리셋.
+- [비즈모아 (BizMoa)](https://www.gslt.kr/bizmoa.html): 건축 도면 위에 장비를 배치하면 견적서·계약서·납품확인서가 자동 생성되는 시공·설치업체용 올인원 B2B SaaS. 인건비 자동 산출, 프로젝트·권한 관리 포함.
+- [모락 (Morak)](https://morac.gslt.kr): 기수제 모임(원우회·동문회)을 위한 모바일 커뮤니티 플랫폼. 디지털 명함 QR 교환, 기수·직책 관리, 일정·참석 관리, 원우수첩 제공. 소개: https://www.gslt.kr/morak.html
+
+## 최근 소식
+
+- [중소벤처기업부 창업성장기술개발사업 선정](https://www.gslt.kr/p/adR3WrFhWsSQ0GW9lbu8.html): 디딤돌 R&D 과제에 선정되어 무선 IoT 스마트 공간 기술 고도화를 지원받습니다.
+- [비즈모아, 견적 자동화 SaaS 정식 출시](https://www.gslt.kr/p/m6vZ76UJGwuKKFhlyo97.html): 도면 위 장비 배치부터 견적·계약·납품까지 한 번에 처리하는 올인원 SaaS를 출시했습니다.
+- [지에스엘티, 포브스 코리아 대상 수상](https://www.gslt.kr/p/Rq7J51ooVuw77YQXrjDT.html): '무선 IoT 기반 스마트 공간' 부문에서 포브스 코리아 대상을 수상했습니다.
+- [테스트](https://www.gslt.kr/p/edNYzngmL27FgkuChp00.html): 안녕하세요
+
+## 시공사례 (포트폴리오)
+
+- [다일로 워크스페이스 도입 사례](https://www.gslt.kr/p/6XZ0sxPrLkgHwLCFxZCG.html): 문서와 채팅을 결합한 지식 관리 워크스페이스를 도입했습니다.
+- [강남 오피스 스마트 공간 구축](https://www.gslt.kr/p/4aTWdRhr9CX4okNYWiVx.html): 조명·블라인드·공조를 하나의 대시보드에서 제어하는 스마트 오피스를 구축했습니다.
+
+## 자료실
+
+- [GSLT 회사 소개서](https://www.gslt.kr/p/2qRjVJST9exUvglaXnZ5.html): 지에스엘티의 솔루션과 실적을 정리한 회사 소개 자료입니다.
+
+## 페이지
+
+- [홈](https://www.gslt.kr/)
+- [뉴스](https://www.gslt.kr/news.html)
+- [포트폴리오](https://www.gslt.kr/portfolio.html)
+- [자료실](https://www.gslt.kr/downloads.html)

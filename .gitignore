@@ -25,8 +25,13 @@ img/시옷*.png
 img/다일로*.png
 # 로컬 빌드 부산물
 node_modules/
+# 정적 사이트 시절 로컬 도구용 파일이라 무시한다. 루트에는 지금 존재하지도 않는다.
 package.json
 package-lock.json
+# 단, Next 앱의 것은 의존성 목록 그 자체다. 이게 저장소에 없으면 새로 클론했을 때
+# 빌드가 되지 않고 GitHub 연동 배포도 불가능하다 — CLI 업로드로만 배포되고 있었다.
+!web/package.json
+!web/package-lock.json
 # 모락 플레이스토어 원본 폴더 (로컬 보관, img/morak-*로 복사해 사용)
 모락 플레이스토어 이미지*/
 img/모락이미지/

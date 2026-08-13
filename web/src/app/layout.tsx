@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
 import { SITE } from '@/lib/site';
+import { jsonLd, organizationSchema, webSiteSchema } from '@/lib/schema';
 import Script from 'next/script';
 import ScrollTop from '@/components/ScrollTop';
+import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -11,6 +13,8 @@ export const metadata: Metadata = {
     template: '%s | GSLT',
   },
   description: SITE.description,
+  // 홈의 정본 주소. 하위 페이지는 각자 alternates.canonical을 갖고 있다.
+  alternates: { canonical: '/', types: { 'application/rss+xml': `${SITE.url}/rss.xml` } },
   openGraph: {
     type: 'website',
     siteName: SITE.name,
@@ -19,6 +23,24 @@ export const metadata: Metadata = {
     images: ['/img/og-image.png'],
   },
   twitter: { card: 'summary_large_image' },
+  // 검색엔진이 이 사이트를 어떻게 다뤄야 하는지. max-image-preview:large 가 있어야
+  // 구글 결과에 큰 썸네일이 뜬다(뉴스·수상 이미지가 있는 사이트에는 차이가 크다).
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
+  keywords: [
+    '지에스엘티', 'GSLT', '무선 IoT', 'IoT 구축', '스마트오피스', '스마트홈',
+    '빌딩 자동화', '스마트빌딩', '시옷', 'Siot', '비즈모아', 'BizMoa', '모락', 'Morak',
+    'IoT 통합관제', '배선 공사 없는 IoT', 'AI 예지보전',
+  ],
   // 아이콘은 파일 컨벤션(favicon.ico · icon.png · apple-icon.png, 이 디렉터리)이 맡는다.
   // 여기서 metadata.icons로 다시 지정하면 중복 <link> 태그가 나가고,
   // 594×615 비정사각 원본을 그대로 물리는 문제도 생긴다.
@@ -50,6 +72,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-dynamic-subset.min.css"
         />
         <link rel="preconnect" href="https://firestore.googleapis.com" crossOrigin="" />
+        {/* 회사·사이트 구조화 데이터. 검색엔진은 화면 글자만으로 "이 회사가 뭐 하는 곳인지"를
+            확신하지 못한다. 회사명·주소·연락처·수상을 기계가 읽는 형식으로 한 번 더 준다.
+            next/script가 아니라 <script>를 직접 쓴다 — 크롤러가 HTML을 받는 순간 있어야 한다. */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: jsonLd(organizationSchema, webSiteSchema) }}
+        />
       </head>
       <body className="font-sans antialiased">
         {/* 히어로 텍스트와 스크롤 리빌 요소의 초기 은닉. 마운트 후 숨기면 한 번 번쩍이므로
@@ -63,6 +92,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div hidden dangerouslySetInnerHTML={{ __html: DIRECTION_CONTRACT }} />
         {children}
         <ScrollTop />
+        {/* 방문자 분석. 지금까지 아무 도구도 없어 하루 몇 명이 오는지, 어디서 오는지,
+            문의까지 몇 %가 닿는지를 전혀 몰랐다. 쿠키를 쓰지 않고 개인을 식별하지 않아
+            별도 동의 배너 없이 쓸 수 있다. Vercel 프로젝트에서 Analytics를 켜야 수집된다. */}
+        <Analytics />
       </body>
     </html>
   );

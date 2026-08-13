@@ -29,7 +29,20 @@ for (const vp of [
   const page = await browser.newPage();
   await page.setViewport(vp);
   await page.goto(BASE + '/', { waitUntil: 'load' });
-  await new Promise((r) => setTimeout(r, 1500)); // preload 승격 뒤 잠시
+
+  // 파일 전체가 메모리(Blob)로 올라올 때까지 기다린다. 고정 시간만 두면 회선 사정에 따라
+  // 아직 스트리밍 중인 순간에 재게 되고, 그때는 첫 탐색만 1초씩 걸려 통과·실패가 뒤집힌다.
+  // 이 검사가 보려는 건 "자리 잡은 뒤의 스크럽"이고, 진입 직후는 scrub-cold-check가 맡는다.
+  await page
+    .waitForFunction(
+      () => {
+        const v = document.getElementById('hero-video');
+        return !!v && v.currentSrc.startsWith('blob:') && v.readyState >= 2;
+      },
+      { timeout: 30000, polling: 250 },
+    )
+    .catch(() => {}); // 못 기다려도 계속 진행한다 — 그 자체가 결함이면 아래 수치가 잡는다
+  await new Promise((r) => setTimeout(r, 400));
 
   // 탐색 지연 실측
   const seek = await page.evaluate(async () => {

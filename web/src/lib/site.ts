@@ -3,7 +3,10 @@
 export const SITE = {
   name: 'GSLT',
   nameKo: '지에스엘티',
-  url: 'https://home.gslt.kr',
+  // 정식 주소. canonical·og:url·sitemap·RSS가 모두 이 값을 쓴다.
+  // home.gslt.kr은 정리 예정인 구 사이트 주소라, 그대로 두면 검색엔진이 죽을 주소를
+  // 정답으로 알고 카톡 공유 썸네일도 깨진다. gslt.kr은 www로 넘어오므로 www를 정본으로 둔다.
+  url: 'https://www.gslt.kr',
   tagline: 'IoT Space Builder',
   description:
     '무선 IoT 구축 전문기업. 배선 공사 없이 오피스·주거·빌딩을 스마트 공간으로 완성합니다.',
@@ -28,6 +31,7 @@ export const SOLUTIONS = [
 export const NAV = [
   { href: '/', key: 'home', label: '홈' },
   { href: '/about', key: 'about', label: '회사소개' },
+  { href: '/faq', key: 'faq', label: 'FAQ' },
   { href: '/news', key: 'news', label: '뉴스', menu: 'news' },
   { href: '/downloads', key: 'downloads', label: '자료실', menu: 'downloads' },
   { href: '/portfolio', key: 'portfolio', label: '포트폴리오', menu: 'portfolio' },
