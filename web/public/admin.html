@@ -90,7 +90,7 @@
           <h2 id="panel-title" class="text-xl font-black"></h2>
           <div class="flex items-center gap-2">
             <button id="seed-press-btn"
-              class="hidden px-4 py-2.5 rounded-full border border-gslt-400 text-gslt-700 text-sm font-bold hover:bg-gslt-50 transition-all">언론보도 3건 등록</button>
+              class="hidden px-4 py-2.5 rounded-full border border-gslt-400 text-gslt-700 text-sm font-bold hover:bg-gslt-50 transition-all">언론보도 4건 등록</button>
             <button id="seed-btn"
               class="px-4 py-2.5 rounded-full border border-slate-300 text-slate-600 text-sm font-bold hover:border-slate-500 transition-all">샘플 글 생성</button>
             <button id="new-btn"
@@ -683,12 +683,21 @@
         sourceUrl: 'https://economist.co.kr/article/view/ecn202606230043',
         mirrors: [],
         thumbnail: '', body: '', tags: ['특허', 'AI', '예지보전'], attachments: []
+      },
+      {
+        category: 'news', type: 'press', published: true, pinned: false,
+        title: '지에스엘티, 초기창업패키지 딥테크 과제 완료… AI기반 IoT 유지보수 솔루션 실증',
+        excerpt: '2025년 초기창업패키지 딥테크 분야 과제를 마치고 통합형 유지보수 솔루션을 실증했습니다. 시옷 알고리즘을 개발해 현장에 연동하고, 설비 상태·점검 이력·장애 대응을 하나로 관리합니다.',
+        outlet: '조선비즈', reporter: '', publishedAt: '2026-08-05',
+        sourceUrl: 'https://biz.chosun.com/industry/business_info/2026/08/05/UGTMQVKPSFEYZAN6H2J2DMURZ4/',
+        mirrors: [],
+        thumbnail: '', body: '', tags: ['초기창업패키지', '딥테크', '유지보수'], attachments: []
       }
     ];
 
     $('seed-press-btn').addEventListener('click', async () => {
       const btn = $('seed-press-btn');
-      if (!confirm('언론보도 3건을 등록할까요?\n\n· 한국경제TV (2026-04-21) 포브스 대상 — 다음·네이트 전재 포함\n· 포브스코리아 (2026-02-27) 수상 기업 소개\n· 이코노미스트 (2026-06-23) AI 예지보전 특허 2건 출원\n\n이미 등록했다면 중복 생성됩니다.')) return;
+      if (!confirm('언론보도 4건을 등록할까요?\n\n· 한국경제TV (2026-04-21) 포브스 대상 — 다음·네이트 전재 포함\n· 포브스코리아 (2026-02-27) 수상 기업 소개\n· 이코노미스트 (2026-06-23) AI 예지보전 특허 2건 출원\n· 조선비즈 (2026-08-05) 초기창업패키지 딥테크 과제 완료\n\n이미 등록했다면 중복 생성됩니다.')) return;
       btn.disabled = true;
       btn.textContent = '등록 중...';
       try {
@@ -698,11 +707,11 @@
           });
         }
         btn.textContent = '등록 완료';
-        setTimeout(() => { btn.disabled = false; btn.textContent = '언론보도 3건 등록'; switchTab(currentTab); }, 800);
+        setTimeout(() => { btn.disabled = false; btn.textContent = '언론보도 4건 등록'; switchTab(currentTab); }, 800);
       } catch (e) {
         alert('등록 실패: ' + e.message);
         btn.disabled = false;
-        btn.textContent = '언론보도 3건 등록';
+        btn.textContent = '언론보도 4건 등록';
       }
     });
 
