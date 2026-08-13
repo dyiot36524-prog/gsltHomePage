@@ -52,7 +52,18 @@
         <button type="submit"
           class="w-full py-3 rounded-xl bg-gslt-500 hover:bg-gslt-600 text-white font-bold text-sm transition-all">로그인</button>
         <p id="login-error" class="hidden text-sm text-rose-600 text-center pt-1"></p>
+        <p id="login-note" class="hidden text-sm text-gslt-700 text-center pt-1"></p>
       </form>
+      <div class="flex items-center justify-between gap-3 mt-5 pt-4 border-t border-slate-100">
+        <button type="button" id="signup-btn"
+          class="text-xs font-bold text-slate-600 hover:text-gslt-700 transition-colors">계정 만들기</button>
+        <button type="button" id="reset-btn"
+          class="text-xs font-bold text-slate-600 hover:text-gslt-700 transition-colors">비밀번호 재설정</button>
+      </div>
+      <p class="text-[11px] text-slate-400 leading-relaxed mt-3">
+        계정을 만들어도 관리자 명단에 없는 이메일은 글을 쓸 수 없습니다.
+        소유자에게 명단 추가를 먼저 요청하세요.
+      </p>
     </div>
   </div>
 
@@ -82,6 +93,7 @@
           <span id="inq-badge" class="hidden ml-1 px-1.5 py-0.5 rounded-full bg-rose-500 text-white text-[10px] font-black align-middle"></span>
         </button>
         <button data-tab="settings" class="tab-btn px-5 py-2.5 rounded-full text-sm font-bold transition-all">메뉴 설정</button>
+        <button data-tab="admins" class="tab-btn px-5 py-2.5 rounded-full text-sm font-bold transition-all">관리자</button>
       </div>
 
       <!-- ── 글 관리 ── -->
@@ -249,18 +261,53 @@
           class="mt-5 px-6 py-2.5 rounded-xl bg-gslt-500 hover:bg-gslt-600 text-white text-sm font-bold transition-all">설정 저장</button>
         <p id="menus-status" class="text-sm mt-3"></p>
       </div>
+
+      <!-- ── 관리자 ── -->
+      <div id="admins-panel" class="hidden">
+        <h2 class="text-xl font-black mb-2">관리자</h2>
+        <p class="text-sm text-slate-500 mb-6 leading-relaxed max-w-2xl">
+          여기 등록된 이메일만 글을 쓰고 고칠 수 있습니다.
+          <strong class="text-slate-700">명단에 추가한다고 계정이 만들어지지는 않습니다</strong> —
+          추가한 뒤, 그분이 이 페이지의 <strong class="text-slate-700">'계정 만들기'</strong>로 직접
+          비밀번호를 정해 가입해야 로그인이 됩니다. 비밀번호는 본인만 알게 됩니다.
+        </p>
+
+        <div id="admins-owner" class="max-w-xl mb-4 rounded-2xl border border-gslt-200 bg-gslt-50 p-5">
+          <p class="text-sm font-bold text-slate-900">소유자</p>
+          <p id="owner-email" class="text-sm text-slate-600 mt-1"></p>
+          <p class="text-xs text-slate-500 mt-2 leading-relaxed">
+            보안 규칙에 직접 적혀 있어 명단과 무관하게 항상 접근됩니다. 명단을 고치는 것도 소유자만 할 수 있습니다.
+          </p>
+        </div>
+
+        <div class="max-w-xl">
+          <div class="flex gap-2">
+            <input id="admin-email" type="email" class="field" placeholder="추가할 관리자 이메일" autocomplete="off">
+            <button id="admin-add"
+              class="shrink-0 px-5 py-2.5 rounded-xl bg-gslt-500 hover:bg-gslt-600 text-white text-sm font-bold transition-all">추가</button>
+          </div>
+          <p id="admins-status" class="text-sm mt-3"></p>
+          <div id="admins-list" class="mt-4 bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100"></div>
+          <p id="admins-empty" class="hidden py-10 text-center text-slate-400 text-sm">추가된 관리자가 없습니다.</p>
+        </div>
+      </div>
     </div>
   </div>
 
   <script type="module">
     import { app, db, CATEGORY_LABEL } from './assets/site.js';
     import {
-      getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged
+      getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged,
+      createUserWithEmailAndPassword, sendPasswordResetEmail
     } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
     import {
       collection, doc, addDoc, updateDoc, deleteDoc, getDocs, setDoc, getDoc,
       query, where, serverTimestamp
     } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+    /* 소유자 — firestore.rules에 박아 둔 값과 반드시 같아야 한다.
+       화면에서 '명단 수정' 버튼을 감추는 용도일 뿐, 실제 차단은 보안 규칙이 한다. */
+    const OWNER_EMAIL = 'dyiot36524@gmail.com';
 
     /* ── Cloudinary 설정 (이미지·파일 업로드) ── */
     const CLOUDINARY = {
@@ -326,6 +373,124 @@
     });
     $('logout-btn').addEventListener('click', () => signOut(auth));
 
+    /* 로그인 화면의 안내 문구. 오류(붉은색)와 성공 안내(청록)를 나눠 쓴다. */
+    function loginMsg(text, ok) {
+      const err = $('login-error'), note = $('login-note');
+      err.classList.add('hidden'); note.classList.add('hidden');
+      const el = ok ? note : err;
+      el.textContent = text;
+      el.classList.remove('hidden');
+    }
+
+    /* 계정 만들기 — 비밀번호는 본인이 정하고 우리는 보관하지 않는다.
+       명단에 없는 이메일도 계정은 만들어지지만 글은 못 쓴다(보안 규칙이 막는다). */
+    $('signup-btn').addEventListener('click', async () => {
+      const email = $('login-email').value.trim();
+      const pw = $('login-pw').value;
+      if (!email || !pw) return loginMsg('이메일과 쓰실 비밀번호를 입력한 뒤 눌러주세요.');
+      if (pw.length < 6) return loginMsg('비밀번호는 6자 이상이어야 합니다.');
+      try {
+        await createUserWithEmailAndPassword(auth, email, pw);
+      } catch (ex) {
+        loginMsg(ex.code === 'auth/email-already-in-use'
+          ? '이미 있는 계정입니다. 그대로 로그인하시거나 비밀번호를 재설정하세요.'
+          : ex.code === 'auth/weak-password'
+            ? '비밀번호가 너무 단순합니다. 6자 이상으로 정해주세요.'
+            : `계정 생성 실패 (${ex.code || '알 수 없음'})`);
+      }
+    });
+
+    /* 비밀번호 재설정 — 해당 주소로 재설정 메일이 간다.
+       계정이 없어도 성공으로 답한다(있는 계정을 캐내지 못하게 하는 Firebase 기본 동작). */
+    $('reset-btn').addEventListener('click', async () => {
+      const email = $('login-email').value.trim();
+      if (!email) return loginMsg('재설정 메일을 받을 이메일을 입력한 뒤 눌러주세요.');
+      try {
+        await sendPasswordResetEmail(auth, email);
+        loginMsg(`${email}로 재설정 메일을 보냈습니다. 메일함(스팸함 포함)을 확인하세요.`, true);
+      } catch (ex) {
+        loginMsg(`메일 발송 실패 (${ex.code || '알 수 없음'})`);
+      }
+    });
+
+    /* ══ 관리자 명단 ══
+       문서 ID가 곧 이메일이다. 명단 수정은 소유자만 — 화면에서도 감추지만
+       실제 차단은 보안 규칙(match /admins/{email})이 한다. */
+    function isOwner() {
+      return (auth.currentUser?.email || '').toLowerCase() === OWNER_EMAIL;
+    }
+
+    async function loadAdmins() {
+      $('owner-email').textContent = OWNER_EMAIL;
+      const owner = isOwner();
+      $('admin-email').disabled = !owner;
+      $('admin-add').disabled = !owner;
+      $('admin-add').classList.toggle('opacity-40', !owner);
+      const status = $('admins-status');
+      status.textContent = owner ? '' : '명단을 고칠 수 있는 건 소유자뿐입니다.';
+      status.className = 'text-sm mt-3 text-slate-500';
+
+      const list = $('admins-list');
+      list.innerHTML = '';
+      let rows = [];
+      try {
+        const snap = await getDocs(collection(db, 'admins'));
+        snap.forEach(d => rows.push(d.id));
+      } catch (e) {
+        status.textContent = '명단을 읽지 못했습니다. 보안 규칙에 admins 컬렉션이 반영됐는지 확인하세요.';
+        status.className = 'text-sm mt-3 text-rose-600';
+      }
+      rows.sort();
+      $('admins-empty').classList.toggle('hidden', rows.length > 0);
+      list.classList.toggle('hidden', rows.length === 0);
+      for (const email of rows) {
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between p-4 gap-3';
+        const span = document.createElement('span');
+        span.className = 'text-sm text-slate-700 break-all';
+        span.textContent = email;
+        row.appendChild(span);
+        if (owner) {
+          const del = document.createElement('button');
+          del.className = 'shrink-0 text-xs font-bold text-slate-500 hover:text-rose-600 transition-colors';
+          del.textContent = '삭제';
+          del.addEventListener('click', async () => {
+            if (!confirm(`${email} 을(를) 관리자에서 제외할까요?\n\n계정 자체는 남고 글쓰기 권한만 사라집니다.`)) return;
+            try { await deleteDoc(doc(db, 'admins', email)); await loadAdmins(); }
+            catch (e) { alert('삭제 실패: ' + e.message); }
+          });
+          row.appendChild(del);
+        }
+        list.appendChild(row);
+      }
+    }
+
+    $('admin-add').addEventListener('click', async () => {
+      const status = $('admins-status');
+      const email = $('admin-email').value.trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        status.textContent = '이메일 형식을 확인하세요.';
+        status.className = 'text-sm mt-3 text-rose-600';
+        return;
+      }
+      if (email === OWNER_EMAIL) {
+        status.textContent = '소유자는 이미 항상 접근됩니다. 명단에 넣을 필요가 없습니다.';
+        status.className = 'text-sm mt-3 text-slate-500';
+        return;
+      }
+      try {
+        // 문서 ID를 이메일로 쓴다. 보안 규칙이 exists()로 이 경로를 그대로 확인한다.
+        await setDoc(doc(db, 'admins', email), { addedAt: serverTimestamp(), addedBy: auth.currentUser?.email || '' });
+        $('admin-email').value = '';
+        await loadAdmins();
+        status.textContent = `${email} 추가됨. 이제 그분이 '계정 만들기'로 비밀번호를 정해 가입하면 로그인됩니다.`;
+        status.className = 'text-sm mt-3 text-gslt-700';
+      } catch (e) {
+        status.textContent = '추가 실패: ' + e.message;
+        status.className = 'text-sm mt-3 text-rose-600';
+      }
+    });
+
     /* ══ 탭 ══ */
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => switchTab(btn.dataset.tab));
@@ -346,9 +511,13 @@
       $('posts-panel').classList.add('hidden');
       $('settings-panel').classList.add('hidden');
       $('inquiries-panel').classList.add('hidden');
+      $('admins-panel').classList.add('hidden');
       if (tab === 'settings') {
         $('settings-panel').classList.remove('hidden');
         loadMenus();
+      } else if (tab === 'admins') {
+        $('admins-panel').classList.remove('hidden');
+        loadAdmins();
       } else if (tab === 'inquiries') {
         $('inquiries-panel').classList.remove('hidden');
         loadInquiries();
