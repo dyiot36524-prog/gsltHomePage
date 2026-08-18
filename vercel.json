@@ -2,6 +2,24 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": false,
   "trailingSlash": false,
+
+  "redirects": [
+    { "source": "/about.html", "destination": "https://www.gslt.kr/about", "permanent": true },
+    { "source": "/siot.html", "destination": "https://www.gslt.kr/siot", "permanent": true },
+    { "source": "/bizmoa.html", "destination": "https://www.gslt.kr/bizmoa", "permanent": true },
+    { "source": "/morak.html", "destination": "https://www.gslt.kr/morak", "permanent": true },
+    { "source": "/news.html", "destination": "https://www.gslt.kr/news", "permanent": true },
+    { "source": "/downloads.html", "destination": "https://www.gslt.kr/downloads", "permanent": true },
+    { "source": "/portfolio.html", "destination": "https://www.gslt.kr/portfolio", "permanent": true },
+    { "source": "/dailo.html", "destination": "https://www.gslt.kr/", "permanent": true },
+    { "source": "/404.html", "destination": "https://www.gslt.kr/", "permanent": true },
+    { "source": "/index.html", "destination": "https://www.gslt.kr/", "permanent": true },
+    { "source": "/admin.html", "destination": "https://www.gslt.kr/admin.html", "permanent": true },
+    { "source": "/p/:id.html", "destination": "https://www.gslt.kr/news/:id", "permanent": true },
+    { "source": "/post.html", "destination": "https://www.gslt.kr/news", "permanent": true },
+    { "source": "/(.*)", "destination": "https://www.gslt.kr/$1", "permanent": true }
+  ],
+
   "headers": [
     {
       "source": "/img/(.*)",
