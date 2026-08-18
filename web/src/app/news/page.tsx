@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import PageHead, { FilterBar } from '@/components/PageHead';
 import { RecordEmpty, RecordHead, RecordList, RecordRow } from '@/components/Record';
 import { ArrowUpRight } from '@/components/Icon';
-import { getPosts, isPress, mediaUrl, postDateLabel, postHref, postMirrors, type Post } from '@/lib/posts';
+import { getPosts, isHiddenCategory, isPress, mediaUrl, postDateLabel, postHref, postMirrors, type Post } from '@/lib/posts';
 
 export const metadata: Metadata = {
   title: 'GSLT 소식',
@@ -38,6 +39,9 @@ export default async function NewsPage({
   const { type } = await searchParams;
   const current: Filter = type === 'press' || type === 'article' ? type : 'all';
 
+  // 관리자에서 끈 분류는 주소로 직접 들어와도 없는 페이지로 낸다. 메뉴에서만 빼면
+  // 검색결과·옛 링크·RSS로 그대로 닿아 '숨김'이 숨김이 아니게 된다.
+  if (await isHiddenCategory('news')) notFound();
   let posts: Post[] = [];
   let failed = false;
   try {

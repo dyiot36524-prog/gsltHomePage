@@ -137,6 +137,21 @@ export async function getMenuVisibility(): Promise<Record<MenuKey, boolean>> {
   }
 }
 
+/**
+ * 관리자에서 끈 분류인가.
+ *
+ * '숨김'은 메뉴에서만 빼는 게 아니라 공개를 접는 것이다. 관리자에 그 설정을 넣을 때의
+ * 요청도 "상단 메뉴, 게시물을 보일지 말지"였는데 처음엔 메뉴 쪽만 연결해서, 끈 분류의
+ * 목록·상세 주소가 그대로 200으로 열리고 RSS에도 남아 있었다. 링크 하나만 알면 닿았다.
+ *
+ * 목록·상세·sitemap·RSS가 모두 이 함수 하나를 보게 해서, 한 군데만 막히고 다른 데로
+ * 새는 상황을 만들지 않는다. 관리자에서 다시 켜면 그대로 돌아온다.
+ */
+export async function isHiddenCategory(category: Category): Promise<boolean> {
+  const menus = await getMenuVisibility();
+  return menus[category] === false;
+}
+
 export function isPress(p: Post): boolean {
   return p.type === 'press' && /^https?:\/\//i.test(String(p.sourceUrl || ''));
 }

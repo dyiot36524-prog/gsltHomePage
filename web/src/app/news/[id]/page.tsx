@@ -8,7 +8,7 @@ import { Tag } from '@/components/Record';
 import { ArrowLeft, ArrowRight } from '@/components/Icon';
 import { renderMarkdown } from '@/lib/markdown';
 import {
-  getPost, getPosts, isPress, mediaUrl, postDateLabel, postTime, safeHttpUrl, type Post,
+  getPost, getPosts, isHiddenCategory, isPress, mediaUrl, postDateLabel, postTime, safeHttpUrl, type Post,
 } from '@/lib/posts';
 import { SITE } from '@/lib/site';
 import { jsonLd, breadcrumbSchema } from '@/lib/schema';
@@ -18,7 +18,8 @@ type Params = { params: Promise<{ id: string }> };
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { id } = await params;
   const post = await getPost(id);
-  if (!post) return { title: '글을 찾을 수 없습니다', robots: { index: false, follow: true } };
+  if (!post || (await isHiddenCategory(post.category)))
+    return { title: '글을 찾을 수 없습니다', robots: { index: false, follow: true } };
   const url = `/news/${id}`;
   return {
     title: post.title,
@@ -47,6 +48,10 @@ export default async function PostPage({ params }: Params) {
   const { id } = await params;
   const post = await getPost(id);
   if (!post) notFound();
+
+  // 분류를 끄면 그 분류의 글도 공개되지 않는다. 목록만 막고 상세를 열어 두면
+  // 검색결과에 남은 링크로 그대로 읽힌다.
+  if (await isHiddenCategory(post.category)) notFound();
 
   // 언론보도는 본문을 우리가 갖고 있지 않다. 원문으로 넘긴다.
   if (isPress(post)) {

@@ -13,8 +13,9 @@ import { getAllPosts, getMenuVisibility, isPress, postTime } from '@/lib/posts';
  * 언론보도(press)는 넣지 않는다. 본문이 우리 것이 아니라 원문으로 내보내는 링크일 뿐이라
  * 우리 사이트의 색인 대상이 아니고, 상세 페이지도 원문으로 바로 나간다.
  *
- * 메뉴에서 숨긴 분류는 목록 페이지를 빼되, 이미 발행된 개별 글은 남긴다 —
- * 숨김은 '메뉴에 안 보이게'이지 '없던 일로'가 아니다.
+ * 관리자에서 끈 분류는 목록도 개별 글도 넣지 않는다. 처음엔 '숨김은 메뉴에서만 빼는 것'
+ * 으로 보고 개별 글을 남겼는데, 그러면 끈 글이 계속 색인되어 검색결과로 닿는다.
+ * 숨김은 공개를 접는 것이고, 사이트는 그 글에 404를 낸다 — 목록에 넣으면 거짓말이 된다.
  */
 export const revalidate = 3600;
 
@@ -48,7 +49,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .map(([, url, priority]) => ({ url, changeFrequency: 'weekly' as const, priority }));
 
     const details: MetadataRoute.Sitemap = posts
-      .filter((p) => !isPress(p))
+      .filter((p) => !isPress(p) && menus[p.category] !== false)
       .map((p) => ({
         url: `${base}/news/${p.id}`,
         lastModified: new Date(postTime(p)),

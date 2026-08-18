@@ -1,5 +1,5 @@
 import { SITE, COMPANY } from '@/lib/site';
-import { getAllPosts, isPress, postTime, safeHttpUrl, CATEGORY_LABEL } from '@/lib/posts';
+import { getAllPosts, getMenuVisibility, isPress, postTime, safeHttpUrl, CATEGORY_LABEL } from '@/lib/posts';
 
 /**
  * rss.xml — 구 사이트에 있던 피드를 새 주소로 되살린 것이다.
@@ -24,7 +24,10 @@ function esc(s: string): string {
 export async function GET() {
   let posts: Awaited<ReturnType<typeof getAllPosts>> = [];
   try {
-    posts = await getAllPosts();
+    // 관리자에서 끈 분류는 피드에도 싣지 않는다. 사이트에서 내린 글이 구독기에는
+    // 계속 흘러가면 내린 의미가 없다.
+    const [all, menus] = await Promise.all([getAllPosts(), getMenuVisibility()]);
+    posts = all.filter((p) => menus[p.category] !== false);
   } catch {
     // 목록을 못 읽어도 빈 피드를 정상 응답으로 낸다. 500을 내면 구독기가 피드를 죽은 것으로 본다.
   }

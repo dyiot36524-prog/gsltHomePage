@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import PageHead from '@/components/PageHead';
 import { RecordEmpty, RecordHead, RecordList, RecordRow } from '@/components/Record';
-import { getPosts, mediaUrl, postDateLabel, type Attachment, type Post } from '@/lib/posts';
+import { getPosts, isHiddenCategory, mediaUrl, postDateLabel, type Attachment, type Post } from '@/lib/posts';
 
 export const metadata: Metadata = {
   title: '자료실',
@@ -38,6 +39,9 @@ function usable(p: Post): Attachment[] {
 }
 
 export default async function DownloadsPage() {
+  // 관리자에서 끈 분류는 주소로 직접 들어와도 없는 페이지로 낸다. 메뉴에서만 빼면
+  // 검색결과·옛 링크·RSS로 그대로 닿아 '숨김'이 숨김이 아니게 된다.
+  if (await isHiddenCategory('downloads')) notFound();
   let posts: Post[] = [];
   let failed = false;
   try {
