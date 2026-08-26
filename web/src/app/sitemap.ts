@@ -10,8 +10,9 @@ import { getAllPosts, getMenuVisibility, isPress, postTime } from '@/lib/posts';
  * 이제 Firestore를 읽어 실제 발행된 글까지 자동으로 채운다 — 글을 올리면 사람이
  * 손대지 않아도 다음 재생성 때 목록에 들어간다.
  *
- * 언론보도(press)는 넣지 않는다. 본문이 우리 것이 아니라 원문으로 내보내는 링크일 뿐이라
- * 우리 사이트의 색인 대상이 아니고, 상세 페이지도 원문으로 바로 나간다.
+ * 언론보도도 넣는다. 예전에는 상세가 원문으로 바로 넘어가 색인할 것이 없었지만, 이제
+ * 제목·우리가 쓴 요약·매체·일자·원문 링크를 담은 우리 지면이 있다. 이 회사를 다룬
+ * 보도가 검색에서 우리 주소로 잡히려면 이 주소들이 목록에 있어야 한다.
  *
  * 관리자에서 끈 분류는 목록도 개별 글도 넣지 않는다. 처음엔 '숨김은 메뉴에서만 빼는 것'
  * 으로 보고 개별 글을 남겼는데, 그러면 끈 글이 계속 색인되어 검색결과로 닿는다.
@@ -49,7 +50,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .map(([, url, priority]) => ({ url, changeFrequency: 'weekly' as const, priority }));
 
     const details: MetadataRoute.Sitemap = posts
-      .filter((p) => !isPress(p) && menus[p.category] !== false)
+      .filter((p) => menus[p.category] !== false)
       .map((p) => ({
         url: `${base}/news/${p.id}`,
         lastModified: new Date(postTime(p)),

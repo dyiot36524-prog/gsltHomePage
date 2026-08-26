@@ -202,9 +202,15 @@ export function mediaUrl(u?: string): string {
   return '/' + s.replace(/^\.?\//, '');
 }
 
-/** 카드 목적지. press면 원문, 아니면 내부 상세. */
+/**
+ * 카드 목적지. 언론보도도 우리 지면으로 보낸다.
+ *
+ * 예전에는 곧장 원문으로 보냈는데, 그러면 그 기사들로 들어오는 내부 링크가 하나도 없어
+ * 우리 지면이 검색에 잡히지 않는다. 지면에는 원문 보기 버튼이 크게 있어 한 번 더 누르면
+ * 원문에 닿는다 — 대신 방문자가 먼저 이 회사의 맥락을 본다.
+ */
 export function postHref(p: Post): string {
-  return isPress(p) ? safeHttpUrl(p.sourceUrl) || '#' : `/news/${p.id}`;
+  return `/news/${p.id}`;
 }
 
 export function postMirrors(p: Post): Mirror[] {

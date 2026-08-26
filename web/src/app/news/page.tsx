@@ -115,14 +115,13 @@ export default async function NewsPage({
                   <RecordRow
                     key={p.id}
                     href={postHref(p)}
-                    external={press}
                     date={postDateLabel(p)}
                     mark={press ? p.outlet || '언론보도' : '자사 소식'}
                     markTone={press ? 'press' : 'default'}
                     title={p.title}
                     excerpt={p.excerpt}
                     thumbnail={mediaUrl(p.thumbnail) || undefined}
-                    action={press ? 'external' : 'read'}
+                    action="read"
                     meta={
                       press && (p.reporter || mirrors.length) ? (
                         <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">

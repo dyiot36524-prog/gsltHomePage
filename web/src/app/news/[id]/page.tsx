@@ -1,14 +1,15 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Tag } from '@/components/Record';
-import { ArrowLeft, ArrowRight } from '@/components/Icon';
+import { ArrowLeft, ArrowRight, ArrowUpRight } from '@/components/Icon';
 import { renderMarkdown } from '@/lib/markdown';
 import {
-  getPost, getPosts, isHiddenCategory, isPress, mediaUrl, postDateLabel, postTime, safeHttpUrl, type Post,
+  getPost, getPosts, isHiddenCategory, isPress, mediaUrl, postDateLabel, postMirrors, postTime,
+  safeHttpUrl, type Post,
 } from '@/lib/posts';
 import { SITE } from '@/lib/site';
 import { jsonLd, breadcrumbSchema } from '@/lib/schema';
@@ -53,15 +54,17 @@ export default async function PostPage({ params }: Params) {
   // 검색결과에 남은 링크로 그대로 읽힌다.
   if (await isHiddenCategory(post.category)) notFound();
 
-  // 언론보도는 본문을 우리가 갖고 있지 않다. 원문으로 넘긴다.
-  if (isPress(post)) {
-    const src = safeHttpUrl(post.sourceUrl);
-    if (src) redirect(src);
-  }
+  // 언론보도도 우리 지면을 갖는다. 예전에는 원문으로 바로 넘겼는데, 그러면 이 회사를
+  // 다룬 기사 4건이 검색에서 우리 주소로는 전혀 잡히지 않았다(sitemap·RSS도 뺄 수밖에 없었다).
+  // 기사 본문과 사진은 우리 것이 아니므로 가져오지 않는다. 제목·우리가 쓴 요약·매체·기자·
+  // 일자와 원문 링크만으로 지면을 만든다.
+  const press = isPress(post);
+  const source = press ? safeHttpUrl(post.sourceUrl) : '';
+  const mirrors = postMirrors(post);
 
   const bodyHtml = renderMarkdown(post.body || '');
   const all = await getPosts(post.category).catch(() => [] as Post[]);
-  const { prev, next } = neighbours(all.filter((p) => !isPress(p)), id);
+  const { prev, next } = neighbours(all, id);
 
   const backTo =
     post.category === 'portfolio' ? { href: '/portfolio', label: '포트폴리오' }
@@ -71,7 +74,27 @@ export default async function PostPage({ params }: Params) {
   // 주소를 하드코딩하지 않는다. 구 도메인(home.gslt.kr)이 박혀 있어 검색엔진이
   // 정리될 주소를 이 글의 정본으로 알고 있었다.
   const ld = jsonLd(
-    {
+    press
+      ? {
+          // 이 지면은 '기사를 소개하는 페이지'다. 기사 자체의 저자·발행처는 언론사이고
+          // 우리가 쓴 것은 요약뿐이라, 저자를 우리로 주장하면 사실과 다르다.
+          '@type': 'WebPage',
+          name: post.title,
+          description: post.excerpt || post.title,
+          inLanguage: 'ko-KR',
+          url: `${SITE.url}/news/${id}`,
+          publisher: { '@id': `${SITE.url}/#organization` },
+          mainEntity: {
+            '@type': 'NewsArticle',
+            headline: post.title,
+            ...(source ? { url: source } : {}),
+            ...(post.publishedAt ? { datePublished: post.publishedAt } : {}),
+            ...(post.outlet ? { publisher: { '@type': 'Organization', name: post.outlet } } : {}),
+            ...(post.reporter ? { author: { '@type': 'Person', name: post.reporter } } : {}),
+            about: { '@id': `${SITE.url}/#organization` },
+          },
+        }
+      : {
       '@type': post.category === 'news' ? 'NewsArticle' : 'Article',
       headline: post.title,
       description: post.excerpt || post.title,
@@ -83,7 +106,7 @@ export default async function PostPage({ params }: Params) {
       mainEntityOfPage: `${SITE.url}/news/${id}`,
       url: `${SITE.url}/news/${id}`,
       ...(mediaUrl(post.thumbnail) ? { image: [mediaUrl(post.thumbnail)] } : {}),
-    },
+        },
     breadcrumbSchema([
       { name: '홈', path: '/' },
       { name: backTo.label, path: backTo.href },
@@ -110,8 +133,14 @@ export default async function PostPage({ params }: Params) {
         <article className="max-w-[68ch] pt-8 md:pt-12">
           <header className="pb-8 border-b-2 border-slate-900">
             <div className="flex items-center gap-3 mb-5 tabular-nums">
-              <Tag>{post.category === 'portfolio' ? '시공사례' : post.category === 'downloads' ? '자료' : '자사 소식'}</Tag>
+              <Tag>{press ? '언론보도' : post.category === 'portfolio' ? '시공사례' : post.category === 'downloads' ? '자료' : '자사 소식'}</Tag>
               <span className="text-sm text-slate-500">{postDateLabel(post)}</span>
+              {press && post.outlet ? (
+                <span className="text-sm font-bold text-slate-900">{post.outlet}</span>
+              ) : null}
+              {press && post.reporter ? (
+                <span className="text-sm text-slate-500">{post.reporter} 기자</span>
+              ) : null}
               {typeof post.views === 'number' && post.views > 0 ? (
                 <span className="text-sm text-slate-500">조회 {post.views}</span>
               ) : null}
@@ -121,6 +150,9 @@ export default async function PostPage({ params }: Params) {
             </h1>
             {post.excerpt ? (
               <p className="mt-5 text-lg text-slate-500 leading-relaxed break-keep">{post.excerpt}</p>
+            ) : null}
+            {press && post.excerpt ? (
+              <p className="mt-3 text-xs text-slate-500">GSLT가 정리한 요약입니다.</p>
             ) : null}
             {Array.isArray(post.tags) && post.tags.length ? (
               <ul className="mt-6 flex flex-wrap gap-2">
@@ -141,6 +173,48 @@ export default async function PostPage({ params }: Params) {
 
           {bodyHtml ? (
             <div className="post-body mt-10" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+          ) : null}
+
+          {/* 기사 본문과 사진은 언론사의 것이다. 여기에 옮기지 않고 원문으로 보낸다.
+              대신 어디서 언제 누가 보도했는지와, 전재된 곳을 함께 밝힌다. */}
+          {press ? (
+            <section className="mt-10 border-2 border-slate-900 p-6 sm:p-8">
+              <p className="text-sm text-slate-500 leading-relaxed break-keep">
+                {post.outlet ? `${post.outlet}에서` : '언론사에서'} 보도한 기사입니다.
+                전문은 원문에서 확인하실 수 있습니다.
+              </p>
+              {source ? (
+                <a
+                  href={source}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group mt-5 inline-flex items-center gap-2 bg-gslt-500 hover:bg-gslt-400 text-slate-900 px-6 py-3.5 text-sm font-bold transition-colors"
+                >
+                  {post.outlet ? `${post.outlet} 원문 보기` : '원문 보기'}
+                  <ArrowUpRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                </a>
+              ) : null}
+              {mirrors.length ? (
+                <div className="mt-6 pt-6 border-t border-slate-200">
+                  <p className="text-[11px] font-bold tracking-[0.14em] text-slate-500 mb-3">전재</p>
+                  <ul className="flex flex-wrap gap-x-5 gap-y-2">
+                    {mirrors.map((m) => (
+                      <li key={m.url}>
+                        <a
+                          href={m.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group inline-flex items-center gap-1.5 text-sm font-bold text-slate-700 hover:text-gslt-700 transition-colors"
+                        >
+                          {m.label}
+                          <ArrowUpRight className="w-3.5 h-3.5 text-slate-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </section>
           ) : null}
 
           {Array.isArray(post.attachments) && post.attachments.length ? (
