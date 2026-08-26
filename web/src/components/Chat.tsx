@@ -333,10 +333,6 @@ export default function Chat({
         </button>
       </form>
 
-      <p className="mt-4 text-sm text-white/65 break-keep">
-        AI가 회사 자료를 근거로 답합니다. 비용·일정은 현장 실측 후 확정됩니다.
-        급하시면 {COMPANY.tel}.
-      </p>
     </div>
   );
 }

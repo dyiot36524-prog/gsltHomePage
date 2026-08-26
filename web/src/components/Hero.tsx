@@ -45,6 +45,8 @@ export default function Hero() {
   const headRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<HTMLDivElement>(null);
   const dimRef = useRef<HTMLDivElement>(null);
+  const gateRef = useRef<HTMLDivElement>(null);
+  const gateBarRef = useRef<HTMLDivElement>(null);
   /** 대화 중에는 스크롤이 조금 흔들려도 챗을 붙잡는다. ref로 두는 이유는 paint()가
       매 프레임 도는 rAF 루프 안에 있어 리렌더를 유발하면 안 되기 때문이다.
 
@@ -85,6 +87,47 @@ export default function Hero() {
     const stingy =
       conn?.saveData === true || conn?.effectiveType === 'slow-2g' || conn?.effectiveType === '2g';
 
+    /* ── 첫 진입 로딩 게이트 ──
+       영상이 8MB(2560)라 회선이 느리면 진입 직후 스크롤해도 한참 움직이지 않는다.
+       그 사이를 빈 화면으로 두지 않고 받는 만큼을 막대로 보여 준다.
+
+       다만 **다 받을 때까지 막아 세우지는 않는다.** LTE에서 6초, 느린 4G에서는 40초가
+       넘게 걸리는데 그동안 아무것도 못 하게 하면 로딩바가 문제를 옮길 뿐 없애지 못한다.
+       그래서 상한(GATE_MAX_MS)을 두고, 넘으면 그냥 열어 준다 — 그때부터는 예전처럼
+       구간 스트리밍으로 스크럽이 돌아간다(느리지만 동작한다).
+
+       한 세션에 한 번만 보인다. 두 번째 방문은 영상이 캐시에 있어 즉시 끝난다. */
+    const GATE_MAX_MS = 4500;
+    const gate = gateRef.current;
+    const gateBar = gateBarRef.current;
+    const seen = (() => {
+      try {
+        return sessionStorage.getItem('hero-gate') === '1';
+      } catch {
+        return false;
+      }
+    })();
+    let gateOpen = seen || stingy || !gate;
+
+    const openGate = () => {
+      if (gateOpen) return;
+      gateOpen = true;
+      try {
+        sessionStorage.setItem('hero-gate', '1');
+      } catch { /* 사파리 프라이빗 등 — 못 써도 동작에 지장 없다 */ }
+      if (!gate) return;
+      gate.style.opacity = '0';
+      gate.style.pointerEvents = 'none';
+      window.setTimeout(() => gate.remove(), 500);
+    };
+
+    const onProgress = (r: number) => {
+      if (gateBar) gateBar.style.transform = `scaleX(${Math.min(1, r).toFixed(3)})`;
+    };
+
+    if (gateOpen && gate) gate.remove();
+    else window.setTimeout(openGate, GATE_MAX_MS);
+
     const cacheWholeFile = () => {
       // 데이터 절약 모드·저속 회선에서는 통째로 받지 않는다. 마크업의 preload="metadata"가
       // 그대로 남아 duration은 잡히고, 스크럽은 구간별 range로 이어간다(느리지만 동작한다).
@@ -97,18 +140,41 @@ export default function Hero() {
       // 우선순위를 낮추지 않는다. 이 영상이 곧 첫 화면의 내용이고, 늦게 받을수록
       // 스크럽이 네트워크에 매달리는 시간이 길어진다. 낮췄을 때 4G에서 blob이
       // 18초까지 밀려 초반 탐색이 2.7초씩 걸렸다.
-      fetch(src, { signal: controller.signal })
-        .then((r) => (r.ok ? r.blob() : null))
-        .then((blob) => {
-          if (!blob || disposed) return;
-          blobUrl = URL.createObjectURL(blob);
+      // .blob()을 바로 부르지 않고 스트림을 직접 읽는다. 받은 바이트를 세어야
+      // 로딩 막대에 진짜 진행률을 그릴 수 있다. 가짜로 채워 넣는 막대는 느린 회선에서
+      // 100%에 도달한 뒤에도 한참 기다리게 만들어, 없느니만 못하다.
+      (async () => {
+        try {
+          const res = await fetch(src, { signal: controller.signal });
+          if (!res.ok || !res.body) return;
+          const total = Number(res.headers.get('content-length')) || 0;
+          const reader = res.body.getReader();
+          // BlobPart로 넘기려면 ArrayBuffer 기반임이 확정돼야 한다.
+          // Uint8Array<ArrayBufferLike>는 SharedArrayBuffer일 수도 있어 타입이 좁혀지지 않는다.
+          const chunks: BlobPart[] = [];
+          let got = 0;
+          for (;;) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            if (!value) continue;
+            chunks.push(value.slice().buffer as ArrayBuffer);
+            got += value.byteLength;
+            if (total) onProgress(got / total);
+          }
+          if (disposed) return;
+          onProgress(1);
+          blobUrl = URL.createObjectURL(new Blob(chunks, { type: 'video/mp4' }));
           // 바로 갈아끼우지 않는다. src를 바꾸면 요소가 리셋돼 메타데이터를 다시 읽는 동안
           // frame 0으로 돌아가는데, 그 순간 사용자가 스크롤 중이면 한 프레임 깜빡인다
           // (실측: 80ms 샘플 하나 분량이 매번 잡혔다). 스크럽이 멈춘 틈에 조용히 바꾼다.
           pendingSwap = true;
           if (!raf) applySwap();
-        })
-        .catch(() => { /* 중단·실패는 무시 — 기존 스트리밍 경로가 그대로 남는다 */ });
+        } catch {
+          /* 중단·실패는 무시 — 기존 스트리밍 경로가 그대로 남는다 */
+        } finally {
+          openGate();
+        }
+      })();
     };
 
     // 모션 최소화 설정: 스크럽 없이 마지막 장면 + 텍스트를 즉시 노출
@@ -328,6 +394,37 @@ export default function Hero() {
           .hero-swap-item { opacity: 1 !important; }
         `}</style>
       </noscript>
+
+      {/* 첫 진입 로딩 게이트. JS가 없거나 이미 본 세션이면 마운트 직후 제거된다.
+          영상 위가 아니라 무대 밖 최상단에 두어, 히어로 내부 레이어 순서에 영향을 주지 않는다. */}
+      <div
+        ref={gateRef}
+        className="hero-gate"
+        role="status"
+        aria-live="polite"
+        aria-label="첫 화면을 준비하고 있습니다"
+      >
+        <div className="flex flex-col items-center gap-6 px-8">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" className="w-10 h-10">
+            <defs>
+              <linearGradient id="gate-spark" x1="0" y1="24" x2="24" y2="0">
+                <stop offset="0%" stopColor="#4cc3d2" />
+                <stop offset="100%" stopColor="#93c5fd" />
+              </linearGradient>
+            </defs>
+            <path
+              d="M12 2.5 13.9 9.1a3 3 0 0 0 2 2L22.5 13l-6.6 1.9a3 3 0 0 0-2 2L12 23.5l-1.9-6.6a3 3 0 0 0-2-2L1.5 13l6.6-1.9a3 3 0 0 0 2-2Z"
+              fill="url(#gate-spark)"
+            />
+          </svg>
+          <p className="text-sm text-white/70 break-keep text-center">
+            공간 지능 솔루션을 불러오는 중입니다
+          </p>
+          <span className="hero-gate-rail">
+            <span className="hero-gate-bar" ref={gateBarRef} />
+          </span>
+        </div>
+      </div>
 
       <div id="hero-track" ref={trackRef} className="relative">
         <div className="hero-stage" ref={stageRef}>
