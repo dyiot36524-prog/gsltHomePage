@@ -44,8 +44,12 @@ export const metadata: Metadata = {
   // 사이트 소유 확인. 구글은 gslt.kr의 DNS TXT 레코드로 잡혀 있어 태그가 필요 없고,
   // 네이버 서치어드바이저는 HTML 태그 방식만 받아 여기서 head에 넣는다.
   // 소유 확인이 풀리면 서치어드바이저의 수집 요청·색인 현황이 통째로 막히므로 지우지 않는다.
+  //
+  // 이 값은 https://www.gslt.kr 사이트에 발급된 것이다. 네이버는 프로토콜과 www 유무까지
+  // 다른 사이트로 세고 사이트마다 코드가 다르다. http://는 여기서 308로 넘기기만 하고
+  // 그 응답 본문에는 태그가 없으므로, http로 등록한 항목은 이 태그로 확인되지 않는다.
   verification: {
-    other: { 'naver-site-verification': '06a78caded48ce220865f7f10a2e48f897d6f71c' },
+    other: { 'naver-site-verification': '15c11b1008709c2b03dfd1b5ee0d4cef63bd8b3b' },
   },
   // 아이콘은 파일 컨벤션(favicon.ico · icon.png · apple-icon.png, 이 디렉터리)이 맡는다.
   // 여기서 metadata.icons로 다시 지정하면 중복 <link> 태그가 나가고,
