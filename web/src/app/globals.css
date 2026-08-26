@@ -103,7 +103,36 @@ body {
    스크롤 진행도(0~1)를 JS가 계산해 영상 currentTime과 텍스트 리빌을 함께 몰아준다.
    주의: #hero / #hero-track에 overflow:hidden을 주면 sticky가 깨진다. */
 #hero-track {
-  height: 380vh;
+  /* 380vh(필름) + 130vh(상담 인계·유지). 늘어난 만큼 필름이 압축되지 않도록
+     Hero.tsx의 FILM 상수가 진행도를 환산한다 — 둘은 같이 움직여야 한다. */
+  height: 510vh;
+}
+
+/* 헤드라인과 상담판이 같은 칸을 나눠 쓴다. 겹쳐 두면 전환 중에 무대 높이가 흔들리지 않는다. */
+/* 상담 구간 감광.
+   필름용 hero-veil은 아래에서 위로 옅어지는 그라디언트라 화면 중단이 밝게 남는다.
+   헤드라인은 바닥에 앉아 있어 문제가 없었지만, 상담판은 화면을 세로로 채워
+   중단에도 글자가 놓인다. 인계 진행도에 맞춰 전면을 고르게 눌러 준다. */
+.hero-dim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  /* 0.72. 영상 프레임이 가장 밝을 때(창이 환하게 켜진 컷)를 기준으로 잡았다 —
+     이 값이면 흰 프레임 위에서도 본문 white/80이 7.1:1, 강조 gslt-400이 4.2:1로
+     읽힌다. 더 낮추면 밝은 컷에서 글이 무너지고, 더 올리면 영상이 사라진다. */
+  background: rgba(5, 7, 12, .72);
+  will-change: opacity;
+}
+
+.hero-swap {
+  display: grid;
+}
+
+.hero-swap > .hero-swap-item {
+  grid-area: 1 / 1;
+  align-self: end;
+  will-change: opacity, transform;
 }
 
 .hero-stage {
@@ -156,7 +185,7 @@ body {
         rgba(5, 7, 12, .97) 0%, rgba(5, 7, 12, .94) 46%,
         rgba(5, 7, 12, .78) 72%, rgba(5, 7, 12, .4) 100%);
   }
-  #hero-track { height: 300vh; }
+  #hero-track { height: 430vh; }
 }
 
 /* 라인 마스크 리빌 — --y를 JS가 스크롤 진행도로 밀어 넣는다 */

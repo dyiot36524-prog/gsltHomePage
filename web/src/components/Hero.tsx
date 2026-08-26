@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import Chat from '@/components/Chat';
 import Link from 'next/link';
 import { ArrowUpRight } from '@/components/Icon';
 
@@ -41,6 +42,12 @@ export default function Hero() {
   const line2Ref = useRef<HTMLSpanElement>(null);
   const descRef = useRef<HTMLParagraphElement>(null);
   const rowsRef = useRef<HTMLAnchorElement[]>([]);
+  const headRef = useRef<HTMLDivElement>(null);
+  const chatRef = useRef<HTMLDivElement>(null);
+  const dimRef = useRef<HTMLDivElement>(null);
+  /** 대화가 시작되면 스크롤과 무관하게 챗을 붙잡는다. ref로 두는 이유는 paint()가
+      매 프레임 도는 rAF 루프 안에 있어 리렌더를 유발하면 안 되기 때문이다. */
+  const engagedRef = useRef(false);
 
   useEffect(() => {
     const track = trackRef.current;
@@ -122,7 +129,15 @@ export default function Hero() {
     const seg = (p: number, a: number, b: number) => clamp01((p - a) / (b - a));
     const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
 
-    const SCRUB_END = 0.6; // 이 진행도에서 영상이 끝까지 재생되고, 이후는 텍스트 리빌·정지 구간
+    const SCRUB_END = 0.6; // 필름 구간 안에서 영상이 끝까지 재생되는 지점
+
+    // 트랙을 늘려 필름 뒤에 상담 구간을 붙였다. FILM은 늘어난 트랙에서 예전 연출이
+    // 차지하는 비율이다. 이 환산이 없으면 같은 연출이 짧은 스크롤에 압축돼
+    // 영상과 글자가 예전보다 빨리 지나간다.
+    const FILM = 0.74;
+    // 헤드라인이 물러나고 상담판이 들어오는 구간. 그 뒤는 붙잡아 두는 구간이다.
+    const HANDOFF_IN = 0.76;
+    const HANDOFF_OUT = 0.9;
     let duration = 0;
 
     const fade = (el: HTMLElement | null, t: number, dist: number) => {
@@ -137,7 +152,9 @@ export default function Hero() {
       el.style.setProperty('--y', `${((1 - easeOut(t)) * 110).toFixed(1)}%`);
     };
 
-    const paint = (p: number) => {
+    const paint = (raw: number) => {
+      // 필름 구간 안에서의 진행도. 예전 코드가 p로 쓰던 값과 같은 의미다.
+      const p = clamp01(raw / FILM);
       if (duration) {
         const t = Math.min(duration - 0.03, seg(p, 0, SCRUB_END) * duration);
         // 미세한 차이까지 대입하면 탐색이 밀리므로 임계값을 둔다.
@@ -164,8 +181,30 @@ export default function Hero() {
         fade(r, seg(p, a, a + 0.16), 18);
       });
 
-      // 리빌 전에는 투명한 링크가 클릭·탭을 가로채지 않게
-      const live = p > 0.58;
+      // ── 필름 → 상담 인계 ──
+      // 헤드라인이 위로 물러나고 같은 자리에 상담판이 들어온다. 영상은 바닥에 그대로
+      // 남아 톤이 끊기지 않는다. 대화가 시작된 뒤에는 스크롤이 조금 움직여도
+      // 판이 걷히지 않게 붙잡는다.
+      const h = engagedRef.current ? 1 : easeOut(seg(raw, HANDOFF_IN, HANDOFF_OUT));
+      const head = headRef.current;
+      const chat = chatRef.current;
+      if (dimRef.current) dimRef.current.style.opacity = h.toFixed(3);
+      if (head) {
+        head.style.opacity = (1 - h).toFixed(3);
+        head.style.transform = `translate3d(0, ${(-h * 36).toFixed(1)}px, 0)`;
+        head.style.pointerEvents = h > 0.5 ? 'none' : '';
+        head.setAttribute('aria-hidden', h > 0.5 ? 'true' : 'false');
+      }
+      if (chat) {
+        chat.style.opacity = h.toFixed(3);
+        chat.style.transform = `translate3d(0, ${((1 - h) * 36).toFixed(1)}px, 0)`;
+        chat.style.pointerEvents = h > 0.6 ? '' : 'none';
+        chat.setAttribute('aria-hidden', h > 0.6 ? 'false' : 'true');
+      }
+
+      // 리빌 전에는 투명한 링크가 클릭·탭을 가로채지 않게.
+      // 인계가 시작되면 헤드라인 쪽 링크도 함께 닫는다.
+      const live = p > 0.58 && h < 0.5;
       rows.forEach((r) => {
         r.style.pointerEvents = live ? '' : 'none';
       });
@@ -275,6 +314,9 @@ export default function Hero() {
           #hero-track { height: auto; }
           .hero-stage { position: relative; height: auto; min-height: 100svh; }
           .hero-veil { opacity: 1; }
+          /* 겹쳐 두는 건 스크롤 인계가 있을 때만 뜻이 있다. JS가 없으면 세로로 쌓는다. */
+          .hero-swap { display: block; }
+          .hero-swap-item { opacity: 1 !important; }
         `}</style>
       </noscript>
 
@@ -308,6 +350,7 @@ export default function Hero() {
 
           <div className="hero-grade" />
           <div className="hero-veil" ref={veilRef} />
+          <div className="hero-dim" ref={dimRef} />
 
           {/* 화면 정중앙에 h1 → 문단 → 목록을 쌓는 대신 아래쪽에 앉힌다. 위를 비워
               빌딩 컷이 숨 쉬고, 글은 어두워진 바닥에 놓인다 — 스크롤로 재생되는 필름의
@@ -315,7 +358,12 @@ export default function Hero() {
           {/* 모바일 하단 여백이 넉넉해야 마지막 행이 떠 있는 '맨 위로' 버튼(bottom-6, 48px)에
               가리지 않는다. 아래로 붙이는 구성이라 이 여백이 곧 안전 거리다. */}
           <div className="relative z-10 h-full flex flex-col justify-end px-4 sm:px-6 lg:px-8 pt-24 pb-24 md:pb-14">
-            <div className="max-w-6xl mx-auto w-full hero-shadow">
+            {/* 헤드라인과 상담판은 같은 자리를 나눠 쓴다. 스크롤이 필름을 다 지나면
+                헤드라인이 위로 물러나고 그 자리에 상담판이 들어온다 — 영상은 바닥에
+                그대로 남아 톤이 끊기지 않는다. 둘을 grid로 겹쳐 두면 전환 중에
+                무대 높이가 흔들리지 않는다. */}
+            <div className="hero-swap max-w-6xl mx-auto w-full">
+            <div className="hero-swap-item hero-shadow" ref={headRef}>
               <h1 className="hero-title font-black break-keep text-white">
                 <span className="hero-line hero-line-setup">
                   <span className="hero-line-inner hero-title-setup text-white/75" ref={kickerRef}>
@@ -371,6 +419,19 @@ export default function Hero() {
                   </Link>
                 ))}
               </div>
+            </div>
+
+            <div
+              className="hero-swap-item hero-shadow opacity-0"
+              ref={chatRef}
+              aria-hidden="true"
+            >
+              <Chat
+                onEngage={() => {
+                  engagedRef.current = true;
+                }}
+              />
+            </div>
             </div>
           </div>
 

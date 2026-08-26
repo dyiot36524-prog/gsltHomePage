@@ -73,17 +73,53 @@ for (const vp of [
   if (worst > 100) { fail++; console.log(`  ✗ 최악 탐색이 ${worst}ms — 버퍼가 비어 스크럽이 끊긴다`); }
 
   // 스크롤에 따라 실제로 다른 프레임이 그려지는가 (화면 해시 비교)
-  const track = await page.evaluate(() => document.getElementById('hero-track')?.offsetHeight || 0);
-  // 스크럽 구간 안에서만 표본을 잡는다. 진행도 0.6에서 영상이 끝나므로 그보다 뒤는
-  // 어디를 찍어도 같은 마지막 화면이 나오는 게 정상이고, 그걸 '멈췄다'로 읽으면 오판이다.
-  // 트랙 높이 대비 진행도는 p = frac * H / (H - stage) 라 여유를 두고 앞쪽을 쓴다.
+  //
+  // 표본은 트랙 높이 비율이 아니라 **스크롤 진행도**로 잡는다. 예전에는 트랙 높이의
+  // 0~0.26 구간을 찍었는데, 히어로 뒤에 상담 구간이 붙어 트랙이 380vh→510vh로 길어지자
+  // 같은 비율이 전혀 다른 진행도를 가리켜 검사가 헛돌았다. 트랙 길이가 바뀌어도
+  // 뜻이 유지되도록 span(=트랙−무대) 대비 진행도로 환산한다.
+  //
+  // 필름 구간은 진행도 0~0.74이고 그 안에서 0.6이 영상 끝이라, 실제 스크럽은
+  // raw 0~0.444에서 일어난다. 그 안쪽만 찍는다 — 뒤쪽은 어디를 찍어도 같은 마지막
+  // 화면이 나오는 게 정상이고, 그걸 '멈췄다'로 읽으면 오판이다.
   const shots = [];
-  for (const frac of [0, 0.08, 0.16, 0.26]) {
-    await page.evaluate((y) => window.scrollTo({ top: y, behavior: 'instant' }), Math.round(track * frac));
-    await new Promise((r) => setTimeout(r, 700));
-    const buf = await page.screenshot({ clip: { x: 0, y: 0, width: vp.width, height: Math.min(vp.height, 700) } });
-    shots.push({ frac, hash: createHash('sha1').update(buf).digest('hex').slice(0, 10),
-      t: await page.evaluate(() => +document.getElementById('hero-video').currentTime.toFixed(2)) });
+  for (const p of [0.02, 0.14, 0.28, 0.40]) {
+    await page.evaluate((prog) => {
+      const track = document.getElementById('hero-track');
+      const stage = document.querySelector('.hero-stage');
+      const span = track.offsetHeight - stage.offsetHeight;
+      window.scrollTo({ top: Math.round(span * prog), behavior: 'instant' });
+    }, p);
+    // 고정 대기 대신 currentTime이 멈출 때까지 기다린다. 스크롤 거리가 길어질수록
+    // 관성 보간이 자리 잡는 데 더 걸려, 700ms 고정은 트랙이 길어지자 모자랐다.
+    await page.waitForFunction(
+      () => {
+        const v = document.getElementById('hero-video');
+        const now = v.currentTime;
+        const settled = window.__lastT !== undefined && Math.abs(window.__lastT - now) < 0.005;
+        window.__lastT = now;
+        return settled;
+      },
+      { timeout: 6000, polling: 200 },
+    ).catch(() => {});
+    await new Promise((r) => setTimeout(r, 250)); // 마지막 프레임이 그려질 여유
+    // 화면 전체를 찍지 않고 **영상 프레임 자체**를 캔버스로 읽는다. 전체 스크린샷은
+    // 헤드라인 리빌·감광층 같은 오버레이가 함께 찍혀, 영상은 멀쩡히 바뀌는데
+    // 해시가 겹치거나 반대로 영상이 멈춰도 오버레이 차이로 통과할 수 있다.
+    // 이 검사가 증명하려는 것은 "스크롤에 프레임이 바뀌는가" 하나다.
+    const frame = await page.evaluate(() => {
+      const v = document.getElementById('hero-video');
+      const c = document.createElement('canvas');
+      c.width = 64; c.height = 36;
+      const cx = c.getContext('2d');
+      cx.drawImage(v, 0, 0, c.width, c.height);
+      return { px: [...cx.getImageData(0, 0, c.width, c.height).data], t: +v.currentTime.toFixed(2) };
+    });
+    shots.push({
+      frac: p,
+      hash: createHash('sha1').update(Buffer.from(frame.px)).digest('hex').slice(0, 10),
+      t: frame.t,
+    });
   }
   console.log('  스크롤 → currentTime: ' + shots.map((s) => `${s.frac}→${s.t}s`).join('  '));
   const distinct = new Set(shots.map((s) => s.hash)).size;
