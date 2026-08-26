@@ -41,6 +41,12 @@ export const metadata: Metadata = {
     '빌딩 자동화', '스마트빌딩', '시옷', 'Siot', '비즈모아', 'BizMoa', '모락', 'Morak',
     'IoT 통합관제', '배선 공사 없는 IoT', 'AI 예지보전',
   ],
+  // 사이트 소유 확인. 구글은 gslt.kr의 DNS TXT 레코드로 잡혀 있어 태그가 필요 없고,
+  // 네이버 서치어드바이저는 HTML 태그 방식만 받아 여기서 head에 넣는다.
+  // 소유 확인이 풀리면 서치어드바이저의 수집 요청·색인 현황이 통째로 막히므로 지우지 않는다.
+  verification: {
+    other: { 'naver-site-verification': '06a78caded48ce220865f7f10a2e48f897d6f71c' },
+  },
   // 아이콘은 파일 컨벤션(favicon.ico · icon.png · apple-icon.png, 이 디렉터리)이 맡는다.
   // 여기서 metadata.icons로 다시 지정하면 중복 <link> 태그가 나가고,
   // 594×615 비정사각 원본을 그대로 물리는 문제도 생긴다.
