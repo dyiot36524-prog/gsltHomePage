@@ -188,7 +188,7 @@ export default async function PostPage({ params }: Params) {
             {post.excerpt ? (
               <p className="mt-5 text-lg text-slate-500 leading-relaxed break-keep">{post.excerpt}</p>
             ) : null}
-            {press && post.excerpt ? (
+            {press && post.excerpt && !bodyHtml ? (
               <p className="mt-3 text-xs text-slate-500">GSLT가 정리한 요약입니다.</p>
             ) : null}
             {Array.isArray(post.tags) && post.tags.length ? (
