@@ -42,6 +42,16 @@ service cloud.firestore {
       );
     }
 
+    // 챗봇 지식베이스. 관리자 페이지의 '지식베이스' 탭이 관리한다.
+    //
+    // 공개된 문서는 누구나 읽을 수 있다 — 어차피 챗봇 답변으로 나가는 내용이고,
+    // 서버가 인증 없이 읽는 posts·settings와 같은 방식이다.
+    // **그러므로 여기에 대외비를 넣으면 그대로 노출된다.** 관리자 화면에 그 경고를 띄운다.
+    match /knowledge/{id} {
+      allow read: if resource.data.published == true || isAdmin();
+      allow write: if isAdmin();
+    }
+
     // 사이트 설정(메뉴 노출): 누구나 읽기, 쓰기는 관리자만
     match /settings/{doc} {
       allow read: if true;
