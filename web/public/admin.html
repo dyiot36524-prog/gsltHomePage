@@ -731,7 +731,36 @@
     }
 
     /* Cloudinary 업로드 */
+    /* 10MB(Cloudinary 무료 플랜의 파일당 상한)를 넘는 파일은 Vercel Blob으로 보낸다.
+       23MB 회사소개서가 실제로 거절되면서 나뉜 경로다. 브라우저가 저장소로 직접 올리므로
+       서버 본문 상한(4.5MB)과도 무관하다. 토큰 발급은 /api/upload가 Firebase 로그인
+       토큰으로 관리자인지 확인한 뒤에만 해 준다. */
+    const CLOUDINARY_MAX = 10 * 1024 * 1024;
+
+    async function uploadLargeFile(file, statusEl) {
+      try {
+        if (statusEl) { statusEl.textContent = `대용량 업로드 중... (${(file.size / 1048576).toFixed(1)}MB)`; statusEl.className = 'text-sm text-center text-slate-500'; }
+        const { upload } = await import('https://esm.sh/@vercel/blob@2.8.0/client');
+        const idToken = await auth.currentUser.getIdToken();
+        const blob = await upload(file.name, file, {
+          access: 'public',
+          handleUploadUrl: '/api/upload',
+          clientPayload: idToken,
+          onUploadProgress: ({ percentage }) => {
+            if (statusEl) statusEl.textContent = `대용량 업로드 중... ${Math.round(percentage)}%`;
+          },
+        });
+        if (statusEl) { statusEl.textContent = '업로드 완료'; statusEl.className = 'text-sm text-center text-gslt-600 font-bold'; }
+        // Cloudinary 응답과 같은 모양으로 돌려줘 호출부가 구분하지 않아도 되게 한다
+        return { secure_url: blob.url, bytes: file.size, original_filename: file.name };
+      } catch (e) {
+        if (statusEl) { statusEl.textContent = '대용량 업로드 실패: ' + e.message; statusEl.className = 'text-sm text-center text-rose-600'; }
+        return null;
+      }
+    }
+
     async function uploadToCloudinary(file, statusEl, nameHint) {
+      if (file && file.size > CLOUDINARY_MAX) return uploadLargeFile(file, statusEl);
       if (!CLOUDINARY.cloudName || !CLOUDINARY.uploadPreset) {
         if (statusEl) { statusEl.textContent = '이미지 업로드는 Cloudinary 설정이 필요합니다. (URL 직접 입력은 가능)'; statusEl.className = 'text-sm text-center text-rose-600'; }
         return null;

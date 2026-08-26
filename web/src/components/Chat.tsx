@@ -46,10 +46,11 @@ function transcript(messages: Msg[]): string {
 
 export default function Chat({
   onEngage,
-  onClose,
+  onStart,
 }: {
   onEngage?: () => void;
-  onClose?: () => void;
+  /** 첫 메시지가 나가는 순간 한 번. 히어로가 이걸 받아 헤드라인을 걷고 판을 넓힌다. */
+  onStart?: () => void;
 }) {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
@@ -72,6 +73,7 @@ export default function Chat({
     // 히어로에게 "이제 대화 중"이라고 알린다. 그래야 스크롤이 조금 움직여도
     // 대화 도중에 이 판이 사라지지 않는다.
     onEngage?.();
+    if (messages.length === 0) onStart?.();
     const next: Msg[] = [...messages, { role: 'user', content: clean }];
     setMessages(next);
     setInput('');
@@ -166,7 +168,6 @@ export default function Chat({
               setNotice('');
               setContactOpen(false);
               setSent(false);
-              onClose?.();
             }}
             className="shrink-0 rounded-full border border-white/15 hover:border-white/30 px-4 py-2 text-sm font-bold text-white/70 hover:text-white transition-colors"
           >
@@ -198,20 +199,20 @@ export default function Chat({
       {/* ── 대화 ── */}
       {started && (
         <div
-          className="mb-5 max-h-[38vh] overflow-y-auto overscroll-contain pr-1 space-y-5 text-left"
+          className="hero-chat-log mb-5 overflow-y-auto overscroll-contain space-y-5 text-left"
           aria-live="polite"
         >
           {messages.map((m, i) =>
             m.role === 'user' ? (
               <div key={i} className="flex justify-end">
-                <p className="max-w-[85%] rounded-3xl rounded-br-lg bg-white/10 px-4 py-3 text-[0.9375rem] md:text-base text-white/90 leading-relaxed break-keep whitespace-pre-wrap">
+                <p className="max-w-[85%] rounded-3xl rounded-br-lg bg-white/10 px-4 py-3 text-[0.9375rem] md:text-base text-white/90 leading-relaxed break-keep [overflow-wrap:anywhere] whitespace-pre-wrap">
                   {m.content}
                 </p>
               </div>
             ) : (
               <div key={i} className="flex gap-3">
                 <Sparkle className="w-5 h-5 shrink-0 mt-0.5" />
-                <p className="min-w-0 text-[0.9375rem] md:text-base text-white/85 leading-[1.8] break-keep whitespace-pre-wrap">
+                <p className="min-w-0 text-[0.9375rem] md:text-base text-white/85 leading-[1.8] break-keep [overflow-wrap:anywhere] whitespace-pre-wrap">
                   {m.content}
                 </p>
               </div>
@@ -220,7 +221,7 @@ export default function Chat({
           {busy && !contactOpen && (
             <div className="flex gap-3 items-center">
               <Sparkle className="w-5 h-5 shrink-0 animate-pulse" />
-              <span className="text-sm text-white/65">회사 자료를 찾는 중…</span>
+              <span className="text-sm text-white/65">고객님을 위한 솔루션 생각중..</span>
             </div>
           )}
           <div ref={endRef} />

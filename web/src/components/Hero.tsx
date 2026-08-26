@@ -40,6 +40,9 @@ export default function Hero() {
   /** 대화 중에는 스크롤이 흔들려도 상담판을 붙잡는다. ref로 두는 이유는 paint()가
       매 프레임 도는 rAF 루프 안에 있어 리렌더를 유발하면 안 되기 때문이다. */
   const engagedRef = useRef(false);
+  /** 첫 메시지가 나가면 무대에 .hero-chatting을 건다. 헤드라인·설명이 스르르 물러나고
+      상담판이 넓어지는 연출은 전부 CSS 전환이 진다 — JS는 클래스 하나만 바꾼다. */
+  const chattingRef = useRef(false);
 
   useEffect(() => {
     const track = trackRef.current;
@@ -454,10 +457,15 @@ export default function Hero() {
               {/* 예전에는 여기에 솔루션 링크 세 줄이 있었다. 목록을 빼고 상담을 바로 놓는다.
                   헤드라인이 무엇을 하는 회사인지 말한 직후의 질문은 늘 "우리 공간에도 되나"이고,
                   그 질문을 받는 자리가 여기다. 솔루션으로 가는 길은 헤더 드롭다운과 푸터에 있다. */}
-              <div className="hero-fade mt-8 md:mt-10" ref={chatRef} aria-hidden="true">
+              <div className="hero-fade hero-chat mt-8 md:mt-10" ref={chatRef} aria-hidden="true">
                 <Chat
                   onEngage={() => {
                     engagedRef.current = true;
+                  }}
+                  onStart={() => {
+                    if (chattingRef.current) return;
+                    chattingRef.current = true;
+                    stageRef.current?.classList.add('hero-chatting');
                   }}
                 />
               </div>
