@@ -1,3 +1,4 @@
+import { PRESS_SEED } from './press-seed';
 /**
  * Firestore 조회 (서버 전용).
  *
@@ -76,6 +77,24 @@ const ENDPOINT =
 /** 목록은 60초마다 재생성. 관리자가 글을 올리면 늦어도 1분 안에 반영된다. */
 const REVALIDATE = 60;
 
+/**
+ * 언론보도 본문·썸네일이 비어 있으면 코드 쪽 기본값으로 채운다.
+ *
+ * **Firestore 값이 있으면 손대지 않는다.** 관리자에서 본문을 채우거나 고치는 순간부터
+ * 이 함수는 아무 일도 하지 않고, DB가 다시 유일한 원본이 된다. 코드 값은 그때까지의
+ * 빈 지면을 막는 바닥일 뿐이다 — 자세한 사정은 press-seed.ts에 적었다.
+ */
+function withPressSeed(p: Post): Post {
+  const key = String(p.sourceUrl || '').trim();
+  if (!key) return p;
+  const seed = PRESS_SEED[key];
+  if (!seed) return p;
+  const out = { ...p };
+  if (!String(p.body || '').trim()) out.body = seed.body;
+  if (!String(p.thumbnail || '').trim()) out.thumbnail = seed.thumbnail;
+  return out;
+}
+
 async function runQuery(body: unknown): Promise<Post[]> {
   const res = await fetch(ENDPOINT, {
     method: 'POST',
@@ -94,7 +113,7 @@ async function runQuery(body: unknown): Promise<Post[]> {
       const fields = Object.fromEntries(
         Object.entries(doc.fields || {}).map(([k, v]) => [k, decode(v)]),
       );
-      return { id: doc.name.split('/').pop()!, ...fields } as Post;
+      return withPressSeed({ id: doc.name.split('/').pop()!, ...fields } as Post);
     });
 }
 
@@ -266,6 +285,6 @@ export async function getPost(id: string): Promise<Post | null> {
   const fields = Object.fromEntries(
     Object.entries(doc.fields || {}).map(([k, v]) => [k, decode(v)]),
   );
-  const post = { id, ...fields } as Post;
+  const post = withPressSeed({ id, ...fields } as Post);
   return post.published === false ? null : post;
 }

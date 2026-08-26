@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -202,10 +201,20 @@ export default async function PostPage({ params }: Params) {
             ) : null}
           </header>
 
+          {/* 비율을 강제하지 않는다. 16:9 상자에 object-cover로 채웠더니 수상 카드와 인증서
+              그래픽의 아래쪽 글자가 잘렸다 — 사진이면 잘려도 되지만 글자가 든 그래픽은 안 된다.
+              원본 비율 그대로 폭에 맞춰 내린다. next/image 대신 <img>를 쓰는 이유는 비율을
+              모르는 원격 이미지를 자르지 않고 배치하려면 고정 상자를 버려야 하기 때문이고,
+              크기 최적화는 Cloudinary가 f_auto,q_auto,w_1600으로 이미 하고 있다. */}
           {mediaUrl(post.thumbnail) ? (
-            <div className="relative w-full aspect-[16/9] mt-10 bg-slate-100 overflow-hidden">
-              <Image src={mediaUrl(post.thumbnail)} alt="" fill sizes="(max-width:768px) 100vw, 68ch" className="object-cover" />
-            </div>
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={mediaUrl(post.thumbnail)}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              className="mt-10 w-full h-auto bg-slate-100"
+            />
           ) : null}
 
           {bodyHtml ? (

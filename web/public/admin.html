@@ -111,6 +111,7 @@
               class="px-5 py-2.5 rounded-full bg-gslt-500 hover:bg-gslt-600 text-white text-sm font-bold transition-all">새 글 작성</button>
           </div>
         </div>
+        <p id="press-fill-note" class="hidden"></p>
         <div class="flex items-center gap-2 mb-4">
           <input id="list-search" class="field" style="max-width:280px" placeholder="제목 검색">
           <select id="list-filter" class="field" style="max-width:130px">
@@ -354,6 +355,7 @@
       if (user) {
         switchTab('news');
         initInquiryBadge();
+        autoFillPress();
       }
     });
 
@@ -835,7 +837,7 @@
     const PRESS_CONTENT = [
       {
         sourceUrl: 'https://www.wowtv.co.kr/NewsCenter/News/Read?articleId=A202604210280',
-        thumbnail: 'https://res.cloudinary.com/r9pnckwj/image/upload/v1787728858/r18bvd9lbd1es8t2jexj.png',
+        thumbnail: 'https://res.cloudinary.com/r9pnckwj/image/upload/f_auto,q_auto,w_1600/v1787728858/r18bvd9lbd1es8t2jexj.png',
         body: `무선 IoT 스마트 공간 솔루션 전문기업 ㈜지에스엘티(GSLT)가 포브스가 주관한 '2026 소비자 선정 최고의 브랜드 대상'을 수상하며 기술력과 사업성을 동시에 입증했다고 밝혔다.
 
 이번 수상은 단순한 브랜드 인지도 차원을 넘어 실제 현장 적용성과 시장 확장성을 기반으로 평가됐다는 점에서 의미가 있다. 특히 초기창업패키지 선발 이후 이어진 성과라는 점에서 성장 궤적의 연속성이 확인됐다는 분석이다.
@@ -856,7 +858,7 @@
       },
       {
         sourceUrl: 'https://www.forbeskorea.co.kr/news/articleView.html?idxno=401647',
-        thumbnail: 'https://res.cloudinary.com/r9pnckwj/image/upload/v1787728262/t3m4timvlln0evecyhym.png',
+        thumbnail: 'https://res.cloudinary.com/r9pnckwj/image/upload/f_auto,q_auto,w_1600/v1787728262/t3m4timvlln0evecyhym.png',
         body: `지에스엘티(GSLT)가 포브스코리아·중앙일보가 선정하는 '2026 소비자 선정 최고의 브랜드 대상'에 무선 IoT 기반 스마트 공간 부문 수상 기업으로 이름을 올렸다.
 
 이 상은 브랜드 인지도만이 아니라 실제 시장에서의 적용 사례와 확장 가능성을 함께 평가한다. 55개 수상 브랜드가 은행·유통·교육·의료 등 여러 부문에 걸쳐 선정됐고, 지에스엘티는 그중 무선 IoT 기반 스마트 통합관제 솔루션 기업으로 소개됐다.
@@ -885,7 +887,7 @@
       },
       {
         sourceUrl: 'https://economist.co.kr/article/view/ecn202606230043',
-        thumbnail: 'https://res.cloudinary.com/r9pnckwj/image/upload/v1787728255/pqfintmc1bzidz5t4qdp.png',
+        thumbnail: 'https://res.cloudinary.com/r9pnckwj/image/upload/f_auto,q_auto,w_1600/v1787728255/pqfintmc1bzidz5t4qdp.png',
         body: `**고장 진단 넘어 조치 절차 자동 선정·작업 지시 자동 생성까지 지원**
 **노후 설비·다양한 통신 규격 혼재한 현장 유지보수 자동화 겨냥**
 
@@ -919,7 +921,7 @@
       },
       {
         sourceUrl: 'https://biz.chosun.com/industry/business_info/2026/08/05/UGTMQVKPSFEYZAN6H2J2DMURZ4/',
-        thumbnail: 'https://res.cloudinary.com/r9pnckwj/image/upload/v1787728225/obuib6kemtsjux4g6b0d.png',
+        thumbnail: 'https://res.cloudinary.com/r9pnckwj/image/upload/f_auto,q_auto,w_1600/v1787728225/obuib6kemtsjux4g6b0d.png',
         body: `지에스엘티는 2025년 초기창업패키지 딥테크 분야 과제를 마치고, 통합형 IoT 유지보수 솔루션 '시옷(SIOT)'의 현장 실증을 진행했다.
 
 협약 기간 동안 시옷의 핵심 알고리즘을 개발하고, 실제 건물 운영 환경에서 관제시스템 연동과 기능 검증을 수행했다. 일부 고객 현장에 기술을 적용한 뒤 유료 서비스 계약으로 이어진 사례도 확보했다.
@@ -946,25 +948,64 @@
       }
     ];
 
+    /**
+     * 언론보도 4건에 본문·썸네일을 채운다.
+     *
+     * 버튼을 찾아 누르게 하는 방식은 실패했다 — 로그인 화면에서는 버튼이 숨겨져 있고,
+     * 뉴스 탭에 들어가야 나타나서 사실상 아무도 누르지 않는다. 그래서 로그인하면
+     * 자동으로 한 번 돈다.
+     *
+     * 덮어쓰기는 body가 비어 있을 때만 한다. 나중에 본문을 직접 고치셔도 다음 로그인에
+     * 되돌아가지 않는다. force=true(버튼)면 비어 있지 않아도 다시 쓴다.
+     */
+    async function fillPressContent({ force = false } = {}) {
+      const snap = await getDocs(query(collection(db, 'posts'), where('type', '==', 'press')));
+      const byUrl = new Map();
+      snap.forEach(d => byUrl.set(String(d.data().sourceUrl || '').trim(), { id: d.id, data: d.data() }));
+      let done = 0, skipped = 0, missing = [];
+      for (const c of PRESS_CONTENT) {
+        const hit = byUrl.get(c.sourceUrl);
+        if (!hit) { missing.push(c.sourceUrl); continue; }
+        const hasBody = String(hit.data.body || '').trim().length > 0;
+        if (hasBody && !force) { skipped++; continue; }
+        await updateDoc(doc(db, 'posts', hit.id), {
+          body: c.body, thumbnail: c.thumbnail, updatedAt: serverTimestamp()
+        });
+        done++;
+      }
+      return { done, skipped, missing };
+    }
+
+    /* 로그인 직후 자동 반영. 조용히 실패해선 안 되므로 결과를 화면에 남긴다. */
+    async function autoFillPress() {
+      const note = $('press-fill-note');
+      try {
+        const r = await fillPressContent();
+        if (r.done > 0) {
+          note.textContent = `언론보도 ${r.done}건에 본문과 썸네일을 채웠습니다. 사이트에는 1분 안에 반영됩니다.`;
+          note.className = 'mb-4 px-4 py-3 rounded-xl bg-gslt-50 text-gslt-800 text-sm font-bold';
+          note.classList.remove('hidden');
+          switchTab(currentTab);
+        } else if (r.missing.length) {
+          note.textContent = `원문 주소가 맞는 글을 ${r.missing.length}건 찾지 못했습니다. 아래 버튼으로 다시 시도해 주세요.`;
+          note.className = 'mb-4 px-4 py-3 rounded-xl bg-amber-50 text-amber-800 text-sm font-bold';
+          note.classList.remove('hidden');
+        }
+      } catch (e) {
+        note.textContent = `언론보도 본문 자동 반영 실패: ${e.message}`;
+        note.className = 'mb-4 px-4 py-3 rounded-xl bg-rose-50 text-rose-700 text-sm font-bold';
+        note.classList.remove('hidden');
+      }
+    }
+
     $('fill-press-btn').addEventListener('click', async () => {
       const btn = $('fill-press-btn');
-      if (!confirm('언론보도 4건에 본문과 썸네일을 채울까요?\n\n기존 글을 원문 주소로 찾아 본문·썸네일만 덮어씁니다.\n제목·요약·태그는 건드리지 않습니다.')) return;
+      if (!confirm('언론보도 4건의 본문과 썸네일을 다시 채울까요?\n\n직접 고치신 본문이 있다면 덮어씁니다.')) return;
       btn.disabled = true; btn.textContent = '반영 중...';
       try {
-        const snap = await getDocs(query(collection(db, 'posts'), where('type', '==', 'press')));
-        const byUrl = new Map();
-        snap.forEach(d => byUrl.set(String(d.data().sourceUrl || '').trim(), d.id));
-        let done = 0, missing = [];
-        for (const c of PRESS_CONTENT) {
-          const id = byUrl.get(c.sourceUrl);
-          if (!id) { missing.push(c.sourceUrl); continue; }
-          await updateDoc(doc(db, 'posts', id), {
-            body: c.body, thumbnail: c.thumbnail, updatedAt: serverTimestamp()
-          });
-          done++;
-        }
-        btn.textContent = `${done}건 반영 완료`;
-        if (missing.length) alert('원문 주소가 일치하는 글을 못 찾았습니다:\n' + missing.join('\n'));
+        const r = await fillPressContent({ force: true });
+        btn.textContent = `${r.done}건 반영 완료`;
+        if (r.missing.length) alert('원문 주소가 일치하는 글을 못 찾았습니다:\n' + r.missing.join('\n'));
         setTimeout(() => { btn.disabled = false; btn.textContent = '언론보도 본문·썸네일 채우기'; switchTab(currentTab); }, 1200);
       } catch (e) {
         alert('반영 실패: ' + e.message);
