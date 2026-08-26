@@ -44,7 +44,13 @@ function transcript(messages: Msg[]): string {
     .join('\n\n');
 }
 
-export default function Chat({ onEngage }: { onEngage?: () => void }) {
+export default function Chat({
+  onEngage,
+  onClose,
+}: {
+  onEngage?: () => void;
+  onClose?: () => void;
+}) {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
@@ -130,28 +136,48 @@ export default function Chat({ onEngage }: { onEngage?: () => void }) {
   }
 
   return (
-    <div className="w-full max-w-3xl" aria-labelledby="chat-heading">
+    <div className="w-full max-w-2xl mx-auto text-center" aria-labelledby="chat-heading">
       {/* ── 머리. 대화가 시작되면 자리를 대화에 내준다 ── */}
       {!started ? (
-        <div className="mb-7">
-          <div className="flex items-center gap-3 mb-4">
-            <Sparkle className="w-7 h-7 md:w-8 md:h-8" />
-            <span className="text-xs font-bold tracking-[0.14em] text-white/65">AI 상담</span>
+        <div className="mb-8">
+          <div className="flex items-center justify-center gap-2.5 mb-5">
+            <Sparkle className="w-8 h-8 md:w-9 md:h-9" />
+            <span className="text-sm font-bold tracking-[0.14em] text-white/65">AI 상담</span>
           </div>
           <h2
             id="chat-heading"
-            className="text-[1.75rem] md:text-[2.5rem] font-black tracking-tight leading-[1.15] break-keep text-white"
+            className="text-[2.25rem] md:text-[3.25rem] font-black tracking-tight leading-[1.12] break-keep text-white"
           >
             우리 공간에도 <span className="text-gslt-400">될까요?</span>
           </h2>
-          <p className="mt-3 text-sm md:text-base text-white/80 leading-relaxed break-keep max-w-[46ch]">
+          <p className="mt-4 text-base md:text-xl text-white/80 leading-relaxed break-keep max-w-[44ch] mx-auto">
             공간 조건만 알려주시면 배선 공사 없이 가능한 범위를 바로 안내해 드립니다.
           </p>
         </div>
       ) : (
-        <h2 id="chat-heading" className="sr-only">
-          AI 상담
-        </h2>
+        /* 대화 중에는 히어로로 돌아갈 길을 화면에 둔다. 이게 없으면 판이 걷히지 않아
+           페이지가 멈춘 것처럼 느껴진다 — 실제로 그렇게 만들었다가 고쳤다. */
+        <div className="flex items-center justify-between gap-4 mb-5">
+          <h2 id="chat-heading" className="flex items-center gap-2.5 text-sm font-bold tracking-[0.14em] text-white/65">
+            <Sparkle className="w-5 h-5" />
+            AI 상담
+          </h2>
+          <button
+            type="button"
+            onClick={() => {
+              setMessages([]);
+              setInput('');
+              setError('');
+              setNotice('');
+              setContactOpen(false);
+              setSent(false);
+              onClose?.();
+            }}
+            className="shrink-0 rounded-full border border-white/15 hover:border-white/30 px-4 py-2 text-sm font-bold text-white/70 hover:text-white transition-colors"
+          >
+            대화 닫기
+          </button>
+        </div>
       )}
 
       {/* ── 첫 질문 ── */}
@@ -163,9 +189,9 @@ export default function Chat({ onEngage }: { onEngage?: () => void }) {
                 type="button"
                 onClick={() => send(s)}
                 disabled={busy}
-                className="group h-full w-full text-left rounded-2xl bg-white/[0.06] hover:bg-white/[0.11] border border-white/10 hover:border-white/20 p-4 backdrop-blur-sm transition-colors disabled:opacity-60"
+                className="group h-full w-full rounded-2xl bg-white/[0.06] hover:bg-white/[0.11] border border-white/10 hover:border-white/20 px-4 py-4 backdrop-blur-sm transition-colors disabled:opacity-60"
               >
-                <span className="block text-sm font-medium text-white/85 leading-snug break-keep">
+                <span className="block text-[0.9375rem] md:text-base font-medium text-white/85 leading-snug break-keep">
                   {s}
                 </span>
               </button>
@@ -177,20 +203,20 @@ export default function Chat({ onEngage }: { onEngage?: () => void }) {
       {/* ── 대화 ── */}
       {started && (
         <div
-          className="mb-5 max-h-[42vh] overflow-y-auto overscroll-contain pr-1 space-y-5"
+          className="mb-5 max-h-[38vh] overflow-y-auto overscroll-contain pr-1 space-y-5 text-left"
           aria-live="polite"
         >
           {messages.map((m, i) =>
             m.role === 'user' ? (
               <div key={i} className="flex justify-end">
-                <p className="max-w-[85%] rounded-3xl rounded-br-lg bg-white/10 px-4 py-3 text-sm text-white/90 leading-relaxed break-keep whitespace-pre-wrap">
+                <p className="max-w-[85%] rounded-3xl rounded-br-lg bg-white/10 px-4 py-3 text-[0.9375rem] md:text-base text-white/90 leading-relaxed break-keep whitespace-pre-wrap">
                   {m.content}
                 </p>
               </div>
             ) : (
               <div key={i} className="flex gap-3">
                 <Sparkle className="w-5 h-5 shrink-0 mt-0.5" />
-                <p className="min-w-0 text-sm md:text-[0.9375rem] text-white/85 leading-[1.75] break-keep whitespace-pre-wrap">
+                <p className="min-w-0 text-[0.9375rem] md:text-base text-white/85 leading-[1.8] break-keep whitespace-pre-wrap">
                   {m.content}
                 </p>
               </div>
@@ -222,7 +248,7 @@ export default function Chat({ onEngage }: { onEngage?: () => void }) {
 
       {/* ── 담당자 연결 ── */}
       {started && wantsHandoff(messages) && !sent && (
-        <div className="mb-5 rounded-3xl border border-white/12 bg-white/[0.05] backdrop-blur-sm p-5">
+        <div className="mb-5 rounded-3xl border border-white/12 bg-white/[0.05] backdrop-blur-sm p-5 text-left">
           {!contactOpen ? (
             <div className="flex flex-wrap items-center justify-between gap-4">
               <p className="text-sm text-white/80 break-keep">
@@ -295,19 +321,19 @@ export default function Chat({ onEngage }: { onEngage?: () => void }) {
             }
           }}
           placeholder="배선 공사 없이 가능한지 물어보세요"
-          className="w-full resize-none rounded-[1.6rem] bg-white/[0.07] border border-white/15 focus:border-gslt-400 focus:bg-white/[0.11] focus:outline-none focus:ring-4 focus:ring-gslt-400/20 backdrop-blur-sm py-3.5 pl-5 pr-15 text-sm text-white placeholder:text-white/60 leading-relaxed transition-colors"
+          className="w-full resize-none rounded-[1.6rem] bg-white/[0.07] border border-white/15 focus:border-gslt-400 focus:bg-white/[0.11] focus:outline-none focus:ring-4 focus:ring-gslt-400/20 backdrop-blur-sm py-4 pl-6 pr-16 text-base text-white placeholder:text-white/60 text-left leading-relaxed transition-colors"
         />
         <button
           type="submit"
           disabled={busy || !input.trim()}
           aria-label="보내기"
-          className="absolute right-2 bottom-2 grid place-items-center w-11 h-11 rounded-full bg-gslt-500 hover:bg-gslt-400 text-slate-900 transition-colors disabled:bg-white/10 disabled:text-white/35"
+          className="absolute right-2.5 bottom-2.5 grid place-items-center w-12 h-12 rounded-full bg-gslt-500 hover:bg-gslt-400 text-slate-900 transition-colors disabled:bg-white/10 disabled:text-white/35"
         >
           <ArrowRight className="w-5 h-5" />
         </button>
       </form>
 
-      <p className="mt-3 text-xs text-white/65 break-keep">
+      <p className="mt-4 text-sm text-white/65 break-keep">
         AI가 회사 자료를 근거로 답합니다. 비용·일정은 현장 실측 후 확정됩니다.
         급하시면 {COMPANY.tel}.
       </p>

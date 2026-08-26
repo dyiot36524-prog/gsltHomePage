@@ -45,8 +45,12 @@ export default function Hero() {
   const headRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<HTMLDivElement>(null);
   const dimRef = useRef<HTMLDivElement>(null);
-  /** 대화가 시작되면 스크롤과 무관하게 챗을 붙잡는다. ref로 두는 이유는 paint()가
-      매 프레임 도는 rAF 루프 안에 있어 리렌더를 유발하면 안 되기 때문이다. */
+  /** 대화 중에는 스크롤이 조금 흔들려도 챗을 붙잡는다. ref로 두는 이유는 paint()가
+      매 프레임 도는 rAF 루프 안에 있어 리렌더를 유발하면 안 되기 때문이다.
+
+      **영구 고정이 아니다.** 한 번 대화하면 영영 붙잡던 판이 위로 스크롤해도 걷히지
+      않아 페이지가 멈춘 것처럼 보였다. 필름 쪽으로 충분히 되돌아가면(RELEASE) 풀어
+      히어로가 돌아온다. 사용자가 직접 닫을 수도 있다. */
   const engagedRef = useRef(false);
 
   useEffect(() => {
@@ -138,6 +142,9 @@ export default function Hero() {
     // 헤드라인이 물러나고 상담판이 들어오는 구간. 그 뒤는 붙잡아 두는 구간이다.
     const HANDOFF_IN = 0.76;
     const HANDOFF_OUT = 0.9;
+    // 이 아래로 되돌아가면 대화 중이어도 붙잡기를 푼다. 인계 시작(0.76)보다 넉넉히
+    // 앞이라, 대화하다 손가락이 미끄러진 정도로는 판이 걷히지 않는다.
+    const RELEASE = 0.62;
     let duration = 0;
 
     const fade = (el: HTMLElement | null, t: number, dist: number) => {
@@ -185,6 +192,8 @@ export default function Hero() {
       // 헤드라인이 위로 물러나고 같은 자리에 상담판이 들어온다. 영상은 바닥에 그대로
       // 남아 톤이 끊기지 않는다. 대화가 시작된 뒤에는 스크롤이 조금 움직여도
       // 판이 걷히지 않게 붙잡는다.
+      // 대화 중이라도 필름 구간으로 되돌아가면 놓아준다 — 그래야 위로 스크롤이 통한다.
+      if (engagedRef.current && raw < RELEASE) engagedRef.current = false;
       const h = engagedRef.current ? 1 : easeOut(seg(raw, HANDOFF_IN, HANDOFF_OUT));
       const head = headRef.current;
       const chat = chatRef.current;
@@ -357,13 +366,13 @@ export default function Hero() {
               자막판에 가까운 구조다. */}
           {/* 모바일 하단 여백이 넉넉해야 마지막 행이 떠 있는 '맨 위로' 버튼(bottom-6, 48px)에
               가리지 않는다. 아래로 붙이는 구성이라 이 여백이 곧 안전 거리다. */}
-          <div className="relative z-10 h-full flex flex-col justify-end px-4 sm:px-6 lg:px-8 pt-24 pb-24 md:pb-14">
+          <div className="relative z-10 h-full flex flex-col justify-center px-4 sm:px-6 lg:px-8 pt-24 pb-24 md:pb-14">
             {/* 헤드라인과 상담판은 같은 자리를 나눠 쓴다. 스크롤이 필름을 다 지나면
                 헤드라인이 위로 물러나고 그 자리에 상담판이 들어온다 — 영상은 바닥에
                 그대로 남아 톤이 끊기지 않는다. 둘을 grid로 겹쳐 두면 전환 중에
                 무대 높이가 흔들리지 않는다. */}
             <div className="hero-swap max-w-6xl mx-auto w-full">
-            <div className="hero-swap-item hero-shadow" ref={headRef}>
+            <div className="hero-swap-item hero-shadow text-center" ref={headRef}>
               <h1 className="hero-title font-black break-keep text-white">
                 <span className="hero-line hero-line-setup">
                   <span className="hero-line-inner hero-title-setup text-white/75" ref={kickerRef}>
@@ -383,7 +392,7 @@ export default function Hero() {
 
               {/* 제품 이름 셋은 바로 아래 목록이 다시 부른다. 여기서는 회사가 무엇을 하는지만 말한다. */}
               <p
-                className="hero-fade hero-desc max-w-xl text-white/70 leading-relaxed break-keep"
+                className="hero-fade hero-desc max-w-xl mx-auto text-white/70 leading-relaxed break-keep"
                 ref={descRef}
               >
                 지에스엘티는 오피스·주거·빌딩, 모든 공간을 배선 공사 없이
@@ -393,7 +402,7 @@ export default function Hero() {
               {/* 제품 세 개는 순서가 아니라 나란한 선택지다 — 01/02/03 번호를 붙이지 않는다.
                   이름 칸에 고정 폭을 줘 설명이 한 줄로 서게 하고(전에는 이름 길이에 따라
                   들쭉날쭉했다), 행 폭을 본문과 같은 자로 묶어 화살표가 멀리 떠 있지 않게 한다. */}
-              <div className="max-w-3xl">
+              <div className="max-w-3xl mx-auto text-left">
                 {ROWS.map((r, i) => (
                   <Link
                     key={r.href}
@@ -429,6 +438,15 @@ export default function Hero() {
               <Chat
                 onEngage={() => {
                   engagedRef.current = true;
+                }}
+                onClose={() => {
+                  engagedRef.current = false;
+                  // 인계 시작 지점보다 앞으로 되돌려, 히어로 헤드라인이 다시 서게 한다.
+                  const track = trackRef.current;
+                  const stage = stageRef.current;
+                  if (!track || !stage) return;
+                  const span = track.offsetHeight - stage.offsetHeight;
+                  window.scrollTo({ top: Math.round(span * 0.55), behavior: 'smooth' });
                 }}
               />
             </div>
