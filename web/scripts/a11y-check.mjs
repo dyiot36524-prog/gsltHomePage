@@ -23,10 +23,28 @@ import puppeteer from 'puppeteer-core';
 const BASE = process.argv[2] || 'http://localhost:3100';
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 
-const ROUTES = process.env.A11Y_ROUTES
-  ? JSON.parse(process.env.A11Y_ROUTES)
-  : ['/', '/about', '/siot', '/bizmoa', '/morak', '/news', '/portfolio', '/downloads',
-     '/contact', '/legal/terms', '/legal/privacy', '/support', '/이런페이지없음'];
+// 관리자에서 끌 수 있는 분류(/portfolio·/news·/downloads)는 고정 목록에 넣지 않는다.
+// 껐을 때 404가 정답인데 목록에 박아 두면 의도된 동작이 실패로 잡히고, 실제 결함이
+// 그 소음에 묻힌다. 아래에서 메뉴 설정을 읽어 켜져 있는 것만 붙인다.
+const FIXED = ['/', '/about', '/siot', '/bizmoa', '/morak',
+  '/contact', '/faq', '/legal/terms', '/legal/privacy', '/support', '/이런페이지없음'];
+const TOGGLEABLE = { news: '/news', downloads: '/downloads', portfolio: '/portfolio' };
+
+async function liveRoutes() {
+  const on = [];
+  for (const [key, path] of Object.entries(TOGGLEABLE)) {
+    try {
+      const res = await fetch(BASE + path, { redirect: 'manual' });
+      if (res.status === 200) on.push(path);
+      else console.log(`  · ${path} 는 관리자에서 꺼져 있어 건너뛴다 (HTTP ${res.status})`);
+    } catch {
+      on.push(path); // 못 물어봤으면 검사한다 — 조용히 빼는 쪽이 더 위험하다
+    }
+  }
+  return [...FIXED, ...on];
+}
+
+const ROUTES = process.env.A11Y_ROUTES ? JSON.parse(process.env.A11Y_ROUTES) : await liveRoutes();
 
 const VIEWPORTS = [
   { name: 'desktop', width: 1440, height: 900 },

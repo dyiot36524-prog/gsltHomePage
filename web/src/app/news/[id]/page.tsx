@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Tag } from '@/components/Record';
-import { ArrowLeft, ArrowRight, ArrowUpRight } from '@/components/Icon';
+import { ArrowLeft, ArrowRight, ArrowUpRight, Download } from '@/components/Icon';
 import { renderMarkdown } from '@/lib/markdown';
 import {
   getPost, getPosts, isHiddenCategory, isPress, mediaUrl, postDateLabel, postMirrors, postTime,
@@ -38,6 +38,19 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   };
 }
 
+/**
+ * 첨부 크기 표기. MB로만 찍으면 1MB 미만이 전부 '0.0 MB'가 되어, 회사 소개서 한 건이
+ * 실제로 그렇게 보이고 있었다. 크기에 맞는 단위를 고른다.
+ */
+function fileSize(n?: number): string {
+  if (typeof n !== 'number' || !Number.isFinite(n) || n <= 0) return '';
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${Math.round(n / 1024)} KB`;
+  return `${(n / 1024 / 1024).toFixed(1)} MB`;
+}
+
+type SourceRow = { label: string; value: React.ReactNode };
+
 /** 앞·뒤 기록. 고정 글 여부와 무관하게 시간순으로만 잇는다. */
 function neighbours(all: Post[], id: string) {
   const line = [...all].sort((a, b) => postTime(b) - postTime(a));
@@ -61,6 +74,36 @@ export default async function PostPage({ params }: Params) {
   const press = isPress(post);
   const source = press ? safeHttpUrl(post.sourceUrl) : '';
   const mirrors = postMirrors(post);
+
+  // 값이 있는 항목만 행이 된다. 빈 칸에 '-'를 채우지 않는 것이 이 기록부의 규칙이다.
+  const sourceRows: SourceRow[] = press
+    ? ([
+        post.outlet ? { label: '매체', value: <span className="font-bold">{post.outlet}</span> } : null,
+        post.reporter ? { label: '기자', value: `${post.reporter} 기자` } : null,
+        mirrors.length
+          ? {
+              label: '전재',
+              value: (
+                <ul className="flex flex-wrap gap-x-4 gap-y-1.5">
+                  {mirrors.map((m) => (
+                    <li key={m.url}>
+                      <a
+                        href={m.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group inline-flex items-center gap-1.5 font-bold text-gslt-700 hover:text-gslt-600 transition-colors"
+                      >
+                        {m.label}
+                        <ArrowUpRight className="w-3.5 h-3.5 text-slate-500 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              ),
+            }
+          : null,
+      ] as (SourceRow | null)[]).filter((r): r is SourceRow => r !== null)
+    : [];
 
   const bodyHtml = renderMarkdown(post.body || '');
   const all = await getPosts(post.category).catch(() => [] as Post[]);
@@ -135,12 +178,6 @@ export default async function PostPage({ params }: Params) {
             <div className="flex items-center gap-3 mb-5 tabular-nums">
               <Tag>{press ? '언론보도' : post.category === 'portfolio' ? '시공사례' : post.category === 'downloads' ? '자료' : '자사 소식'}</Tag>
               <span className="text-sm text-slate-500">{postDateLabel(post)}</span>
-              {press && post.outlet ? (
-                <span className="text-sm font-bold text-slate-900">{post.outlet}</span>
-              ) : null}
-              {press && post.reporter ? (
-                <span className="text-sm text-slate-500">{post.reporter} 기자</span>
-              ) : null}
               {typeof post.views === 'number' && post.views > 0 ? (
                 <span className="text-sm text-slate-500">조회 {post.views}</span>
               ) : null}
@@ -175,52 +212,53 @@ export default async function PostPage({ params }: Params) {
             <div className="post-body mt-10" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
           ) : null}
 
-          {/* 기사 본문과 사진은 언론사의 것이다. 여기에 옮기지 않고 원문으로 보낸다.
-              대신 어디서 언제 누가 보도했는지와, 전재된 곳을 함께 밝힌다. */}
+          {/* 출처는 상자에 담기지 않는다. 헤어라인으로 나뉜 행으로 눕는다. 이전에는 2px 테두리
+              상자였는데, 아래 이전/다음 표와 먹색 CTA 면 사이에 끼어 '상자 → 표 → 면'으로
+              무게가 세 번 튀었다. 이제 '표 → 표 → 면' 한 방향으로 간다.
+
+              '출처' 같은 머리 라벨은 두지 않는다. 매체·기자·전재가 이미 이름을 지고 있어
+              그 위의 라벨은 제목 위 작은 라벨(키커)이 되고, 머리말을 닫은 2px 먹선 바로 아래
+              또 2px 먹선이 와서 선이 두 번 겹쳤다.
+
+              기사 본문과 사진은 언론사의 것이라 여기 옮기지 않는다. */}
           {press ? (
-            <section className="mt-10 border-2 border-slate-900 p-6 sm:p-8">
-              <p className="text-sm text-slate-500 leading-relaxed break-keep">
-                {post.outlet ? `${post.outlet}에서` : '언론사에서'} 보도한 기사입니다.
-                전문은 원문에서 확인하실 수 있습니다.
-              </p>
+            <section className="mt-10">
+              <dl className="divide-y divide-slate-200 border-b border-slate-200">
+                {sourceRows.map((row) => (
+                  <div
+                    key={row.label}
+                    className="grid grid-cols-[4.5rem_1fr] md:grid-cols-[7.5rem_1fr] gap-x-5 py-4"
+                  >
+                    <dt className="text-[0.6875rem] font-bold tracking-[0.14em] text-slate-500 pt-1">
+                      {row.label}
+                    </dt>
+                    <dd className="text-slate-900 break-keep">{row.value}</dd>
+                  </div>
+                ))}
+              </dl>
+
               {source ? (
                 <a
                   href={source}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group mt-5 inline-flex items-center gap-2 bg-gslt-500 hover:bg-gslt-400 text-slate-900 px-6 py-3.5 text-sm font-bold transition-colors"
+                  className="group mt-8 inline-flex items-center gap-2 bg-gslt-500 hover:bg-gslt-400 text-slate-900 px-6 py-3.5 text-sm font-bold transition-colors"
                 >
                   {post.outlet ? `${post.outlet} 원문 보기` : '원문 보기'}
                   <ArrowUpRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 </a>
               ) : null}
-              {mirrors.length ? (
-                <div className="mt-6 pt-6 border-t border-slate-200">
-                  <p className="text-[11px] font-bold tracking-[0.14em] text-slate-500 mb-3">전재</p>
-                  <ul className="flex flex-wrap gap-x-5 gap-y-2">
-                    {mirrors.map((m) => (
-                      <li key={m.url}>
-                        <a
-                          href={m.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="group inline-flex items-center gap-1.5 text-sm font-bold text-slate-700 hover:text-gslt-700 transition-colors"
-                        >
-                          {m.label}
-                          <ArrowUpRight className="w-3.5 h-3.5 text-slate-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
+              <p className="mt-4 text-sm text-slate-500 break-keep">
+                기사 본문과 사진은 해당 언론사에 있습니다.
+              </p>
             </section>
           ) : null}
 
+          {/* 첨부 파일. 출처 표와 같은 문법으로 눕는다 — 머리말을 닫은 2px 먹선이 표머리를
+              대신하므로 위 헤어라인을 두지 않는다. */}
           {Array.isArray(post.attachments) && post.attachments.length ? (
-            <section className="mt-14 pt-8 border-t border-slate-200">
-              <h2 className="text-sm font-bold text-slate-900 mb-4">첨부 파일</h2>
-              <ul className="divide-y divide-slate-200 border-y border-slate-200">
+            <section className="mt-10">
+              <ul className="divide-y divide-slate-200 border-b border-slate-200">
                 {post.attachments
                   .filter((f) => f && mediaUrl(f.url))
                   .map((f) => (
@@ -230,13 +268,14 @@ export default async function PostPage({ params }: Params) {
                         {...(/^https?:\/\//i.test(mediaUrl(f.url))
                           ? { target: '_blank', rel: 'noopener noreferrer' }
                           : {})}
-                        className="group flex items-center justify-between gap-4 py-4 text-sm"
+                        className="group flex items-center gap-4 py-4 text-sm"
                       >
-                        <span className="font-medium text-slate-700 group-hover:text-gslt-700 transition-colors break-all">
+                        <Download className="w-5 h-5 shrink-0 text-slate-500 transition-colors group-hover:text-gslt-700" />
+                        <span className="min-w-0 flex-1 font-bold text-slate-900 group-hover:text-gslt-700 transition-colors break-all">
                           {f.name}
                         </span>
                         <span className="shrink-0 text-xs text-slate-500 tabular-nums">
-                          {typeof f.size === 'number' ? `${(f.size / 1024 / 1024).toFixed(1)} MB` : ''}
+                          {fileSize(f.size)}
                         </span>
                       </a>
                     </li>
