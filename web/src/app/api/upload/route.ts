@@ -41,16 +41,10 @@ async function isAdminToken(idToken: string): Promise<boolean> {
 }
 
 export async function POST(request: Request) {
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    return Response.json(
-      {
-        error:
-          '대용량 저장소가 아직 연결되지 않았습니다. Vercel 대시보드 → Storage → Blob 스토어를 만들어 gslt-next 프로젝트에 연결해 주세요.',
-      },
-      { status: 503 },
-    );
-  }
-
+  // 연결 여부를 환경변수 이름으로 미리 판정하지 않는다. Blob 스토어를 붙이는 방식이
+  // 두 가지(RW 토큰 / OIDC + BLOB_STORE_ID)라 특정 이름의 유무로 막으면, 멀쩡히 연결된
+  // 설정을 '연결 안 됨'으로 잘못 돌려보낸다 — 실제로 그렇게 한 번 막았다.
+  // SDK가 시도하게 두고, 실패했을 때 그 이유를 그대로 받아 안내로 바꾼다.
   const body = (await request.json()) as HandleUploadBody;
 
   try {
@@ -87,9 +81,17 @@ export async function POST(request: Request) {
     });
     return Response.json(result);
   } catch (e) {
-    return Response.json(
-      { error: e instanceof Error ? e.message : '업로드 준비에 실패했습니다.' },
-      { status: 400 },
-    );
+    const raw = e instanceof Error ? e.message : '';
+    // 스토어 미연결은 사용자가 고칠 수 있는 일이라 무엇을 해야 하는지 알려 준다.
+    if (/BLOB_READ_WRITE_TOKEN|No token|store/i.test(raw)) {
+      return Response.json(
+        {
+          error:
+            `대용량 저장소에 연결하지 못했습니다. Vercel 대시보드 → Storage에서 Blob 스토어가 gslt-next에 연결됐는지 확인해 주세요. (${raw})`,
+        },
+        { status: 503 },
+      );
+    }
+    return Response.json({ error: raw || '업로드 준비에 실패했습니다.' }, { status: 400 });
   }
 }

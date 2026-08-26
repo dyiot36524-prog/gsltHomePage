@@ -47,10 +47,13 @@ function transcript(messages: Msg[]): string {
 export default function Chat({
   onEngage,
   onStart,
+  onClose,
 }: {
   onEngage?: () => void;
   /** 첫 메시지가 나가는 순간 한 번. 히어로가 이걸 받아 헤드라인을 걷고 판을 넓힌다. */
   onStart?: () => void;
+  /** 대화를 닫을 때. 히어로가 헤드라인을 다시 세운다. */
+  onClose?: () => void;
 }) {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
@@ -168,6 +171,7 @@ export default function Chat({
               setNotice('');
               setContactOpen(false);
               setSent(false);
+              onClose?.();
             }}
             className="shrink-0 rounded-full border border-white/15 hover:border-white/30 px-4 py-2 text-sm font-bold text-white/70 hover:text-white transition-colors"
           >
@@ -298,7 +302,7 @@ export default function Chat({
           e.preventDefault();
           send(input);
         }}
-        className="relative"
+        className="hero-chat-field relative rounded-[1.6rem]"
       >
         <label htmlFor="chat-input" className="sr-only">
           궁금한 점을 입력하세요
@@ -317,13 +321,13 @@ export default function Chat({
             }
           }}
           placeholder="배선 공사 없이 가능한지 물어보세요"
-          className="w-full resize-none rounded-[1.6rem] bg-white/[0.07] border border-white/15 focus:border-gslt-400 focus:bg-white/[0.11] focus:outline-none focus:ring-4 focus:ring-gslt-400/20 backdrop-blur-sm py-4 pl-6 pr-16 text-base text-white placeholder:text-white/60 text-left leading-relaxed transition-colors"
+          className="block w-full resize-none rounded-[1.6rem] bg-white/[0.07] border border-white/10 focus:border-transparent focus:bg-white/[0.11] focus:outline-none focus:ring-4 focus:ring-gslt-400/20 backdrop-blur-sm py-4 pl-6 pr-16 text-base text-white placeholder:text-white/60 text-left leading-relaxed transition-colors"
         />
         <button
           type="submit"
           disabled={busy || !input.trim()}
           aria-label="보내기"
-          className="absolute right-2.5 bottom-2.5 grid place-items-center w-12 h-12 rounded-full bg-gslt-500 hover:bg-gslt-400 text-slate-900 transition-colors disabled:bg-white/10 disabled:text-white/35"
+          className="absolute right-1.5 top-1/2 -translate-y-1/2 grid place-items-center w-12 h-12 rounded-full bg-gslt-500 hover:bg-gslt-400 text-slate-900 transition-colors disabled:bg-white/10 disabled:text-white/35"
         >
           <ArrowRight className="w-5 h-5" />
         </button>

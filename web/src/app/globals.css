@@ -177,6 +177,54 @@ body {
   transition: opacity .45s ease;
 }
 
+/* 입자 스퀘어클. 캔버스 크기는 JS가 dpr까지 반영해 잡고, 여기서는 표시 크기만 정한다. */
+/* 구체 뒤의 은은한 후광. 점만으로는 빛이 번지지 않아 선으로만 읽힌다. */
+.hero-gate-orb-wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.hero-gate-orb-wrap::before {
+  content: '';
+  position: absolute;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%,
+      rgba(40, 184, 197, .34) 0%,
+      rgba(37, 99, 235, .20) 38%,
+      transparent 70%);
+  filter: blur(18px);
+  animation: gate-breathe 3.8s ease-in-out infinite;
+}
+
+.hero-gate-orb {
+  position: relative;
+  width: 260px;
+  height: 260px;
+  /* 점을 조금 번지게 해 '빛나는 입자'로 읽히게 한다 */
+  filter: drop-shadow(0 0 6px rgba(76, 195, 210, .75));
+  /* 캔버스 자체가 이미 가장자리로 갈수록 옅어지지만, 사각 경계가 드러나지 않도록
+     한 겹 더 부드럽게 지운다. */
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 55%, transparent 78%);
+  mask-image: radial-gradient(circle at 50% 50%, #000 55%, transparent 78%);
+}
+
+/* 문구는 구체 아래에서 조용히 숨 쉰다 */
+@keyframes gate-breathe {
+  0%, 100% { opacity: .5; }
+  50% { opacity: .95; }
+}
+
+.hero-gate-label {
+  animation: gate-breathe 2.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-gate-label { animation: none; opacity: .8; }
+}
+
 .hero-gate-rail {
   display: block;
   width: min(18rem, 60vw);
@@ -209,6 +257,117 @@ html:not(.js-hero) .hero-gate { display: none; }
   opacity: 0;
   background: rgba(5, 7, 12, .72);
   will-change: opacity;
+}
+
+/* ── 입력창 테두리의 빛 물결 ──
+   테두리를 직접 칠하지 않는다. 캡슐보다 한 겹 큰 판에 GSLT 청록·파랑 원뿔 그라디언트를
+   깔고, 가운데를 마스크로 도려내 테두리 두께만 남긴다. 그 판이 천천히 돌면 빛이
+   테두리를 따라 흐른다. 여기에 숨쉬듯 밝기가 오가는 두 번째 겹을 얹어 물결이 된다.
+
+   테두리에 애니메이션을 직접 걸지 않는 이유는 border-color 전환이 네 변을 동시에만
+   바꿀 수 있어 '흐른다'가 표현되지 않기 때문이다. 회전하는 원뿔 그라디언트만이
+   한 점이 테두리를 따라 도는 움직임을 만든다. */
+.hero-chat-field {
+  position: relative;
+  isolation: isolate;
+}
+
+.hero-chat-field::before,
+.hero-chat-field::after {
+  content: '';
+  position: absolute;
+  inset: -1.5px;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: -1;
+  /* 가운데를 파내 테두리 두께(1.5px)만 남긴다 */
+  padding: 1.5px;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+/* 아래 겹: 테두리를 따라 도는 빛 */
+.hero-chat-field::before {
+  background: conic-gradient(
+    from var(--sweep, 0deg),
+    transparent 0deg,
+    rgba(76, 195, 210, .05) 40deg,
+    rgba(76, 195, 210, .85) 88deg,
+    rgba(147, 197, 253, .95) 116deg,
+    rgba(76, 195, 210, .8) 144deg,
+    rgba(76, 195, 210, .05) 190deg,
+    transparent 250deg,
+    transparent 360deg
+  );
+  filter: blur(.5px);
+  animation: chat-sweep 5.5s linear infinite;
+}
+
+/* 위 겹: 반대로 더 느리게 돌며 숨을 쉰다 — 둘이 겹쳐 물결로 읽힌다 */
+.hero-chat-field::after {
+  background: conic-gradient(
+    from var(--sweep, 0deg),
+    transparent 0deg,
+    rgba(40, 184, 197, .5) 60deg,
+    rgba(176, 232, 238, .7) 96deg,
+    rgba(40, 184, 197, .45) 130deg,
+    transparent 210deg,
+    transparent 360deg
+  );
+  filter: blur(2.5px);
+  animation:
+    chat-sweep-rev 8.5s linear infinite,
+    chat-glow 3.4s ease-in-out infinite;
+}
+
+/* 포커스가 오면 물결이 또렷해지고 조금 빨라진다 */
+.hero-chat-field:focus-within::before { animation-duration: 3.8s; }
+.hero-chat-field:focus-within::after {
+  animation-duration: 6s, 2.4s;
+  filter: blur(4px);
+}
+
+@property --sweep {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes chat-sweep {
+  to { --sweep: 360deg; }
+}
+
+@keyframes chat-sweep-rev {
+  to { --sweep: -360deg; }
+}
+
+@keyframes chat-glow {
+  0%, 100% { opacity: .35; }
+  50% { opacity: .9; }
+}
+
+/* @property를 모르는 브라우저에서는 각도가 보간되지 않아 빛이 돌지 않는다.
+   그때는 밝기만 숨쉬게 두어 '죽은 테두리'가 되지 않게 한다. */
+@supports not (background: conic-gradient(from var(--sweep, 0deg), red, blue)) {
+  .hero-chat-field::before,
+  .hero-chat-field::after {
+    background: linear-gradient(90deg, rgba(76, 195, 210, .6), rgba(147, 197, 253, .8), rgba(76, 195, 210, .6));
+    animation: chat-glow 3.4s ease-in-out infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-chat-field::before,
+  .hero-chat-field::after {
+    animation: none;
+    opacity: .5;
+  }
 }
 
 /* ── 대화 모드 전환 ──

@@ -37,6 +37,7 @@ export default function Hero() {
   const dimRef = useRef<HTMLDivElement>(null);
   const gateRef = useRef<HTMLDivElement>(null);
   const gateBarRef = useRef<HTMLDivElement>(null);
+  const orbRef = useRef<HTMLCanvasElement>(null);
   /** 대화 중에는 스크롤이 흔들려도 상담판을 붙잡는다. ref로 두는 이유는 paint()가
       매 프레임 도는 rAF 루프 안에 있어 리렌더를 유발하면 안 되기 때문이다. */
   const engagedRef = useRef(false);
@@ -103,6 +104,7 @@ export default function Hero() {
       try {
         sessionStorage.setItem('hero-gate', '1');
       } catch { /* 사파리 프라이빗 등 — 못 써도 동작에 지장 없다 */ }
+      if (orbRaf) cancelAnimationFrame(orbRaf);
       if (!gate) return;
       gate.style.opacity = '0';
       gate.style.pointerEvents = 'none';
@@ -112,6 +114,105 @@ export default function Hero() {
     const onProgress = (r: number) => {
       if (gateBar) gateBar.style.transform = `scaleX(${Math.min(1, r).toFixed(3)})`;
     };
+
+    /* ── 게이트의 입자 스퀘어클 ──
+       점을 경위선 격자로 뿌리면 자오선이 줄무늬로 드러나 '입자 구름'이 아니라
+       '와이어프레임 지구본'으로 보인다(처음에 그렇게 만들었다가 고쳤다).
+       황금각 나선으로 구면에 고르게 뿌린 뒤, 초타원 노름으로 나눠 둥근 사각면 위로
+       밀어 올린다. 지수를 시간에 따라 흔들면 구와 각진 사각 사이를 오간다.
+
+       DOM 요소 수백 개 대신 캔버스 하나를 쓴다. 점이 2,200개라 요소로 만들면
+       레이아웃·합성 비용이 그대로 초기 로딩을 갉아먹는데, 지금 이 화면은
+       "느려서 보여 주는 화면"이라 그 비용을 낼 이유가 없다. */
+    let orbRaf = 0;
+    const startOrb = () => {
+      const cv = orbRef.current;
+      if (!cv) return;
+      const ctx = cv.getContext('2d');
+      if (!ctx) return;
+
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      const size = 260;
+      cv.width = size * dpr;
+      cv.height = size * dpr;
+      ctx.scale(dpr, dpr);
+
+      // 황금각 나선 — 이웃 점이 같은 선 위에 놓이지 않아 격자가 생기지 않는다
+      const N = 2200;
+      const GOLDEN = Math.PI * (3 - Math.sqrt(5));
+      const base: { x: number; y: number; z: number }[] = [];
+      for (let i = 0; i < N; i++) {
+        const y = 1 - (2 * i + 1) / N;
+        const r = Math.sqrt(Math.max(0, 1 - y * y));
+        const th = i * GOLDEN;
+        base.push({ x: r * Math.cos(th), y, z: r * Math.sin(th) });
+      }
+
+      const R = size * 0.33;
+      const cx = size / 2;
+      const cy = size / 2;
+      let t = 0;
+      const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      const draw = () => {
+        // m이 2면 구, 커질수록 각진 사각이 된다
+        const m = 3.4 + Math.sin(t * 0.7) * 1.5;
+        const ry = t * 0.62;
+        const rx = 0.38 + Math.sin(t * 0.45) * 0.14;
+        const cosY = Math.cos(ry), sinY = Math.sin(ry);
+        const cosX = Math.cos(rx), sinX = Math.sin(rx);
+
+        ctx.clearRect(0, 0, size, size);
+        ctx.globalCompositeOperation = 'lighter';
+
+        for (const p0 of base) {
+          // 초타원 노름으로 나눠 둥근 사각면 위로 민다
+          const norm = Math.pow(
+            Math.pow(Math.abs(p0.x), m) + Math.pow(Math.abs(p0.y), m) + Math.pow(Math.abs(p0.z), m),
+            1 / m,
+          );
+          const k = norm > 0 ? 1 / norm : 0;
+          const x0 = p0.x * k, y0 = p0.y * k, z0 = p0.z * k;
+
+          const x1 = x0 * cosY + z0 * sinY;
+          const z1 = -x0 * sinY + z0 * cosY;
+          const y2 = y0 * cosX - z1 * sinX;
+          const z2 = y0 * sinX + z1 * cosX;
+
+          const persp = 1 / (2.05 - z2 * 0.5);
+          const sx = cx + x1 * R * persp * 2.05;
+          const sy = cy + y2 * R * persp * 2.05;
+
+          const depth = (z2 + 1) / 2; // 0 뒤 · 1 앞
+          // 실루엣 강조 — 중심에서 멀수록(=시선과 면이 나란할수록) 점이 몰려 보인다
+          const dx = (sx - cx) / R, dy = (sy - cy) / R;
+          const rim = Math.min(1, Math.sqrt(dx * dx + dy * dy) / 1.75);
+          const alpha = (0.11 + depth * 0.34) * (0.24 + Math.pow(rim, 1.5) * 1.7);
+          if (alpha < 0.015) continue;
+
+          // 앞쪽 청록(gslt-400) → 뒤쪽 밝은 파랑
+          ctx.fillStyle =
+            `rgba(${Math.round(70 + depth * 30)}, ${Math.round(178 + depth * 55)}, ` +
+            `${Math.round(248 - depth * 30)}, ${Math.min(1, alpha).toFixed(3)})`;
+          ctx.fillRect(sx, sy, 1.25 + depth * 0.6, 1.25 + depth * 0.6);
+        }
+
+        ctx.globalCompositeOperation = 'source-over';
+      };
+
+      if (still) {
+        t = 1.1;
+        draw();
+        return;
+      }
+      const frame = () => {
+        t += 0.0055;
+        draw();
+        orbRaf = requestAnimationFrame(frame);
+      };
+      orbRaf = requestAnimationFrame(frame);
+    };
+    if (!gateOpen) startOrb();
 
     if (gateOpen && gate) gate.remove();
     else window.setTimeout(openGate, GATE_MAX_MS);
@@ -364,23 +465,16 @@ export default function Hero() {
         aria-live="polite"
         aria-label="첫 화면을 준비하고 있습니다"
       >
-        <div className="flex flex-col items-center gap-6 px-8">
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" className="w-10 h-10">
-            <defs>
-              <linearGradient id="gate-spark" x1="0" y1="24" x2="24" y2="0">
-                <stop offset="0%" stopColor="#4cc3d2" />
-                <stop offset="100%" stopColor="#93c5fd" />
-              </linearGradient>
-            </defs>
-            <path
-              d="M12 2.5 13.9 9.1a3 3 0 0 0 2 2L22.5 13l-6.6 1.9a3 3 0 0 0-2 2L12 23.5l-1.9-6.6a3 3 0 0 0-2-2L1.5 13l6.6-1.9a3 3 0 0 0 2-2Z"
-              fill="url(#gate-spark)"
-            />
-          </svg>
-          <p className="text-sm text-white/70 break-keep text-center">
+        <div className="flex flex-col items-center px-8">
+          {/* 입자 스퀘어클. 회전하면서 형태가 둥근 사각과 구 사이를 오간다.
+              가장자리에 입자가 몰려 테두리가 빛나고 속은 비어 어둡다. */}
+          <div className="hero-gate-orb-wrap">
+            <canvas ref={orbRef} aria-hidden="true" className="hero-gate-orb" />
+          </div>
+          <p className="hero-gate-label mt-1 text-sm text-white/70 break-keep text-center">
             공간 지능 솔루션을 불러오는 중입니다
           </p>
-          <span className="hero-gate-rail">
+          <span className="hero-gate-rail mt-6">
             <span className="hero-gate-bar" ref={gateBarRef} />
           </span>
         </div>
@@ -466,6 +560,12 @@ export default function Hero() {
                     if (chattingRef.current) return;
                     chattingRef.current = true;
                     stageRef.current?.classList.add('hero-chatting');
+                  }}
+                  onClose={() => {
+                    // 헤드라인이 되돌아온다. 같은 전환이 반대로 돌아 자연스럽게 이어진다.
+                    chattingRef.current = false;
+                    engagedRef.current = false;
+                    stageRef.current?.classList.remove('hero-chatting');
                   }}
                 />
               </div>
