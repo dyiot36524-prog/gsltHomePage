@@ -2,8 +2,6 @@
 
 import { useEffect, useRef } from 'react';
 import Chat from '@/components/Chat';
-import Link from 'next/link';
-import { ArrowUpRight } from '@/components/Icon';
 
 /**
  * 히어로 — 스크롤에 따라 재생되는 스마트빌딩 필름.
@@ -25,12 +23,6 @@ import { ArrowUpRight } from '@/components/Icon';
 /** navigator.connection — 표준 DOM 타입에 없어 필요한 필드만 좁혀 받는다 */
 type NetworkInfo = { saveData?: boolean; effectiveType?: string };
 
-const ROWS = [
-  { href: '/siot', name: '시옷 솔루션', desc: '무선 IoT 구축 · 통합 제어', hover: 'group-hover:text-siot-500' },
-  { href: '/bizmoa', name: '비즈모아 자동화', desc: 'IoT 시공 견적 자동화 SaaS', hover: 'group-hover:text-bizmoa-500' },
-  { href: '/morak', name: '모락 커뮤니티', desc: '기수제 모임 플랫폼 · 디지털 명함', hover: 'group-hover:text-morak-400' },
-] as const;
-
 export default function Hero() {
   const trackRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -41,18 +33,12 @@ export default function Hero() {
   const line1Ref = useRef<HTMLSpanElement>(null);
   const line2Ref = useRef<HTMLSpanElement>(null);
   const descRef = useRef<HTMLParagraphElement>(null);
-  const rowsRef = useRef<HTMLAnchorElement[]>([]);
-  const headRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<HTMLDivElement>(null);
   const dimRef = useRef<HTMLDivElement>(null);
   const gateRef = useRef<HTMLDivElement>(null);
   const gateBarRef = useRef<HTMLDivElement>(null);
-  /** 대화 중에는 스크롤이 조금 흔들려도 챗을 붙잡는다. ref로 두는 이유는 paint()가
-      매 프레임 도는 rAF 루프 안에 있어 리렌더를 유발하면 안 되기 때문이다.
-
-      **영구 고정이 아니다.** 한 번 대화하면 영영 붙잡던 판이 위로 스크롤해도 걷히지
-      않아 페이지가 멈춘 것처럼 보였다. 필름 쪽으로 충분히 되돌아가면(RELEASE) 풀어
-      히어로가 돌아온다. 사용자가 직접 닫을 수도 있다. */
+  /** 대화 중에는 스크롤이 흔들려도 상담판을 붙잡는다. ref로 두는 이유는 paint()가
+      매 프레임 도는 rAF 루프 안에 있어 리렌더를 유발하면 안 되기 때문이다. */
   const engagedRef = useRef(false);
 
   useEffect(() => {
@@ -63,7 +49,6 @@ export default function Hero() {
 
     const veil = veilRef.current;
     const cue = cueRef.current;
-    const rows = rowsRef.current.filter(Boolean);
 
     // ─── 영상 전체를 따로 받아, 스크럽을 네트워크에서 떼어낸다 ───
     // 스크럽은 매 프레임 currentTime을 바꾼다. 그때마다 브라우저는 진행 중이던 순차
@@ -201,16 +186,6 @@ export default function Hero() {
 
     const SCRUB_END = 0.6; // 필름 구간 안에서 영상이 끝까지 재생되는 지점
 
-    // 트랙을 늘려 필름 뒤에 상담 구간을 붙였다. FILM은 늘어난 트랙에서 예전 연출이
-    // 차지하는 비율이다. 이 환산이 없으면 같은 연출이 짧은 스크롤에 압축돼
-    // 영상과 글자가 예전보다 빨리 지나간다.
-    const FILM = 0.74;
-    // 헤드라인이 물러나고 상담판이 들어오는 구간. 그 뒤는 붙잡아 두는 구간이다.
-    const HANDOFF_IN = 0.76;
-    const HANDOFF_OUT = 0.9;
-    // 이 아래로 되돌아가면 대화 중이어도 붙잡기를 푼다. 인계 시작(0.76)보다 넉넉히
-    // 앞이라, 대화하다 손가락이 미끄러진 정도로는 판이 걷히지 않는다.
-    const RELEASE = 0.62;
     let duration = 0;
 
     const fade = (el: HTMLElement | null, t: number, dist: number) => {
@@ -225,9 +200,7 @@ export default function Hero() {
       el.style.setProperty('--y', `${((1 - easeOut(t)) * 110).toFixed(1)}%`);
     };
 
-    const paint = (raw: number) => {
-      // 필름 구간 안에서의 진행도. 예전 코드가 p로 쓰던 값과 같은 의미다.
-      const p = clamp01(raw / FILM);
+    const paint = (p: number) => {
       if (duration) {
         const t = Math.min(duration - 0.03, seg(p, 0, SCRUB_END) * duration);
         // 미세한 차이까지 대입하면 탐색이 밀리므로 임계값을 둔다.
@@ -249,40 +222,24 @@ export default function Hero() {
       maskUp(line1Ref.current, seg(p, 0.38, 0.58));
       maskUp(line2Ref.current, seg(p, 0.44, 0.64));
       fade(descRef.current, seg(p, 0.52, 0.68), 22);
-      rows.forEach((r, i) => {
-        const a = 0.56 + i * 0.035;
-        fade(r, seg(p, a, a + 0.16), 18);
-      });
 
-      // ── 필름 → 상담 인계 ──
-      // 헤드라인이 위로 물러나고 같은 자리에 상담판이 들어온다. 영상은 바닥에 그대로
-      // 남아 톤이 끊기지 않는다. 대화가 시작된 뒤에는 스크롤이 조금 움직여도
-      // 판이 걷히지 않게 붙잡는다.
-      // 대화 중이라도 필름 구간으로 되돌아가면 놓아준다 — 그래야 위로 스크롤이 통한다.
-      if (engagedRef.current && raw < RELEASE) engagedRef.current = false;
-      const h = engagedRef.current ? 1 : easeOut(seg(raw, HANDOFF_IN, HANDOFF_OUT));
-      const head = headRef.current;
+      // 상담판은 헤드라인·설명에 이어 같은 리듬으로 올라온다. 예전에는 솔루션 링크 세 줄이
+      // 이 자리를 썼는데, 그 목록을 빼고 상담을 바로 놓았다 — 히어로가 무엇을 하는 회사인지
+      // 말한 직후의 질문은 늘 "우리 공간에도 되나"이고, 그 질문을 받는 자리가 여기다.
+      //
+      // 대화 중에는 스크롤이 흔들려도 붙잡는다. 필름 앞쪽으로 충분히 되돌아가면 놓아준다.
+      if (engagedRef.current && p < 0.5) engagedRef.current = false;
+      const reveal = engagedRef.current ? 1 : easeOut(seg(p, 0.56, 0.78));
       const chat = chatRef.current;
-      if (dimRef.current) dimRef.current.style.opacity = h.toFixed(3);
-      if (head) {
-        head.style.opacity = (1 - h).toFixed(3);
-        head.style.transform = `translate3d(0, ${(-h * 36).toFixed(1)}px, 0)`;
-        head.style.pointerEvents = h > 0.5 ? 'none' : '';
-        head.setAttribute('aria-hidden', h > 0.5 ? 'true' : 'false');
-      }
       if (chat) {
-        chat.style.opacity = h.toFixed(3);
-        chat.style.transform = `translate3d(0, ${((1 - h) * 36).toFixed(1)}px, 0)`;
-        chat.style.pointerEvents = h > 0.6 ? '' : 'none';
-        chat.setAttribute('aria-hidden', h > 0.6 ? 'false' : 'true');
+        chat.style.setProperty('--o', reveal.toFixed(3));
+        chat.style.setProperty('--y', `${((1 - reveal) * 18).toFixed(1)}px`);
+        chat.style.pointerEvents = reveal > 0.9 ? '' : 'none';
+        chat.setAttribute('aria-hidden', reveal > 0.9 ? 'false' : 'true');
       }
-
-      // 리빌 전에는 투명한 링크가 클릭·탭을 가로채지 않게.
-      // 인계가 시작되면 헤드라인 쪽 링크도 함께 닫는다.
-      const live = p > 0.58 && h < 0.5;
-      rows.forEach((r) => {
-        r.style.pointerEvents = live ? '' : 'none';
-      });
+      // 상담판이 드러나는 만큼 화면을 눌러 준다. 필름용 veil은 아래에서 위로 옅어지는
+      // 그라디언트라 화면 중단이 밝게 남는데, 상담판은 그 높이까지 글자를 올린다.
+      if (dimRef.current) dimRef.current.style.opacity = (reveal * 0.85).toFixed(3);
     };
 
     let target = 0;
@@ -390,8 +347,8 @@ export default function Hero() {
           .hero-stage { position: relative; height: auto; min-height: 100svh; }
           .hero-veil { opacity: 1; }
           /* 겹쳐 두는 건 스크롤 인계가 있을 때만 뜻이 있다. JS가 없으면 세로로 쌓는다. */
-          .hero-swap { display: block; }
-          .hero-swap-item { opacity: 1 !important; }
+          /* JS가 없으면 리빌이 돌지 않는다. 상담판을 처음부터 보이게 둔다. */
+          .hero-fade { opacity: 1 !important; transform: none !important; }
         `}</style>
       </noscript>
 
@@ -468,8 +425,7 @@ export default function Hero() {
                 헤드라인이 위로 물러나고 그 자리에 상담판이 들어온다 — 영상은 바닥에
                 그대로 남아 톤이 끊기지 않는다. 둘을 grid로 겹쳐 두면 전환 중에
                 무대 높이가 흔들리지 않는다. */}
-            <div className="hero-swap max-w-6xl mx-auto w-full">
-            <div className="hero-swap-item hero-shadow text-center" ref={headRef}>
+            <div className="max-w-6xl mx-auto w-full hero-shadow text-center">
               <h1 className="hero-title font-black break-keep text-white">
                 <span className="hero-line hero-line-setup">
                   <span className="hero-line-inner hero-title-setup text-white/75" ref={kickerRef}>
@@ -487,7 +443,6 @@ export default function Hero() {
                 </span>
               </h1>
 
-              {/* 제품 이름 셋은 바로 아래 목록이 다시 부른다. 여기서는 회사가 무엇을 하는지만 말한다. */}
               <p
                 className="hero-fade hero-desc max-w-xl mx-auto text-white/70 leading-relaxed break-keep"
                 ref={descRef}
@@ -496,57 +451,16 @@ export default function Hero() {
                 스마트 공간으로 완성하는 IoT 구축 전문기업입니다.
               </p>
 
-              {/* 제품 세 개는 순서가 아니라 나란한 선택지다 — 01/02/03 번호를 붙이지 않는다.
-                  이름 칸에 고정 폭을 줘 설명이 한 줄로 서게 하고(전에는 이름 길이에 따라
-                  들쭉날쭉했다), 행 폭을 본문과 같은 자로 묶어 화살표가 멀리 떠 있지 않게 한다. */}
-              <div className="max-w-3xl mx-auto text-left">
-                {ROWS.map((r, i) => (
-                  <Link
-                    key={r.href}
-                    href={r.href}
-                    ref={(el) => {
-                      if (el) rowsRef.current[i] = el;
-                    }}
-                    className={`hero-fade hero-row group flex items-center gap-4 border-t ${
-                      i === ROWS.length - 1 ? 'border-b' : ''
-                    } border-white/10`}
-                  >
-                    <span
-                      className={`hero-row-name font-bold text-white shrink-0 sm:w-[13rem] ${r.hover} transition-colors duration-300`}
-                    >
-                      {r.name}
-                    </span>
-                    <span className="hidden sm:block flex-1 min-w-0 text-sm text-white/55 truncate">
-                      {r.desc}
-                    </span>
-                    <ArrowUpRight
-                      className={`w-5 h-5 md:w-6 md:h-6 ml-auto sm:ml-0 text-white/55 ${r.hover} group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-300 shrink-0`}
-                    />
-                  </Link>
-                ))}
+              {/* 예전에는 여기에 솔루션 링크 세 줄이 있었다. 목록을 빼고 상담을 바로 놓는다.
+                  헤드라인이 무엇을 하는 회사인지 말한 직후의 질문은 늘 "우리 공간에도 되나"이고,
+                  그 질문을 받는 자리가 여기다. 솔루션으로 가는 길은 헤더 드롭다운과 푸터에 있다. */}
+              <div className="hero-fade mt-8 md:mt-10" ref={chatRef} aria-hidden="true">
+                <Chat
+                  onEngage={() => {
+                    engagedRef.current = true;
+                  }}
+                />
               </div>
-            </div>
-
-            <div
-              className="hero-swap-item hero-shadow opacity-0"
-              ref={chatRef}
-              aria-hidden="true"
-            >
-              <Chat
-                onEngage={() => {
-                  engagedRef.current = true;
-                }}
-                onClose={() => {
-                  engagedRef.current = false;
-                  // 인계 시작 지점보다 앞으로 되돌려, 히어로 헤드라인이 다시 서게 한다.
-                  const track = trackRef.current;
-                  const stage = stageRef.current;
-                  if (!track || !stage) return;
-                  const span = track.offsetHeight - stage.offsetHeight;
-                  window.scrollTo({ top: Math.round(span * 0.55), behavior: 'smooth' });
-                }}
-              />
-            </div>
             </div>
           </div>
 

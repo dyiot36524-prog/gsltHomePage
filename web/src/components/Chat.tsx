@@ -139,21 +139,16 @@ export default function Chat({
     <div className="w-full max-w-2xl mx-auto text-center" aria-labelledby="chat-heading">
       {/* ── 머리. 대화가 시작되면 자리를 대화에 내준다 ── */}
       {!started ? (
-        <div className="mb-8">
-          <div className="flex items-center justify-center gap-2.5 mb-5">
-            <Sparkle className="w-8 h-8 md:w-9 md:h-9" />
-            <span className="text-sm font-bold tracking-[0.14em] text-white/65">AI 상담</span>
-          </div>
-          <h2
-            id="chat-heading"
-            className="text-[2.25rem] md:text-[3.25rem] font-black tracking-tight leading-[1.12] break-keep text-white"
-          >
-            우리 공간에도 <span className="text-gslt-400">될까요?</span>
-          </h2>
-          <p className="mt-4 text-base md:text-xl text-white/80 leading-relaxed break-keep max-w-[44ch] mx-auto">
-            공간 조건만 알려주시면 배선 공사 없이 가능한 범위를 바로 안내해 드립니다.
-          </p>
-        </div>
+        /* 히어로 헤드라인이 이미 이 회사가 무엇을 하는지 말했다. 여기서 큰 제목을
+           또 세우면 한 화면에 h1급이 둘이 되고, 세로도 감당하지 못한다.
+           작은 표식 한 줄만 두고 곧장 질문으로 넘어간다. */
+        <h2
+          id="chat-heading"
+          className="flex items-center justify-center gap-2.5 mb-5 text-sm font-bold tracking-[0.14em] text-white/70"
+        >
+          <Sparkle className="w-5 h-5" />
+          AI에게 바로 물어보기
+        </h2>
       ) : (
         /* 대화 중에는 히어로로 돌아갈 길을 화면에 둔다. 이게 없으면 판이 걷히지 않아
            페이지가 멈춘 것처럼 느껴진다 — 실제로 그렇게 만들었다가 고쳤다. */
