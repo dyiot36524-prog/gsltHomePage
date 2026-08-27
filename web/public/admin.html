@@ -784,6 +784,21 @@
       } catch (e) {
         const msg = `업로드 실패 [${stage}]: ` + (e && (e.message || e));
         console.error('[upload]', stage, e);
+        // 실패 사유를 서버 로그로 보낸다. 저장소로 직접 올리는 구간의 실패는 서버에
+        // 흔적이 남지 않아, 신고를 받고도 원인을 추측할 수밖에 없었다.
+        try {
+          fetch('/api/upload', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              // HTTP 헤더 값은 ASCII만 안전하다. 한글을 그대로 넣으면 로그에서 깨진다.
+              'x-upload-error': encodeURIComponent(
+                `${stage} | ${file.name} | ${file.type || '(형식없음)'} | ${file.size}B | ${(e && (e.message || e))}`,
+              ).slice(0, 900),
+            },
+            body: '{}',
+          }).catch(() => {});
+        } catch { /* 진단 전송 실패는 무시한다 */ }
         if (statusEl) { statusEl.textContent = msg; statusEl.className = 'text-sm text-center text-rose-600'; }
         return null;
       }

@@ -41,6 +41,23 @@ async function isAdminToken(idToken: string): Promise<boolean> {
 }
 
 export async function POST(request: Request) {
+  // 브라우저 쪽 실패를 여기로 보내 배포 로그에 남긴다.
+  //
+  // 토큰 발급(200) 뒤 저장소로 직접 올리는 구간에서 실패하면 서버에는 흔적이 남지
+  // 않는다. 그래서 "올라가긴 하는데 안 된다"는 신고를 받고도 무엇이 막혔는지 알 수
+  // 없어 추측으로 두 번 고쳤다. 이제 클라이언트가 실패 사유를 여기로 보낸다.
+  const diag = request.headers.get('x-upload-error');
+  if (diag) {
+    let text = diag;
+    try {
+      text = decodeURIComponent(diag);
+    } catch {
+      /* 인코딩이 깨졌으면 원문 그대로 남긴다 — 깨진 채로라도 있는 편이 없는 것보다 낫다 */
+    }
+    console.error('[api/upload] 클라이언트 실패:', text.slice(0, 600));
+    return Response.json({ ok: true });
+  }
+
   // 연결 여부를 환경변수 이름으로 미리 판정하지 않는다. Blob 스토어를 붙이는 방식이
   // 두 가지(RW 토큰 / OIDC + BLOB_STORE_ID)라 특정 이름의 유무로 막으면, 멀쩡히 연결된
   // 설정을 '연결 안 됨'으로 잘못 돌려보낸다 — 실제로 그렇게 한 번 막았다.
@@ -54,24 +71,21 @@ export async function POST(request: Request) {
       onBeforeGenerateToken: async (pathname, clientPayload) => {
         const ok = await isAdminToken(String(clientPayload || ''));
         if (!ok) throw new Error('관리자 로그인이 필요합니다.');
+        // 어떤 파일을 올리려 했는지 로그에 남긴다. 실패했을 때 형식·이름이 없으면
+        // 원인을 좁힐 수 없어 한 번 헤맸다.
+        console.log('[api/upload] 토큰 발급', pathname);
         return {
-          // 첨부로 쓰이는 형식만. 실수로 아무 파일이나 올리는 것을 막는 정도의 제한이다.
-          allowedContentTypes: [
-            'application/pdf',
-            'application/zip',
-            'application/x-zip-compressed',
-            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'application/haansofthwp',
-            'application/x-hwp',
-            'application/octet-stream',
-            'image/png',
-            'image/jpeg',
-            'image/webp',
-            'video/mp4',
-          ],
-          maximumSizeInBytes: 200 * 1024 * 1024, // 200MB — 상한은 두되 넉넉히
+          // 형식 화이트리스트를 두지 않는다.
+          //
+          // 목록에 없는 MIME이 오면 저장소가 PUT 단계에서 거절하는데, 그 실패는 토큰
+          // 발급(200) 뒤에 일어나 서버 로그에 아무것도 남지 않는다 — 관리자 화면에서는
+          // 그냥 "안 올라간다"로만 보인다. 한글(hwp)·한셀·알집처럼 브라우저마다 MIME을
+          // 제각기 붙이거나 빈 문자열로 두는 형식이 흔해서, 목록을 아무리 늘려도
+          // 같은 종류의 사고가 반복된다.
+          //
+          // 실제 통제는 이 위의 관리자 확인이다. 업로드할 수 있는 사람이 이미 관리자로
+          // 좁혀져 있고, 형식 제한은 그 위에 얹는 장식에 가까웠다.
+          maximumSizeInBytes: 200 * 1024 * 1024, // 200MB — 상한은 둔다
           addRandomSuffix: true,
         };
       },
