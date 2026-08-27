@@ -748,6 +748,32 @@
        토큰 발급은 /api/upload가 Firebase 로그인 토큰으로 관리자인지 확인한 뒤에만 해 준다. */
     const CLOUDINARY_MAX = 10 * 1024 * 1024;
 
+    /* 저장소에 쓸 경로를 만든다.
+       파일 이름을 그대로 쓰면 안 된다. 실제로 이런 값이 들어왔다 —
+
+         \\시옷_서비스소개서 2026.pdf.pdf
+
+       역슬래시로 시작하고, 한글과 공백이 섞이고, 확장자가 겹쳐 있다. 이 경로로 토큰이
+       서명되는데 실제 PUT 주소의 인코딩과 어긋나 저장소가 거절하고, SDK가 재시도하면서
+       진행률이 100%까지 갔다가 0%로 돌아간다(로그에 같은 파일의 토큰 발급이 4회 찍혔다).
+
+       보이는 이름은 attachments[].name에 따로 저장하므로, 저장 경로는 안전한 ASCII로
+       바꿔도 화면에서 잃는 것이 없다. */
+    function blobPathname(file) {
+      const raw = String(file?.name || 'file');
+      // 경로 구분자를 떼어 낸다. 일부 브라우저는 C:\\fakepath\\ 형태를 남긴다.
+      const base = raw.split(/[\\/]/).pop() || 'file';
+      const dot = base.lastIndexOf('.');
+      const ext = dot > 0 ? base.slice(dot + 1).toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 8) : '';
+      const stem = (dot > 0 ? base.slice(0, dot) : base)
+        .replace(/[^A-Za-z0-9._-]+/g, '-')   // 한글·공백 등은 하이픈으로
+        .replace(/-{2,}/g, '-')
+        .replace(/^[-.]+|[-.]+$/g, '')
+        .slice(0, 48);
+      const stamp = Date.now().toString(36);
+      return `attachments/${stem || 'file'}-${stamp}${ext ? '.' + ext : ''}`;
+    }
+
     async function uploadToBlob(file, statusEl) {
       let stage = '준비';
       try {
@@ -770,7 +796,7 @@
         }
 
         stage = '업로드';
-        const blob = await upload(file.name, file, {
+        const blob = await upload(blobPathname(file), file, {
           access: 'public',
           handleUploadUrl: '/api/upload',
           clientPayload: idToken,
