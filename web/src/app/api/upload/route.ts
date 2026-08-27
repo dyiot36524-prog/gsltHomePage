@@ -1,4 +1,5 @@
 import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
+import { put, get } from '@vercel/blob';
 
 /**
  * 대용량 첨부 업로드 (Vercel Blob, 클라이언트 직접 업로드).
@@ -37,6 +38,38 @@ async function isAdminToken(idToken: string): Promise<boolean> {
     return res.status === 200 || res.status === 404;
   } catch {
     return false;
+  }
+}
+
+/**
+ * 저장소 자가 점검.
+ *
+ * 업로드는 "토큰 발급(우리 서버) → 저장소로 직접 전송(브라우저)" 두 단계인데, 두 번째
+ * 단계는 우리 서버를 지나지 않아 실패해도 로그가 없다. 토큰 서명은 환경변수의
+ * BLOB_READ_WRITE_TOKEN으로 HMAC만 계산하므로 **값이 틀려도 발급은 200으로 성공한다** —
+ * 그래서 발급 로그만 보고는 토큰이 유효한지 알 수 없다.
+ *
+ * 이 GET은 같은 자격증명으로 서버에서 직접 16바이트를 써 보고 지운다. 성공하면 토큰이
+ * 유효한 것이고, 실패하면 그 사유가 그대로 응답에 실린다. 쓰는 내용이 고정 16바이트라
+ * 외부에서 반복 호출해도 비용이 없다.
+ */
+export async function GET() {
+  try {
+    // 실제 업로드와 같은 private으로 쓴다. 이 점검이 public으로 성공하는데 실제
+    // 업로드가 죽는(혹은 그 반대) 어긋남을 만들지 않기 위해서다.
+    // 파일은 지우지 않고 남긴다(21바이트) — /api/file 내려받기 경로의 상시 검증 대상이 된다.
+    const b = await put('attachments/_health.txt', 'ok-' + Date.now(), {
+      access: 'private',
+      allowOverwrite: true,
+      contentType: 'text/plain',
+    });
+    const back = await get('attachments/_health.txt', { access: 'private', useCache: false });
+    if (!back) throw new Error('썼는데 읽히지 않습니다.');
+    return Response.json({ ok: true, store: 'private 쓰기·읽기 정상', pathname: b.pathname });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error('[api/upload] 자가 점검 실패:', msg);
+    return Response.json({ ok: false, error: msg }, { status: 500 });
   }
 }
 

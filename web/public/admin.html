@@ -797,7 +797,9 @@
 
         stage = '업로드';
         const blob = await upload(blobPathname(file), file, {
-          access: 'public',
+          // 스토어가 비공개로 만들어져 있다. public으로 보내면 전송이 100% 끝난 뒤
+          // 저장소가 거절하고 SDK가 재시도하며 진행률이 0%로 되감긴다(자가 점검으로 확정).
+          access: 'private',
           handleUploadUrl: '/api/upload',
           clientPayload: idToken,
           onUploadProgress: ({ percentage }) => {
@@ -805,8 +807,11 @@
           },
         });
         if (statusEl) { statusEl.textContent = '업로드 완료'; statusEl.className = 'text-sm text-center text-gslt-600 font-bold'; }
+        // 비공개 블롭은 직접 URL로 열리지 않는다. 내려받기 라우트를 주소로 저장한다 —
+        // name까지 실어 방문자가 받는 파일명이 원래 한글 이름이 되게 한다.
+        const servedUrl = '/api/file?p=' + encodeURIComponent(blob.pathname) + '&name=' + encodeURIComponent(file.name);
         // Cloudinary 응답과 같은 모양으로 돌려줘 호출부가 구분하지 않아도 되게 한다
-        return { secure_url: blob.url, bytes: file.size, original_filename: file.name };
+        return { secure_url: servedUrl, bytes: file.size, original_filename: file.name };
       } catch (e) {
         const msg = `업로드 실패 [${stage}]: ` + (e && (e.message || e));
         console.error('[upload]', stage, e);
