@@ -738,10 +738,27 @@
     const CLOUDINARY_MAX = 10 * 1024 * 1024;
 
     async function uploadLargeFile(file, statusEl) {
+      let stage = '준비';
       try {
         if (statusEl) { statusEl.textContent = `대용량 업로드 중... (${(file.size / 1048576).toFixed(1)}MB)`; statusEl.className = 'text-sm text-center text-slate-500'; }
-        const { upload } = await import('https://esm.sh/@vercel/blob@2.8.0/client');
+
+        stage = '로그인 확인';
+        // auth.currentUser가 아직 안 잡혔을 수 있다(토큰 갱신 직후 등). 그대로 .getIdToken()을
+        // 부르면 'null의 속성을 읽을 수 없다'는 엉뚱한 메시지가 나와 원인을 못 찾는다.
+        if (!auth.currentUser) throw new Error('로그인이 풀렸습니다. 새로고침 후 다시 로그인해 주세요.');
         const idToken = await auth.currentUser.getIdToken();
+
+        stage = '업로드 모듈 불러오기';
+        // 외부 CDN이라 광고 차단기·사내 네트워크 정책에 막힐 수 있다. 막히면 무엇이
+        // 막혔는지 알려 준다 — 예전에는 여기서 조용히 실패해 원인을 알 수 없었다.
+        let upload;
+        try {
+          ({ upload } = await import('https://esm.sh/@vercel/blob@2.8.0/client'));
+        } catch (e) {
+          throw new Error('업로드 모듈을 불러오지 못했습니다. 광고 차단기를 끄거나 다른 네트워크에서 시도해 주세요. (' + (e.message || e) + ')');
+        }
+
+        stage = '업로드';
         const blob = await upload(file.name, file, {
           access: 'public',
           handleUploadUrl: '/api/upload',
@@ -754,9 +771,20 @@
         // Cloudinary 응답과 같은 모양으로 돌려줘 호출부가 구분하지 않아도 되게 한다
         return { secure_url: blob.url, bytes: file.size, original_filename: file.name };
       } catch (e) {
-        if (statusEl) { statusEl.textContent = '대용량 업로드 실패: ' + e.message; statusEl.className = 'text-sm text-center text-rose-600'; }
+        const msg = `대용량 업로드 실패 [${stage}]: ` + (e && (e.message || e));
+        console.error('[upload]', stage, e);
+        if (statusEl) { statusEl.textContent = msg; statusEl.className = 'text-sm text-center text-rose-600'; }
         return null;
       }
+    }
+
+    /* Cloudinary의 업로드 경로를 파일 종류로 고른다.
+       예전에는 전부 /auto/upload로 보냈는데, auto는 PDF를 **이미지**로 판정해
+       렌더링 파이프라인에 태운다. 그래서 조금 복잡한 PDF가 'Invalid PDF file'로
+       거절되고, 이미지 기준 용량 제한에도 함께 걸렸다. 문서는 바이트 그대로 두는
+       raw로 보내야 한다. */
+    function cloudinaryPath(file) {
+      return /^image\//.test(file.type || '') ? 'image' : 'raw';
     }
 
     async function uploadToCloudinary(file, statusEl, nameHint) {
@@ -770,7 +798,7 @@
       fd.append('file', file);
       fd.append('upload_preset', CLOUDINARY.uploadPreset);
       try {
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY.cloudName}/auto/upload`, { method: 'POST', body: fd });
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY.cloudName}/${cloudinaryPath(file)}/upload`, { method: 'POST', body: fd });
         const json = await res.json();
         if (!json.secure_url) throw new Error(json.error?.message || 'upload failed');
         if (statusEl) { statusEl.textContent = '업로드 완료'; statusEl.className = 'text-sm text-center text-gslt-600 font-bold'; }

@@ -82,6 +82,9 @@ export async function POST(request: Request) {
     return Response.json(result);
   } catch (e) {
     const raw = e instanceof Error ? e.message : '';
+    // 배포 로그에 남긴다. 브라우저 쪽 메시지만으로는 어느 단계에서 막혔는지
+    // 알 수 없어 원인 추적에 한 번 애를 먹었다.
+    console.error('[api/upload]', raw || e);
     // 스토어 미연결은 사용자가 고칠 수 있는 일이라 무엇을 해야 하는지 알려 준다.
     if (/BLOB_READ_WRITE_TOKEN|No token|store/i.test(raw)) {
       return Response.json(
