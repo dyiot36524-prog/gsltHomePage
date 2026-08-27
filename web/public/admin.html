@@ -731,16 +731,27 @@
     }
 
     /* Cloudinary 업로드 */
-    /* 10MB(Cloudinary 무료 플랜의 파일당 상한)를 넘는 파일은 Vercel Blob으로 보낸다.
-       23MB 회사소개서가 실제로 거절되면서 나뉜 경로다. 브라우저가 저장소로 직접 올리므로
-       서버 본문 상한(4.5MB)과도 무관하다. 토큰 발급은 /api/upload가 Firebase 로그인
-       토큰으로 관리자인지 확인한 뒤에만 해 준다. */
+    /* 저장소를 파일 종류로 가른다 — **이미지는 Cloudinary, 문서는 Vercel Blob.**
+
+       처음에는 전부 Cloudinary로 보내고 10MB를 넘을 때만 Blob으로 우회했다. 그런데
+       Cloudinary는 **PDF·ZIP 전송을 기본적으로 막는다.** 업로드는 성공하는데 그 URL을
+       열면 401이 떨어져, 관리자 화면에서는 '업로드 완료'로 보이지만 방문자는 파일을
+       받을 수 없었다. 실측으로 확인한 지점이다 —
+
+         raw/…/x.pdf   → 401      image/…/x.pdf → 401      raw/…/x.hwp → 200
+
+       계정 설정 한 곳(Allow delivery of PDF and ZIP files)에 사이트 동작이 걸려 있는
+       구조 자체가 위험하다. 문서는 우리가 통제하는 Blob으로 보낸다. 덤으로 10MB 상한도
+       사라진다. 이미지는 Cloudinary에 남긴다 — 변환(f_auto,q_auto,w_1600)이 쓸모 있다.
+
+       Blob은 브라우저가 저장소로 직접 올리므로 서버 본문 상한(4.5MB)과 무관하다.
+       토큰 발급은 /api/upload가 Firebase 로그인 토큰으로 관리자인지 확인한 뒤에만 해 준다. */
     const CLOUDINARY_MAX = 10 * 1024 * 1024;
 
-    async function uploadLargeFile(file, statusEl) {
+    async function uploadToBlob(file, statusEl) {
       let stage = '준비';
       try {
-        if (statusEl) { statusEl.textContent = `대용량 업로드 중... (${(file.size / 1048576).toFixed(1)}MB)`; statusEl.className = 'text-sm text-center text-slate-500'; }
+        if (statusEl) { statusEl.textContent = `업로드 중... (${(file.size / 1048576).toFixed(1)}MB)`; statusEl.className = 'text-sm text-center text-slate-500'; }
 
         stage = '로그인 확인';
         // auth.currentUser가 아직 안 잡혔을 수 있다(토큰 갱신 직후 등). 그대로 .getIdToken()을
@@ -764,31 +775,24 @@
           handleUploadUrl: '/api/upload',
           clientPayload: idToken,
           onUploadProgress: ({ percentage }) => {
-            if (statusEl) statusEl.textContent = `대용량 업로드 중... ${Math.round(percentage)}%`;
+            if (statusEl) statusEl.textContent = `업로드 중... ${Math.round(percentage)}%`;
           },
         });
         if (statusEl) { statusEl.textContent = '업로드 완료'; statusEl.className = 'text-sm text-center text-gslt-600 font-bold'; }
         // Cloudinary 응답과 같은 모양으로 돌려줘 호출부가 구분하지 않아도 되게 한다
         return { secure_url: blob.url, bytes: file.size, original_filename: file.name };
       } catch (e) {
-        const msg = `대용량 업로드 실패 [${stage}]: ` + (e && (e.message || e));
+        const msg = `업로드 실패 [${stage}]: ` + (e && (e.message || e));
         console.error('[upload]', stage, e);
         if (statusEl) { statusEl.textContent = msg; statusEl.className = 'text-sm text-center text-rose-600'; }
         return null;
       }
     }
 
-    /* Cloudinary의 업로드 경로를 파일 종류로 고른다.
-       예전에는 전부 /auto/upload로 보냈는데, auto는 PDF를 **이미지**로 판정해
-       렌더링 파이프라인에 태운다. 그래서 조금 복잡한 PDF가 'Invalid PDF file'로
-       거절되고, 이미지 기준 용량 제한에도 함께 걸렸다. 문서는 바이트 그대로 두는
-       raw로 보내야 한다. */
-    function cloudinaryPath(file) {
-      return /^image\//.test(file.type || '') ? 'image' : 'raw';
-    }
-
     async function uploadToCloudinary(file, statusEl, nameHint) {
-      if (file && file.size > CLOUDINARY_MAX) return uploadLargeFile(file, statusEl);
+      // 문서는 종류를 가리지 않고 Blob으로. 이미지도 10MB를 넘으면 Blob으로 넘긴다.
+      const isImage = /^image\//.test(file?.type || '');
+      if (file && (!isImage || file.size > CLOUDINARY_MAX)) return uploadToBlob(file, statusEl);
       if (!CLOUDINARY.cloudName || !CLOUDINARY.uploadPreset) {
         if (statusEl) { statusEl.textContent = '이미지 업로드는 Cloudinary 설정이 필요합니다. (URL 직접 입력은 가능)'; statusEl.className = 'text-sm text-center text-rose-600'; }
         return null;
@@ -798,7 +802,7 @@
       fd.append('file', file);
       fd.append('upload_preset', CLOUDINARY.uploadPreset);
       try {
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY.cloudName}/${cloudinaryPath(file)}/upload`, { method: 'POST', body: fd });
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY.cloudName}/image/upload`, { method: 'POST', body: fd });
         const json = await res.json();
         if (!json.secure_url) throw new Error(json.error?.message || 'upload failed');
         if (statusEl) { statusEl.textContent = '업로드 완료'; statusEl.className = 'text-sm text-center text-gslt-600 font-bold'; }
