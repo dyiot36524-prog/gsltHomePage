@@ -472,7 +472,7 @@ export default function Hero() {
             <canvas ref={orbRef} aria-hidden="true" className="hero-gate-orb" />
           </div>
           <p className="hero-gate-label mt-1 text-sm text-white/70 break-keep text-center">
-            공간 지능 솔루션을 불러오는 중입니다
+            지에스엘티에 방문 감사드립니다
           </p>
           <span className="hero-gate-rail mt-6">
             <span className="hero-gate-bar" ref={gateBarRef} />
