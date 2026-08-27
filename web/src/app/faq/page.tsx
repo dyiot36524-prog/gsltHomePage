@@ -85,7 +85,7 @@ export default function FaqPage() {
       />
       <Header active="" />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <PageHead title={TITLE} lead="무선 IoT 구축을 검토하실 때 가장 많이 받는 질문입니다." />
 
         <dl className="max-w-[68ch] border-t-2 border-slate-900">
