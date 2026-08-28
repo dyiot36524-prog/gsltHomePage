@@ -69,7 +69,9 @@ export default function SupportPage() {
           lead="무엇이든 도와드리겠습니다. 아래 연락처로 문의 주시면 담당자가 확인 후 답변드립니다."
         />
 
-        <section className="max-w-[68ch]">
+        {/* 연락처 표도 컨테이너를 가로지른다. 뉴스·자료실·FAQ와 같은 자다 —
+            이 페이지만 오른쪽이 비어 다른 사이트처럼 보였다. */}
+        <section>
           <h2 className="text-sm font-bold text-slate-900 mb-4">연락처</h2>
           {/* 표는 위아래가 닫혀야 문서로 읽힌다 — 위 2px 먹선, 아래 1px 헤어라인. */}
           <dl className="border-t-2 border-t-slate-900 border-b border-b-slate-200 divide-y divide-slate-200">
@@ -89,11 +91,11 @@ export default function SupportPage() {
           </dl>
         </section>
 
-        <aside className="max-w-[68ch] mt-16 bg-slate-900 text-white p-8 md:p-10">
+        <aside className="mt-16 bg-slate-900 text-white p-8 md:p-10">
           <p className="text-xl md:text-2xl font-black tracking-tight break-keep mb-2">
             상담이 필요하신가요?
           </p>
-          <p className="text-white/60 break-keep mb-7">
+          <p className="max-w-[62ch] text-white/60 break-keep mb-7">
             현장 조건에 맞는 구성을 무료로 제안해 드립니다.
           </p>
           <Link

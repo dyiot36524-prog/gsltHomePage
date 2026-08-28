@@ -88,22 +88,25 @@ export default function FaqPage() {
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <PageHead title={TITLE} lead="무선 IoT 구축을 검토하실 때 가장 많이 받는 질문입니다." />
 
-        <dl className="max-w-[68ch] border-t-2 border-slate-900">
+        {/* 괘선은 컨테이너를 가로지른다. 뉴스·자료실 목록과 같은 자다.
+            예전에는 목록 전체를 68ch로 묶어, 같은 컨테이너 안에서 이 페이지만
+            오른쪽 440px이 비어 보였다. 읽기 폭은 답변 문단이 따로 지킨다. */}
+        <dl className="border-t-2 border-slate-900">
           {FAQ.map((f) => (
             <div key={f.q} className="border-b border-slate-200 py-7">
               <dt className="text-lg md:text-xl font-black text-slate-900 break-keep leading-snug">
                 {f.q}
               </dt>
-              <dd className="mt-3 text-[15px] md:text-base text-slate-600 break-keep leading-relaxed">
+              <dd className="mt-3 max-w-[68ch] text-[15px] md:text-base text-slate-600 break-keep leading-relaxed">
                 {f.a}
               </dd>
             </div>
           ))}
         </dl>
 
-        <div className="max-w-[68ch] mt-10 bg-slate-900 text-white p-8 md:p-10">
+        <div className="mt-16 bg-slate-900 text-white p-8 md:p-10">
           <p className="text-xl md:text-2xl font-black break-keep">여기에 없는 질문이라면</p>
-          <p className="mt-3 text-sm md:text-base text-white/70 break-keep leading-relaxed">
+          <p className="mt-3 max-w-[62ch] text-sm md:text-base text-white/70 break-keep leading-relaxed">
             공간 조건과 원하는 제어 범위를 알려주시면 현장에 맞는 구성을 제안해 드립니다.
           </p>
           <Link
