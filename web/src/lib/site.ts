@@ -24,7 +24,7 @@ export const COMPANY = {
 
 /** 헤더 드롭다운·푸터·모바일 행이 모두 이 목록 하나를 쓴다. */
 export const SOLUTIONS = [
-  { href: '/siot', name: '시옷', en: 'Siot', desc: '무선 IoT 통합 제어', dot: '#f97316' },
+  { href: '/siot', name: '시옷', en: 'Siot', desc: '실시간 공간 예약 · 예약 연동 자동화', dot: '#f97316' },
   { href: '/bizmoa', name: '비즈모아', en: 'BizMoa', desc: 'IoT 시공 견적 자동화 SaaS', dot: '#3b82f6' },
   { href: '/morak', name: '모락', en: 'Morak', desc: '기수제 모임 커뮤니티', dot: '#00c2c2' },
 ] as const;
