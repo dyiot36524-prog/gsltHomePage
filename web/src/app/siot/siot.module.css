@@ -1,4 +1,4 @@
-/* 시옷 페이지 전용 연출. 원본 siot.html의 <style> 블록을 그대로 옮긴 것.
+/* 시옷 페이지 전용 연출.
    전역 .reveal 은 globals.css + Reveal 컴포넌트가 담당하므로 여기엔 없다. */
 
 /* 원본은 전역 ::selection 을 주황으로 덮어썼다. 다른 페이지로 새지 않도록 이 페이지 안으로만 한정한다. */
@@ -37,6 +37,315 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* ─────────────────────────────────────────────────────────────
+   예약 → 자동화 사슬. 이 페이지의 유일한 연출된 순간이다.
+
+   이 제품이 파는 것은 '제어'가 아니라 **예약이 곧 준비**라는 연결이고,
+   그 연결은 문장보다 빛이 지나가는 것으로 보여야 한다. 불빛이 왼쪽에서
+   오른쪽으로 레일을 타고 지나가며 각 단계가 차례로 켜진다 —
+   공간이 예약 시간에 맞춰 켜지는 것과 같은 움직임이다.
+   진입 시 한 번만 돌고, transform(scale)만 움직이므로 레이아웃을 건드리지 않는다.
+   ───────────────────────────────────────────────────────────── */
+
+.chain {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.chainStep {
+  position: relative;
+  padding-top: 1.75rem;
+}
+
+.chainDot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* 꺼진 레일 */
+.chainStep:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 1.25rem;
+  right: -1rem;
+  top: 0.3125rem;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* 지나가는 불빛 */
+.chainStep:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 1.25rem;
+  right: -1rem;
+  top: 0.3125rem;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(251, 146, 60, 0.25), #fb923c);
+  box-shadow: 0 0 8px 1px rgba(249, 115, 22, 0.45);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+/* 초기 은닉은 .js-reveal 문서에서만. 스크립트가 죽어도 글은 남아야 한다. */
+:global(.js-reveal) .chainStep {
+  opacity: 0.25;
+}
+
+.chain:global(.on) .chainStep {
+  animation: stepIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: calc(0.5s + var(--i) * 0.34s);
+}
+
+.chain:global(.on) .chainStep:not(:last-child)::after {
+  animation: traceX 0.34s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+  animation-delay: calc(0.62s + var(--i) * 0.34s);
+}
+
+.chain:global(.on) .chainDot {
+  animation: ignite 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: calc(0.5s + var(--i) * 0.34s);
+}
+
+@keyframes stepIn {
+  from { opacity: 0.25; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes traceX {
+  to { transform: scaleX(1); }
+}
+
+@keyframes traceY {
+  to { transform: scaleY(1); }
+}
+
+@keyframes ignite {
+  0% {
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 0 0 rgba(249, 115, 22, 0);
+  }
+  45% {
+    background: #fdba74;
+    box-shadow: 0 0 0 6px rgba(249, 115, 22, 0.26), 0 0 22px 5px rgba(249, 115, 22, 0.55);
+  }
+  100% {
+    background: #f97316;
+    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15), 0 0 14px 2px rgba(249, 115, 22, 0.35);
+  }
+}
+
+/* 좁은 화면에서는 레일이 세로로 선다. */
+@media (max-width: 1023px) {
+  .chain {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .chainStep {
+    padding-top: 0;
+    padding-left: 2rem;
+    padding-bottom: 1.75rem;
+  }
+
+  .chainDot { top: 0.25rem; }
+
+  .chainStep:not(:last-child)::before,
+  .chainStep:not(:last-child)::after {
+    left: 0.25rem;
+    right: auto;
+    top: 1.25rem;
+    bottom: -0.25rem;
+    width: 1px;
+    height: auto;
+  }
+
+  .chainStep:not(:last-child)::after {
+    background: linear-gradient(180deg, rgba(251, 146, 60, 0.25), #fb923c);
+    transform: scaleY(0);
+    transform-origin: top center;
+  }
+
+  .chain:global(.on) .chainStep:not(:last-child)::after {
+    animation-name: traceY;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   제품 화면 — 어두운 방 안의 켜진 판
+
+   화면을 흰 지면 위에 얹으면 화면 자체가 흰 UI라 경계가 사라진다.
+   실제로 그렇게 보였다: 640px로 줄인 관제 화면은 회색 얼룩이었다.
+   어두운 바닥으로 옮기고 폭을 지면 전체로 넓힌다. 뒤에 주황 번짐을 두면
+   판이 스스로 빛을 내는 것처럼 읽히는데, 이 제품이 실제로 하는 일과 같은 그림이다.
+
+   --lit 은 0(꺼짐) → 1(켜짐). Reveal이 .on을 붙이면 1이 된다.
+   기본값이 1인 이유는 스크립트가 없는 환경에서 화면이 사라지면 안 되기 때문이다.
+   ───────────────────────────────────────────────────────────── */
+
+.feature {
+  --lit: 1;
+  --glow: 0;
+}
+
+:global(.js-reveal) .feature { --lit: 0; }
+:global(.js-reveal) .feature:global(.on) { --lit: 1; }
+
+.stage {
+  position: relative;
+  margin-top: 3rem;
+}
+
+/* 판 뒤의 번짐. filter:blur 대신 부드러운 방사 그라디언트를 쓴다 —
+   1200px 넓이에 blur를 상시로 걸면 모바일에서 합성 비용이 크다. */
+.bloom {
+  position: absolute;
+  left: -8%;
+  right: -8%;
+  top: -14%;
+  bottom: -22%;
+  border-radius: 50%;
+  background: radial-gradient(
+    58% 54% at 50% 46%,
+    rgba(249, 115, 22, 0.44) 0%,
+    rgba(249, 115, 22, 0.2) 38%,
+    rgba(249, 115, 22, 0) 72%
+  );
+  opacity: var(--lit);
+  transform: scale(calc(1 + var(--glow) * 0.09));
+  transition: opacity 1.1s ease 0.2s, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.screen {
+  position: relative;
+  display: block;
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #0f1117;
+  box-shadow:
+    0 24px 60px -20px rgba(0, 0, 0, 0.8),
+    0 8px 20px -12px rgba(0, 0, 0, 0.6);
+  opacity: var(--lit);
+  transform: translateY(calc((1 - var(--lit)) * 3rem))
+             scale(calc(0.965 + var(--lit) * 0.035));
+  transition:
+    opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.1s,
+    transform 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.1s,
+    filter 0.9s ease 0.1s,
+    border-color 0.4s ease;
+}
+
+/* 초점이 맞아 들어오는 느낌. 큰 면에 blur를 거는 비용이 있어 넓은 화면에서만 쓴다. */
+@media (min-width: 1024px) {
+  .screen { filter: blur(calc((1 - var(--lit)) * 5px)); }
+}
+
+.shot {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* 좁은 화면에서는 지면 여백을 뚫고 화면 끝까지 나간다.
+   358px와 390px의 차이는 작지만, 화면이 기기 폭을 꽉 채우는 것과
+   여백 안에 얌전히 앉는 것은 존재감이 다르다. */
+@media (max-width: 767px) {
+  .stage {
+    margin-inline: -1rem;
+    margin-top: 2.5rem;
+  }
+
+  .screen {
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+  }
+}
+
+/* 세로로 긴 화면(이력표·장면 목록)은 위쪽이 정보다.
+   아래를 잘라 어두운 바닥으로 녹이면 지면 길이도 잡히고 '아래로 이어진다'가 읽힌다. */
+.tall .screen {
+  max-height: min(70vh, 640px);
+  -webkit-mask-image: linear-gradient(to bottom, #000 76%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 76%, transparent 100%);
+}
+
+/* 전원이 들어오는 순간의 한 줄기 빛. 진입할 때 한 번만 지나간다. */
+.screen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    102deg,
+    transparent 34%,
+    rgba(255, 255, 255, 0.5) 47%,
+    transparent 60%
+  );
+  transform: translateX(-115%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.feature:global(.on) .screen::after {
+  animation: sheen 1.5s cubic-bezier(0.4, 0, 0.2, 1) 0.45s;
+}
+
+@keyframes sheen {
+  0% { transform: translateX(-115%); opacity: 0; }
+  22% { opacity: 0.42; }
+  100% { transform: translateX(115%); opacity: 0; }
+}
+
+@media (hover: hover) {
+  .feature:hover { --glow: 1; }
+  .feature:hover .screen { border-color: rgba(249, 115, 22, 0.4); }
+}
+
+/* ── 설명 ──
+   제목·리드가 왼쪽 기둥, 사양표가 오른쪽이다. 처음에는 제목만 왼쪽에 두었는데
+   오른쪽이 훨씬 길어져 왼쪽 아래에 200px짜리 빈 구멍이 생겼다. 리드를 제목 밑으로
+   내리고 사양표를 아래로 붙이면 두 기둥의 바닥이 맞는다. */
+
+.head {
+  display: grid;
+  gap: 2rem;
+}
+
+@media (min-width: 1024px) {
+  .head {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: 0 3.5rem;
+    align-items: end;
+  }
+}
+
+.specs {
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.specs > li {
+  padding: 0.875rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+/* 목록으로 보이는 것이므로 계단으로 들어온다. 총 지연은 8번째 항목 기준 0.42초. */
+:global(.js-reveal) .stagger > li {
+  opacity: 0;
+}
+
+.stagger:global(.on) > li {
+  animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: calc(var(--i) * 60ms);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .heroLineInner,
   .fadeUp {
@@ -44,4 +353,26 @@
     transform: none;
     opacity: 1;
   }
+
+  :global(.js-reveal) .chainStep { opacity: 1; }
+
+  .chain:global(.on) .chainStep,
+  .chain:global(.on) .chainDot,
+  .chain:global(.on) .chainStep:not(:last-child)::after,
+  .feature:global(.on) .screen::after {
+    animation: none;
+  }
+
+  .chainStep:not(:last-child)::after { transform: none; }
+  .chainDot { background: #f97316; }
+
+  .bloom,
+  .screen {
+    transition: none;
+    transform: none;
+    filter: none;
+  }
+
+  :global(.js-reveal) .stagger > li { opacity: 1; }
+  .stagger:global(.on) > li { animation: none; }
 }
