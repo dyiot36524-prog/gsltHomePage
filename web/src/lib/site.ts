@@ -8,8 +8,10 @@ export const SITE = {
   // 정답으로 알고 카톡 공유 썸네일도 깨진다. gslt.kr은 www로 넘어오므로 www를 정본으로 둔다.
   url: 'https://www.gslt.kr',
   tagline: 'IoT Space Builder',
+  // 홈의 meta description이자 여러 스키마의 설명으로 함께 쓰인다.
+  // 한글 60~85자 — 짧으면 정보가 부족하고 길면 검색 결과에서 잘린다.
   description:
-    '무선 IoT 구축 전문기업. 배선 공사 없이 오피스·주거·빌딩을 스마트 공간으로 완성합니다.',
+    '무선 IoT 구축 전문기업. 배선 공사 없이 오피스·주거·빌딩을 스마트 공간으로 완성합니다. 상담부터 시공·유지보수까지 직접 수행합니다.',
 } as const;
 
 export const COMPANY = {

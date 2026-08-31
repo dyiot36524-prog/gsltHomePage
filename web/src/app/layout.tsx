@@ -1,6 +1,12 @@
 import type { Metadata } from 'next';
 import { SITE } from '@/lib/site';
-import { jsonLd, organizationSchema, webSiteSchema } from '@/lib/schema';
+import {
+  jsonLd,
+  localBusinessSchema,
+  organizationSchema,
+  serviceSchema,
+  webSiteSchema,
+} from '@/lib/schema';
 import Script from 'next/script';
 import ScrollTop from '@/components/ScrollTop';
 import { Analytics } from '@vercel/analytics/next';
@@ -8,13 +14,20 @@ import './globals.css';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
+  // 홈 제목이 77자여서 검색 결과에서 잘리고 있었다. 한글 기준 구글이 보여 주는 폭은
+  // 약 30자다. 잘린 뒤에 무엇이 남는지 통제하지 못하느니, 노리는 질의 하나로 짧게 쓴다.
   title: {
-    default: 'GSLT - IoT 구축 전문기업 | 스마트오피스·스마트홈·빌딩 IoT',
+    default: '무선 IoT 구축 전문기업 | GSLT',
     template: '%s | GSLT',
   },
   description: SITE.description,
   // 홈의 정본 주소. 하위 페이지는 각자 alternates.canonical을 갖고 있다.
-  alternates: { canonical: '/', types: { 'application/rss+xml': `${SITE.url}/rss.xml` } },
+  // canonical을 '/'로 두면 Next가 슬래시 없는 주소로 낸다. sitemap은 슬래시를 붙여
+  // 내보내므로 둘이 어긋난다 — 같은 페이지를 두 주소로 신고하는 셈이라 명시적으로 맞춘다.
+  alternates: {
+    canonical: `${SITE.url}/`,
+    types: { 'application/rss+xml': `${SITE.url}/rss.xml` },
+  },
   openGraph: {
     type: 'website',
     siteName: SITE.name,
@@ -96,7 +109,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             next/script가 아니라 <script>를 직접 쓴다 — 크롤러가 HTML을 받는 순간 있어야 한다. */}
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: jsonLd(organizationSchema, webSiteSchema) }}
+          dangerouslySetInnerHTML={{
+            __html: jsonLd(organizationSchema, webSiteSchema, serviceSchema, localBusinessSchema),
+          }}
         />
       </head>
       <body className="font-sans antialiased">

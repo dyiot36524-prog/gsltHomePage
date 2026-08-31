@@ -1,26 +1,18 @@
 import type { Metadata } from 'next';
+import { pageSeo } from '@/lib/seo';
+import { jsonLd, breadcrumbSchema } from '@/lib/schema';
 import Link from 'next/link';
 import Image from 'next/image';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import TimelineProgress from './TimelineProgress';
 
-export const metadata: Metadata = {
-  title: '회사소개 - IoT 구축 전문기업',
+export const metadata: Metadata = pageSeo({
+  title: "회사소개",
   description:
-    '지에스엘티(GSLT)는 무선 IoT 구축 전문기업입니다. 상담부터 실측·설계·시공·유지보수까지, 오피스·주거·빌딩을 배선 공사 없이 스마트 공간으로 완성합니다.',
-  alternates: { canonical: '/about' },
-  openGraph: {
-    type: 'website',
-    siteName: 'GSLT',
-    title: '회사소개 - GSLT | IoT 구축 전문기업',
-    description:
-      '상담부터 실측·설계·시공·유지보수까지. 배선 공사 없는 무선 IoT 구축 전문기업 지에스엘티입니다.',
-    url: '/about',
-    images: ['/img/og-image.png'],
-    locale: 'ko_KR',
-  },
-};
+    "2023년 설립한 무선 IoT 구축 전문기업 지에스엘티. 대표·연혁·수상 이력과 시공 5단계 절차를 소개합니다.",
+  path: '/about',
+});
 
 /** 원본 <style>에 있던 페이지 전용 장식 — 타임라인 현재 지점 펄스와 아웃라인 워터마크. */
 const pageCss = `
@@ -43,6 +35,18 @@ const pageCss = `
 export default function AboutPage() {
   return (
     <div className="bg-slate-50 text-slate-900">
+      {/* 검색 결과의 경로 표시와 AI의 사이트 구조 이해에 함께 쓰인다. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: jsonLd(
+            breadcrumbSchema([
+              { name: '홈', path: '/' },
+              { name: '회사소개', path: '/about' },
+            ]),
+          ),
+        }}
+      />
       <style dangerouslySetInnerHTML={{ __html: pageCss }} />
       <Header active="about" />
 

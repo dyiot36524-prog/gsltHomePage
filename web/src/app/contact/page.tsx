@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { pageSeo } from '@/lib/seo';
+import { jsonLd, breadcrumbSchema } from '@/lib/schema';
 import type { ReactNode } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -9,20 +11,12 @@ import { COMPANY } from '@/lib/site';
 const DESCRIPTION =
   '전화·이메일로 바로 연결하거나 상담을 신청하세요. 현장 조건에 맞는 구성과 견적을 무료로 제안해 드립니다.';
 
-export const metadata: Metadata = {
-  title: '도입 문의',
-  description: DESCRIPTION,
-  alternates: { canonical: '/contact' },
-  openGraph: {
-    type: 'website',
-    siteName: 'GSLT',
-    locale: 'ko_KR',
-    url: '/contact',
-    title: '도입 문의 | GSLT',
-    description: DESCRIPTION,
-    images: ['/img/og-image.png'],
-  },
-};
+export const metadata: Metadata = pageSeo({
+  title: "도입 문의",
+  description:
+    "공간 조건을 알려주시면 현장에 맞는 구성과 견적을 제안해 드립니다. 실측 전 상담과 개략 안내는 무료입니다.",
+  path: '/contact',
+});
 
 /** 시공 5단계. PRODUCT.md가 정의한 실제 진행 순서이고, 신청 이후에 무엇이 일어나는지를 알린다. */
 const STEPS = ['상담·요구분석', '현장실측', '설계·견적', '시공·설치', '검수·유지보수'];
@@ -54,6 +48,13 @@ function Line({ label, children }: { label: string; children: ReactNode }) {
 export default function ContactPage() {
   return (
     <>
+      {/* 검색 결과의 경로 표시와 AI의 사이트 구조 이해에 함께 쓰인다. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: jsonLd(breadcrumbSchema([{ name: "홈", path: "/" }, { name: "도입 문의", path: "/contact" }])),
+        }}
+      />
       <Header active="" />
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <PageHead

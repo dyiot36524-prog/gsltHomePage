@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageSeo } from '@/lib/seo';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -43,20 +44,12 @@ const TITLE = '자주 묻는 질문';
 const DESCRIPTION =
   '배선 공사 없이 설치가 가능한지, 임대 사무실에도 되는지, 구축 절차와 비용 산정, 설치 후 유지보수까지 — 무선 IoT 구축을 검토할 때 가장 많이 받는 질문에 답합니다.';
 
-export const metadata: Metadata = {
-  title: TITLE,
-  description: DESCRIPTION,
-  alternates: { canonical: '/faq' },
-  openGraph: {
-    type: 'website',
-    siteName: SITE.name,
-    locale: 'ko_KR',
-    title: `${TITLE} | ${SITE.name}`,
-    description: DESCRIPTION,
-    url: '/faq',
-    images: ['/img/og-image.png'],
-  },
-};
+export const metadata: Metadata = pageSeo({
+  title: "자주 묻는 질문",
+  description:
+    "배선 공사 없이 되는지, 임대 사무실도 가능한지, 비용은 어떻게 산정되는지 — 자주 받는 질문을 모았습니다.",
+  path: '/faq',
+});
 
 /** FAQPage 스키마 — 구글이 검색 결과에 질문을 직접 펼쳐 보여줄 수 있게 한다. */
 const faqSchema = {

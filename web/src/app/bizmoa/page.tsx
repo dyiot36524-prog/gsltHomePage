@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { pageSeo } from '@/lib/seo';
+import { jsonLd, breadcrumbSchema } from '@/lib/schema';
 import type { CSSProperties } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -8,21 +10,12 @@ import Reveal from '@/components/Reveal';
 import styles from './bizmoa.module.css';
 import { SITE } from '@/lib/site';
 
-export const metadata: Metadata = {
-  title: '비즈모아(BizMoa) - IoT 시공 견적 자동화 SaaS',
+export const metadata: Metadata = pageSeo({
+  title: "비즈모아 — 견적 자동화",
   description:
-    '건축 도면 위에 장비를 배치하면 견적서·계약서·납품확인서가 자동 생성됩니다. IoT·스마트홈 시공업체를 위한 올인원 B2B SaaS 비즈모아(BizMoa).',
-  alternates: { canonical: '/bizmoa' },
-  openGraph: {
-    type: 'website',
-    siteName: 'GSLT',
-    locale: 'ko_KR',
-    title: '비즈모아(BizMoa) - IoT 시공 견적 자동화 SaaS | GSLT',
-    description: '도면 위에서 견적까지, 한 번에. 시공·설치업체용 올인원 SaaS 비즈모아.',
-    url: '/bizmoa',
-    images: ['/img/og-image.png'],
-  },
-};
+    "도면에 장비를 배치하면 견적서·계약서·납품확인서가 자동 생성됩니다. IoT·전기 시공업체를 위한 B2B SaaS.",
+  path: '/bizmoa',
+});
 
 const ld = {
   '@context': 'https://schema.org',
@@ -129,6 +122,13 @@ const STEPS = [
 export default function BizmoaPage() {
   return (
     <>
+      {/* 검색 결과의 경로 표시와 AI의 사이트 구조 이해에 함께 쓰인다. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: jsonLd(breadcrumbSchema([{ name: "홈", path: "/" }, { name: "비즈모아", path: "/bizmoa" }])),
+        }}
+      />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
       <Header active="" />
 

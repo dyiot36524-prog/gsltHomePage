@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { pageSeo } from '@/lib/seo';
+import { jsonLd, breadcrumbSchema } from '@/lib/schema';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -6,21 +8,12 @@ import PageHead from '@/components/PageHead';
 import { ArrowRight, ArrowUpRight } from '@/components/Icon';
 import { COMPANY } from '@/lib/site';
 
-export const metadata: Metadata = {
-  title: '고객 지원',
+export const metadata: Metadata = pageSeo({
+  title: "고객 지원",
   description:
-    '지에스엘티(GSLT) 고객 지원 안내입니다. 전화·이메일 문의처와 오시는 길, 무료 상담 신청 방법을 확인하실 수 있습니다.',
-  alternates: { canonical: '/support' },
-  openGraph: {
-    type: 'website',
-    siteName: 'GSLT',
-    locale: 'ko_KR',
-    url: '/support',
-    title: '고객 지원 | GSLT',
-    description: '전화·이메일 문의처와 오시는 길을 안내합니다. 무엇이든 도와드리겠습니다.',
-    images: ['/img/og-image.png'],
-  },
-};
+    "전화 070-4659-4804, 이메일 문의는 24시간 내 답변드립니다. 오시는 길과 운영 시간을 함께 안내합니다.",
+  path: '/support',
+});
 
 /**
  * 연락 수단 한 줄. 왼쪽에 항목 이름, 오른쪽에 값이 서는 표 구조다.
@@ -62,6 +55,13 @@ function ContactRow({
 export default function SupportPage() {
   return (
     <>
+      {/* 검색 결과의 경로 표시와 AI의 사이트 구조 이해에 함께 쓰인다. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: jsonLd(breadcrumbSchema([{ name: "홈", path: "/" }, { name: "고객 지원", path: "/support" }])),
+        }}
+      />
       <Header />
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <PageHead

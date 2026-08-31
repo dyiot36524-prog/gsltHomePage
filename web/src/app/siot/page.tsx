@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { pageSeo } from '@/lib/seo';
+import { jsonLd, breadcrumbSchema } from '@/lib/schema';
 import type { CSSProperties } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -15,20 +17,12 @@ const TITLE = '시옷(Siot) - 무선 IoT 통합 제어';
 const DESCRIPTION =
   '배선 공사 없는 무선 IoT 구축 솔루션 시옷(Siot). 조명·블라인드·공조를 하나의 대시보드에서 제어하고, 1초 단위 실시간 모니터링과 99.9% 제어 안정성을 제공합니다.';
 
-export const metadata: Metadata = {
-  title: TITLE,
-  description: DESCRIPTION,
-  alternates: { canonical: '/siot' },
-  openGraph: {
-    type: 'website',
-    siteName: SITE.name,
-    locale: 'ko_KR',
-    title: `${TITLE} | ${SITE.name}`,
-    description: '배선 공사 없이 공간 전체를 제어합니다. 무선 IoT 구축 솔루션 시옷.',
-    url: '/siot',
-    images: ['/img/og-image.png'],
-  },
-};
+export const metadata: Metadata = pageSeo({
+  title: "시옷 — 무선 IoT 통합제어",
+  description:
+    "배선 공사 없이 조명·공조·출입을 하나로 제어합니다. 제조사가 달라도 묶는 개방형 IoT 통합관제 솔루션 시옷.",
+  path: '/siot',
+});
 
 const ld = {
   '@context': 'https://schema.org',
@@ -48,6 +42,13 @@ const d = (value: string) => ({ '--d': value }) as CSSProperties;
 export default function SiotPage() {
   return (
     <>
+      {/* 검색 결과의 경로 표시와 AI의 사이트 구조 이해에 함께 쓰인다. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: jsonLd(breadcrumbSchema([{ name: "홈", path: "/" }, { name: "시옷", path: "/siot" }])),
+        }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }}

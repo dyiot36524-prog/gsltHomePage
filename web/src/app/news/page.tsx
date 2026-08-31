@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { pageSeo } from '@/lib/seo';
+import { jsonLd, breadcrumbSchema } from '@/lib/schema';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Header from '@/components/Header';
@@ -8,20 +10,12 @@ import { RecordEmpty, RecordHead, RecordList, RecordRow } from '@/components/Rec
 import { ArrowUpRight } from '@/components/Icon';
 import { getPosts, isHiddenCategory, isPress, mediaUrl, postDateLabel, postHref, postMirrors, type Post } from '@/lib/posts';
 
-export const metadata: Metadata = {
-  title: 'GSLT 소식',
-  description: '지에스엘티의 새로운 소식과 언론보도를 기록순으로 전합니다.',
-  alternates: { canonical: '/news' },
-  openGraph: {
-    type: 'website',
-    siteName: 'GSLT',
-    locale: 'ko_KR',
-    url: '/news',
-    title: 'GSLT 소식 | GSLT',
-    description: '지에스엘티의 새로운 소식과 언론보도를 기록순으로 전합니다.',
-    images: ['/img/og-image.png'],
-  },
-};
+export const metadata: Metadata = pageSeo({
+  title: "GSLT 소식",
+  description:
+    "지에스엘티의 새 소식과 언론보도입니다. 수상·특허 출원·국책과제 선정 기록을 시간순으로 모아 전해 드립니다.",
+  path: '/news',
+});
 
 type Filter = 'all' | 'article' | 'press';
 
@@ -59,6 +53,13 @@ export default async function NewsPage({
 
   return (
     <>
+      {/* 검색 결과의 경로 표시와 AI의 사이트 구조 이해에 함께 쓰인다. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: jsonLd(breadcrumbSchema([{ name: "홈", path: "/" }, { name: "GSLT 소식", path: "/news" }])),
+        }}
+      />
       <Header active="news" />
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <PageHead

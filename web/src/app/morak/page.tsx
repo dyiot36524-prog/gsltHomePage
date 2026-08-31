@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { pageSeo } from '@/lib/seo';
+import { jsonLd, breadcrumbSchema } from '@/lib/schema';
 import type { CSSProperties } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -7,22 +9,12 @@ import Footer from '@/components/Footer';
 import Reveal from '@/components/Reveal';
 import styles from './morak.module.css';
 
-export const metadata: Metadata = {
-  title: '모락(Morak) - 기수제 모임 커뮤니티 플랫폼',
+export const metadata: Metadata = pageSeo({
+  title: "모락 — 기수제 모임 앱",
   description:
-    '원우회·동문회를 위한 모임 커뮤니티 플랫폼 모락(Morak). 디지털 명함 QR 교환, 기수·직책 관리, 일정·참석 관리, 원우수첩까지 — 흩어진 모임 운영을 한곳에서.',
-  alternates: { canonical: '/morak' },
-  openGraph: {
-    type: 'website',
-    siteName: 'GSLT',
-    title: '모락(Morak) - 기수제 모임 커뮤니티 플랫폼 | GSLT',
-    description: '기수제 모임을 한곳에서. 디지털 명함으로 만나는 원우회·동문회 커뮤니티.',
-    url: '/morak',
-    images: ['/img/og-image.png'],
-    locale: 'ko_KR',
-  },
-  icons: { icon: '/img/morak-icon.png' },
-};
+    "원우회·동문회를 위한 모바일 커뮤니티 앱. 디지털 명함 QR 교환, 기수·직책 관리, 일정과 참석을 한곳에서.",
+  path: '/morak',
+});
 
 /** 원본 <head>의 JSON-LD */
 const ld = {
@@ -122,6 +114,13 @@ const SCREENS = [
 export default function MorakPage() {
   return (
     <>
+      {/* 검색 결과의 경로 표시와 AI의 사이트 구조 이해에 함께 쓰인다. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: jsonLd(breadcrumbSchema([{ name: "홈", path: "/" }, { name: "모락", path: "/morak" }])),
+        }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }}

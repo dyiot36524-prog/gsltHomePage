@@ -24,7 +24,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = SITE.url;
 
   const fixed: MetadataRoute.Sitemap = [
-    { url: `${base}/`, changeFrequency: 'weekly', priority: 1.0 },
+    // 홈은 슬래시 없이 낸다. next.config의 trailingSlash: false 때문에 Next가
+    // canonical을 슬래시 없는 주소로 정규화하는데, sitemap만 슬래시를 붙이면
+    // 같은 페이지를 두 주소로 신고하는 셈이 된다. 정규화하는 쪽에 맞춘다.
+    { url: base, changeFrequency: 'weekly', priority: 1.0 },
     { url: `${base}/about`, changeFrequency: 'monthly', priority: 0.9 },
     { url: `${base}/siot`, changeFrequency: 'monthly', priority: 0.9 },
     { url: `${base}/bizmoa`, changeFrequency: 'monthly', priority: 0.9 },

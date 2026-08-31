@@ -1,4 +1,4 @@
-import { SITE, COMPANY } from '@/lib/site';
+import { SITE, COMPANY, SOLUTIONS } from '@/lib/site';
 
 /**
  * 구조화 데이터(JSON-LD).
@@ -58,6 +58,71 @@ export const organizationSchema = {
     'IoT 통합 관제',
     'AI 예지보전',
   ],
+} as const;
+
+/**
+ * 이 회사가 파는 것.
+ *
+ * Organization만 있으면 검색엔진은 "회사가 존재한다"까지만 안다. 이 회사의 본업은
+ * 솔루션 판매가 아니라 **현장 시공**인데, 그 사실이 구조화 데이터 어디에도 없었다.
+ * "성남 IoT 시공업체" 같은 질의에서 후보로 올라가려면 무엇을 어느 지역에 제공하는지가
+ * 기계가 읽는 형식으로 있어야 한다.
+ */
+export const serviceSchema = {
+  '@type': 'Service',
+  '@id': `${SITE.url}/#service`,
+  name: '무선 IoT 구축 · 스마트 공간 시공',
+  serviceType: '무선 IoT 구축',
+  provider: { '@id': ORG_ID },
+  areaServed: { '@type': 'Country', name: '대한민국' },
+  description:
+    '배선 공사 없이 기존 오피스·주거·빌딩을 스마트 공간으로 전환한다. ' +
+    '상담·요구분석, 현장실측, 설계·견적, 시공·설치, 검수·유지보수 다섯 단계를 직접 수행한다.',
+  hasOfferCatalog: {
+    '@type': 'OfferCatalog',
+    name: '솔루션',
+    itemListElement: SOLUTIONS.map((s) => ({
+      '@type': 'Offer',
+      itemOffered: {
+        '@type': 'Service',
+        name: `${s.name}(${s.en})`,
+        description: s.desc,
+        url: `${SITE.url}${s.href}`,
+      },
+    })),
+  },
+} as const;
+
+/**
+ * 주소가 있는 사업장.
+ *
+ * 성남 소재이고 전화·영업시간이 있는데 쓰지 않고 있었다. 지역 질의와 지도 결과에서
+ * 잡히려면 필요하다. Organization과 같은 실체이므로 `@id`로 이어 둘로 세지 않게 한다.
+ */
+export const localBusinessSchema = {
+  '@type': 'LocalBusiness',
+  '@id': `${SITE.url}/#localbusiness`,
+  name: SITE.nameKo,
+  parentOrganization: { '@id': ORG_ID },
+  url: SITE.url,
+  telephone: `+82-${COMPANY.tel.replace(/^0/, '')}`,
+  email: COMPANY.email,
+  image: `${SITE.url}/img/og-image.png`,
+  priceRange: '현장 실측 후 견적',
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: '중원구 둔촌대로 388번길 24, 우림라이온스밸리 3차 501호',
+    addressLocality: '성남시',
+    addressRegion: '경기도',
+    postalCode: '13215',
+    addressCountry: 'KR',
+  },
+  openingHoursSpecification: {
+    '@type': 'OpeningHoursSpecification',
+    dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+    opens: '09:00',
+    closes: '18:00',
+  },
 } as const;
 
 /** 사이트 자체. 검색창에서 사이트 내 검색이 뜨게 하려면 WebSite가 필요하다. */

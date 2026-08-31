@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { pageSeo } from '@/lib/seo';
+import { jsonLd, breadcrumbSchema } from '@/lib/schema';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Header from '@/components/Header';
@@ -7,20 +9,12 @@ import PageHead from '@/components/PageHead';
 import { RecordEmpty, RecordHead, RecordList, RecordRow } from '@/components/Record';
 import { getPosts, isHiddenCategory, mediaUrl, postDateLabel, type Attachment, type Post } from '@/lib/posts';
 
-export const metadata: Metadata = {
-  title: '자료실',
-  description: '회사소개서·제품 자료를 내려받을 수 있습니다.',
-  alternates: { canonical: '/downloads' },
-  openGraph: {
-    type: 'website',
-    siteName: 'GSLT',
-    locale: 'ko_KR',
-    url: '/downloads',
-    title: '자료실 | GSLT',
-    description: '회사소개서·제품 자료를 내려받을 수 있습니다.',
-    images: ['/img/og-image.png'],
-  },
-};
+export const metadata: Metadata = pageSeo({
+  title: "자료실",
+  description:
+    "지에스엘티 회사소개서와 솔루션 자료를 내려받으실 수 있습니다. 필요한 자료가 있으시면 언제든 요청해 주세요.",
+  path: '/downloads',
+});
 
 function ext(name: string) {
   const m = /\.([a-z0-9]{1,5})$/i.exec(String(name || '').trim());
@@ -59,6 +53,13 @@ export default async function DownloadsPage() {
 
   return (
     <>
+      {/* 검색 결과의 경로 표시와 AI의 사이트 구조 이해에 함께 쓰인다. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: jsonLd(breadcrumbSchema([{ name: "홈", path: "/" }, { name: "자료실", path: "/downloads" }])),
+        }}
+      />
       <Header active="downloads" />
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <PageHead
