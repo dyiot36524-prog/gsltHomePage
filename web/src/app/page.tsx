@@ -20,8 +20,8 @@ import HomeBody from '@/components/HomeBody';
  * 검색엔진이 홈을 어떤 질의에 매길지 판단할 근거가 없었고, AI 답변은 인용할 문단이
  * 없어 홈을 아예 참조하지 않았다. **첫 화면은 그대로다** — 스크롤해야 나온다.
  *
- * 본문이 흰 지면으로 이어지므로 푸터의 flush를 뗀다. 히어로가 마지막이던 때는
- * 어두운 면 뒤에 흰 띠가 드러나 flush가 필요했지만, 이제 그 사이에 본문이 있다.
+ * 구축 분야 판도 어두운 면으로 끝나므로 푸터 위 여백을 내지 않는다(flush).
+ * 기본 mt-24를 두면 그 사이로 body 흰색이 96px 띠로 드러난다.
  */
 export default function Home() {
   return (
@@ -29,7 +29,7 @@ export default function Home() {
       <Header active="home" overlay />
       <Hero />
       <HomeBody />
-      <Footer />
+      <Footer flush />
     </>
   );
 }

@@ -265,8 +265,90 @@ export default function SiotPage() {
               </div>
             </Reveal>
 
+            <Reveal className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+              <div>
+                <p className="text-siot-700 text-xs font-black tracking-widest uppercase mb-4">05 — 장면 자동화</p>
+                <h2 className="text-3xl md:text-4xl font-black break-keep leading-tight mb-5">
+                  한 번 눌러<br />공간 하나를 통째로
+                </h2>
+                <p className="text-slate-500 leading-[1.85] break-keep mb-6">
+                  장면 하나에 여러 장비를 묶습니다. &lsquo;입실&rsquo;을 누르면 그 구역의 전등과
+                  빔프로젝터, 공조가 함께 켜지고 &lsquo;퇴실&rsquo;이면 함께 꺼집니다. 예약과 연결해
+                  두면 사람이 누르지 않아도 시간에 맞춰 실행됩니다.
+                </p>
+                <p className="text-sm text-slate-500 leading-relaxed break-keep">
+                  성남 쇼룸에서는 스크린골프 3사(카카오VX 프렌즈스크린 · 골프존파크 ·
+                  GDR 아카데미) 타석마다 입·퇴실 장면을 걸어 두고 실증하고 있습니다.
+                </p>
+              </div>
+              <Image
+                src="https://res.cloudinary.com/r9pnckwj/image/upload/f_auto,q_auto,w_1600/v1788165692/xycz4pulxk4euucgq3oc.png"
+                alt="시옷 자동화 제어 화면 — 입실·퇴실 장면 카드가 나열되어 있다"
+                width={2048}
+                height={1586}
+                sizes="(max-width:1024px) 100vw, 640px"
+                className="w-full h-auto rounded-2xl border border-slate-200 shadow-sm"
+              />
+            </Reveal>
+
+            <Reveal className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+              <Image
+                src="https://res.cloudinary.com/r9pnckwj/image/upload/f_auto,q_auto,w_1600/v1788170672/dsawwe8q4bjyyyo1qllq.png"
+                alt="시옷 이력 화면 — 예약 변경·QR 발송·출입 인증 기록이 한 표에 남는다"
+                width={2048}
+                height={2178}
+                sizes="(max-width:1024px) 100vw, 640px"
+                className="w-full h-auto rounded-2xl border border-slate-200 shadow-sm"
+              />
+              <div className="lg:order-first">
+                <p className="text-siot-700 text-xs font-black tracking-widest uppercase mb-4">06 — 이력·회원</p>
+                <h2 className="text-3xl md:text-4xl font-black break-keep leading-tight mb-5">
+                  누가 언제 왔는지<br />전부 남습니다
+                </h2>
+                <p className="text-slate-500 leading-[1.85] break-keep mb-6">
+                  예약 변경, 입장 QR 발송, 출입 인증이 한 표에 시간순으로 쌓입니다. 각 줄에
+                  사람이 눌러 처리한 것인지 시스템이 자동으로 처리한 것인지, QR 스캔으로
+                  들어온 것인지가 구분되어 남습니다.
+                </p>
+                <ul className="space-y-2.5 text-sm text-slate-600">
+                  {[
+                    '결과를 예약확정·이용중·이용완료·노쇼로 자동 구분',
+                    '회원별 방문·노쇼 횟수 집계 — 상습 노쇼를 운영에 반영',
+                    '연락처는 마스킹해 보관 · 필요할 때 CSV로 반출',
+                  ].map((t) => (
+                    <li key={t} className="flex gap-2.5 break-keep">
+                      <span aria-hidden="true" className="text-siot-500 font-bold shrink-0">·</span>
+                      {t}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </Reveal>
+
+            <Reveal className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+              <div>
+                <p className="text-siot-700 text-xs font-black tracking-widest uppercase mb-4">07 — 개별 제어</p>
+                <h2 className="text-3xl md:text-4xl font-black break-keep leading-tight mb-5">
+                  장비 하나까지<br />손으로 잡습니다
+                </h2>
+                <p className="text-slate-500 leading-[1.85] break-keep">
+                  자동화가 전부는 아닙니다. 공간별·장비 종류별로 묶어 두고 스위치 한 구,
+                  블라인드 열림 정도, 에어컨 온도를 개별로 조작합니다. 적외선 리모컨이 필요한
+                  기존 기기도 그대로 붙습니다. 끊긴 장비는 카드에 오프라인으로 표시됩니다.
+                </p>
+              </div>
+              <Image
+                src="https://res.cloudinary.com/r9pnckwj/image/upload/f_auto,q_auto,w_1600/v1788170696/kf5vy5atuzxkhfuszak6.png"
+                alt="시옷 홈 관리 화면 — 스위치·커튼·플러그·센서를 종류별 탭으로 제어한다"
+                width={2048}
+                height={1362}
+                sizes="(max-width:1024px) 100vw, 640px"
+                className="w-full h-auto rounded-2xl border border-slate-200 shadow-sm"
+              />
+            </Reveal>
+
             <Reveal>
-              <p className="text-siot-700 text-xs font-black tracking-widest uppercase mb-4">05 — 붙는 장비</p>
+              <p className="text-siot-700 text-xs font-black tracking-widest uppercase mb-4">08 — 붙는 장비</p>
               <h2 className="text-3xl md:text-4xl font-black break-keep leading-tight mb-5">
                 제조사가 달라도<br />하나로 묶습니다
               </h2>
