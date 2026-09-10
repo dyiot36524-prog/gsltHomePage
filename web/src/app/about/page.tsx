@@ -167,20 +167,69 @@ export default function AboutPage() {
             <div className="flex-1 h-px bg-slate-200"></div>
           </div>
 
-          {/* 포브스 대상은 이 페이지 맨 위로 올라갔다. 여기서 또 크게 반복하면 광고가 된다 —
-              연혁 항목으로만 남기고, 공적 확인 세 건을 사실 그대로 잇는다.
-              벤처기업 확인은 상이 아니라 **유효기간이 있는 자격**이라, 확인유형과 기간을
-              함께 적는다. 2029-09-08이 지나면 이 카드는 사실이 아니게 된다. */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-            <div className="rounded-3xl bg-white border border-slate-200/70 p-8">
-              <p className="text-xl md:text-2xl font-black leading-snug break-keep text-slate-900">
-                벤처기업 확인
-              </p>
-              <p className="mt-2 text-sm font-bold text-gslt-700">혁신성장유형 · 2026</p>
-              <p className="mt-3 text-sm text-slate-500 break-keep leading-relaxed">
-                벤처기업확인기관 확인 — 유효기간 2026.09.09 ~ 2029.09.08
-              </p>
+          {/* 벤처기업 확인 — 확인서 실물과 제원표를 나란히.
+              확인서는 상장이 아니라 **서류**다. 트로피처럼 크게 걸면 형식이 어긋나고,
+              340px로 앉히면 그 안의 글자는 어차피 읽히지 않는다. 그래서 이미지는
+              '이 서류가 실재한다'는 증거로만 두고, 읽을 값은 옆의 제원표가 전부 글자로
+              갖는다 — 검색엔진도 스크린리더도 그림 속 글자는 읽지 못한다.
+              원본 해상도가 687px라 표시 폭 340px가 2배 밀도에서 딱 맞는 상한이다.
+
+              상이 아니라 **유효기간이 있는 자격**이라 기간을 반드시 함께 적는다.
+              2029-09-08이 지나면 이 판은 사실이 아니게 된다. */}
+          <div className="rounded-3xl bg-white border border-slate-200/70 overflow-hidden mb-6">
+            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+              <div className="bg-slate-100 border-b lg:border-b-0 lg:border-r border-slate-200/70 p-8 md:p-10 flex justify-center">
+                <a
+                  href="/img/venture-certificate-2026.png"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group block w-full max-w-[340px] rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gslt-600"
+                >
+                  <Image
+                    src="/img/venture-certificate-2026.png"
+                    alt="벤처기업확인서. 기업명 (주)지에스엘티, 확인유형 혁신성장유형, 유효기간 2026년 09월 09일부터 2029년 09월 08일까지, 발급번호 제20260909030005호, 벤처기업확인기관장 직인."
+                    width={687}
+                    height={903}
+                    sizes="(max-width: 1023px) 90vw, 340px"
+                    className="w-full h-auto block rounded-sm border border-slate-300/80 shadow-[0_20px_44px_-18px_rgb(15_23_42/0.4),0_4px_12px_-6px_rgb(15_23_42/0.25)] transition-transform duration-500 group-hover:-translate-y-1.5 motion-reduce:transition-none motion-reduce:group-hover:translate-y-0"
+                  />
+                  <span className="mt-5 block text-center text-xs font-bold text-slate-600 group-hover:text-gslt-700 transition-colors">
+                    확인서 원본 크게 보기
+                  </span>
+                </a>
+              </div>
+
+              <div className="p-8 md:p-12 flex flex-col justify-center">
+                <p className="text-2xl md:text-3xl font-black leading-snug break-keep text-slate-900">
+                  벤처기업 확인
+                </p>
+                <p className="mt-2 text-sm font-bold text-gslt-700">혁신성장유형 · 2026</p>
+                <p className="mt-5 text-slate-600 break-keep leading-relaxed max-w-[52ch]">
+                  「벤처기업육성에 관한 특별법」 제25조에 따른 확인입니다. 혁신성장유형은
+                  기술의 혁신성과 사업의 성장성을 평가해 확인하는 유형입니다.
+                </p>
+                <dl className="mt-8 border-t border-slate-300">
+                  {[
+                    ['확인기관', '벤처기업확인기관 · (사)벤처기업협회'],
+                    ['발급번호', '제20260909030005호'],
+                    ['유효기간', '2026.09.09 ~ 2029.09.08'],
+                  ].map(([k, v]) => (
+                    <div
+                      key={k}
+                      className="grid gap-0.5 sm:grid-cols-[6rem_minmax(0,1fr)] sm:gap-5 sm:items-baseline py-3.5 border-b border-slate-200"
+                    >
+                      <dt className="text-sm text-slate-500">{k}</dt>
+                      <dd className="text-sm font-bold text-slate-900 break-keep">{v}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
             </div>
+          </div>
+
+          {/* 포브스 대상은 이 페이지 맨 위로 올라갔다. 여기서 또 크게 반복하면 광고가 된다 —
+              연혁 항목으로만 남기고, 국책과제 두 건을 사실 그대로 잇는다. */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
             <div className="rounded-3xl bg-white border border-slate-200/70 p-8">
               <p className="text-xl md:text-2xl font-black leading-snug break-keep text-slate-900">
                 디딤돌 R&amp;D 국책과제 선정
