@@ -22,11 +22,39 @@ export const COMPANY = {
   email: 'gs7078103107@gmail.com',
 } as const;
 
-/** 헤더 드롭다운·푸터·모바일 행이 모두 이 목록 하나를 쓴다. */
+/**
+ * 헤더 솔루션 패널·푸터·모바일 행이 모두 이 목록 하나를 쓴다.
+ *
+ * `lead`와 `pillars`는 헤더 카드 패널에서만 쓰는 추가 설명이다. 시옷이 이 회사의
+ * 대표 솔루션이라 패널 맨 위에 큰 카드로 서고, 나머지 둘은 그 아래 한 줄로 붙는다.
+ * 순서가 곧 비중이므로 시옷을 첫 항목으로 둔다.
+ */
 export const SOLUTIONS = [
-  { href: '/siot', name: '시옷', en: 'SIOT', desc: '빌딩 관제 · 공간 예약 · 복합 자동화', dot: '#f97316' },
-  { href: '/bizmoa', name: '비즈모아', en: 'BizMoa', desc: 'IoT 시공 견적 자동화 SaaS', dot: '#3b82f6' },
-  { href: '/morak', name: '모락', en: 'Morak', desc: '기수제 모임 커뮤니티', dot: '#00c2c2' },
+  {
+    href: '/siot',
+    name: '시옷',
+    en: 'SIOT',
+    desc: '빌딩 관제 · 공간 예약 · 복합 자동화',
+    dot: '#f97316',
+    lead: '예약과 출입, 조명과 공조, 에너지와 기록까지 하나의 플랫폼 위에.',
+    pillars: ['통합 관제', '공간 예약', '출입 연동', '자동화', '에너지'],
+  },
+  {
+    href: '/bizmoa',
+    name: '비즈모아',
+    en: 'BizMoa',
+    desc: 'IoT 시공 견적 자동화 SaaS',
+    dot: '#3b82f6',
+    lead: '도면 위에 장비를 배치하면 견적서·계약서·납품확인서가 자동으로 나옵니다.',
+  },
+  {
+    href: '/morak',
+    name: '모락',
+    en: 'Morak',
+    desc: '기수제 모임 커뮤니티',
+    dot: '#00c2c2',
+    lead: '디지털 명함으로 만나는 원우회·동문회 커뮤니티 플랫폼.',
+  },
 ] as const;
 
 /** key는 활성 메뉴 표시에 쓴다. menu가 있으면 관리자에서 숨길 수 있는 항목. */

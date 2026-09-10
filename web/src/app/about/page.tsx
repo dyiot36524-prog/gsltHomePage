@@ -67,9 +67,10 @@ export default function AboutPage() {
             />
             {/* 위의 큰 그림은 수상 엠블럼(연출물)이고, 오른쪽 작은 사진은 시상식 현장이다.
                 엠블럼만 있으면 '만든 그림'이지만 현장 사진이 붙으면 '실제로 받았다'가 된다.
-                원본이 306px라 300px가 상한이다 — 더 키우면 뭉갠다.
+                원본이 306px라 520px에서는 1.7배로 늘어난다. 사진(연속 계조)은 UI 스크린샷과
+                달리 확대에 관대해서 이 정도는 버티지만, **원본이 있으면 그쪽이 훨씬 낫다.**
                 사진 속 인물은 이름을 적지 않는다. 그림만 보고 누구인지 단정할 수 없다. */}
-            <div className="p-8 md:p-12 grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+            <div className="p-8 md:p-12 grid gap-8 lg:gap-12 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-end">
               <div>
                 <p className="text-2xl md:text-4xl font-black leading-[1.2] break-keep text-white">
                   포브스 코리아 2026 소비자 선정 최고의 브랜드 대상
@@ -89,13 +90,13 @@ export default function AboutPage() {
                 </Link>
               </div>
 
-              <figure className="lg:w-[300px] shrink-0">
+              <figure>
                 <Image
                   src="/img/forbes-ceremony-2026.png"
                   alt="포브스 코리아 2026 소비자 선정 최고의 브랜드 대상 시상식 현장. 수상자가 상패를 들고 무대에 서 있고, 배경 화면에 '2026 소비자선정 최고의 브랜드 大賞 Korea Best Brand Awards', 2026년 2월 27일 금요일 오전 10시 20분, 중앙일보·과학기술정보통신부·산업통상자원부·Forbes 로고가 보인다."
                   width={306}
                   height={230}
-                  sizes="(max-width: 1023px) 90vw, 300px"
+                  sizes="(max-width: 1023px) 92vw, 520px"
                   className="w-full h-auto block rounded-xl border border-white/15"
                 />
                 <figcaption className="mt-3 text-xs text-slate-400 break-keep">
@@ -133,49 +134,69 @@ export default function AboutPage() {
           </dl>
         </div>
 
-        {/* IoT 구축 프로세스 */}
-        <div className="bg-[#0a0a0f] py-20 md:py-28 mb-20 md:mb-28">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-3xl md:text-5xl font-black tracking-tight text-white break-keep mb-4">IoT 구축, 이렇게 진행됩니다</h2>
-            <p className="text-white/50 break-keep mb-14 max-w-2xl">무선 IoT라서 대규모 공사가 없습니다. 지금 쓰는 공간 그대로,
-              다섯 단계면 스마트 공간이 됩니다.</p>
+        {/* IoT 구축 프로세스.
 
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-              <div className="border-t border-white/15 pt-6">
+            전에는 화면 폭을 꽉 채운 검은 띠였다. 흰 지면 사이에 먹지가 한 장 끼어든 것처럼
+            **페이지가 거기서 끊겼다.** 이 페이지의 다른 검은 면(맨 위 수상 판, 맨 아래 CTA)은
+            전부 둥근 패널인데 이것만 전폭이었던 탓이다.
+
+            같은 문법으로 되돌린다 — 여백 안에 앉는 둥근 패널. 청록 번짐을 하나 두어
+            먹지가 아니라 만들어진 물건으로 읽히게 한다. 순서가 정보이므로 ol로 세운다. */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20 md:mb-28">
+          <div className="relative overflow-hidden rounded-3xl bg-[#0a0a0f] p-8 md:p-14">
+            <div className="absolute -top-40 -left-28 w-[32rem] h-[32rem] rounded-full bg-gslt-500 blur-[150px] opacity-[0.13] pointer-events-none" />
+            <div className="relative">
+              <h2 className="text-3xl md:text-5xl font-black tracking-tight text-white break-keep mb-4">IoT 구축, 이렇게 진행됩니다</h2>
+              <p className="text-white/55 break-keep mb-14 max-w-2xl">무선 IoT라서 대규모 공사가 없습니다. 지금 쓰는 공간 그대로,
+                다섯 단계면 스마트 공간이 됩니다.</p>
+
+              <ol className="grid grid-cols-1 md:grid-cols-5 gap-6">
+              <li key="01" className="relative border-t border-white/15 pt-6">
+                {/* 단계 위 작은 점. 다섯 개가 한 줄에 찍혀 진행 눈금처럼 읽힌다. */}
+                <span aria-hidden="true" className="absolute -top-[3px] left-0 h-[5px] w-[5px] rounded-full bg-gslt-400" />
                 <p className="font-bold text-lg mb-2 flex items-baseline gap-2.5">
                   <span className="text-gslt-400 tabular-nums text-sm shrink-0">01</span>
-                  <span className="text-white">상담·요구 분석</span>
+                  <span className="text-white break-keep">상담·요구 분석</span>
                 </p>
                 <p className="text-white/55 text-sm break-keep leading-relaxed">공간 용도와 원하는 제어 범위를 듣고 최적 구성을 제안합니다.</p>
-              </div>
-              <div className="border-t border-white/15 pt-6">
+              </li>
+              <li key="02" className="relative border-t border-white/15 pt-6">
+                {/* 단계 위 작은 점. 다섯 개가 한 줄에 찍혀 진행 눈금처럼 읽힌다. */}
+                <span aria-hidden="true" className="absolute -top-[3px] left-0 h-[5px] w-[5px] rounded-full bg-gslt-400" />
                 <p className="font-bold text-lg mb-2 flex items-baseline gap-2.5">
                   <span className="text-gslt-400 tabular-nums text-sm shrink-0">02</span>
-                  <span className="text-white">현장 실측</span>
+                  <span className="text-white break-keep">현장 실측</span>
                 </p>
                 <p className="text-white/55 text-sm break-keep leading-relaxed">현장을 방문해 공간 구조와 설비 환경을 확인합니다.</p>
-              </div>
-              <div className="border-t border-white/15 pt-6">
+              </li>
+              <li key="03" className="relative border-t border-white/15 pt-6">
+                {/* 단계 위 작은 점. 다섯 개가 한 줄에 찍혀 진행 눈금처럼 읽힌다. */}
+                <span aria-hidden="true" className="absolute -top-[3px] left-0 h-[5px] w-[5px] rounded-full bg-gslt-400" />
                 <p className="font-bold text-lg mb-2 flex items-baseline gap-2.5">
                   <span className="text-gslt-400 tabular-nums text-sm shrink-0">03</span>
-                  <span className="text-white">설계·견적</span>
+                  <span className="text-white break-keep">설계·견적</span>
                 </p>
                 <p className="text-white/55 text-sm break-keep leading-relaxed">도면 위에 장비를 배치하고 견적을 산출합니다. 비즈모아로 견적서가 즉시 나옵니다.</p>
-              </div>
-              <div className="border-t border-white/15 pt-6">
+              </li>
+              <li key="04" className="relative border-t border-white/15 pt-6">
+                {/* 단계 위 작은 점. 다섯 개가 한 줄에 찍혀 진행 눈금처럼 읽힌다. */}
+                <span aria-hidden="true" className="absolute -top-[3px] left-0 h-[5px] w-[5px] rounded-full bg-gslt-400" />
                 <p className="font-bold text-lg mb-2 flex items-baseline gap-2.5">
                   <span className="text-gslt-400 tabular-nums text-sm shrink-0">04</span>
-                  <span className="text-white">시공·설치</span>
+                  <span className="text-white break-keep">시공·설치</span>
                 </p>
                 <p className="text-white/55 text-sm break-keep leading-relaxed">배선 공사 없이 무선 장비를 설치하고 통합 제어를 세팅합니다.</p>
-              </div>
-              <div className="border-t border-white/15 pt-6">
+              </li>
+              <li key="05" className="relative border-t border-white/15 pt-6">
+                {/* 단계 위 작은 점. 다섯 개가 한 줄에 찍혀 진행 눈금처럼 읽힌다. */}
+                <span aria-hidden="true" className="absolute -top-[3px] left-0 h-[5px] w-[5px] rounded-full bg-gslt-400" />
                 <p className="font-bold text-lg mb-2 flex items-baseline gap-2.5">
                   <span className="text-gslt-400 tabular-nums text-sm shrink-0">05</span>
-                  <span className="text-white">검수·유지보수</span>
+                  <span className="text-white break-keep">검수·유지보수</span>
                 </p>
                 <p className="text-white/55 text-sm break-keep leading-relaxed">현장 검수 후 인계하며, 1초 단위 모니터링으로 계속 관리합니다.</p>
-              </div>
+              </li>
+              </ol>
             </div>
           </div>
         </div>
