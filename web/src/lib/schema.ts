@@ -50,6 +50,20 @@ export const organizationSchema = {
     '중소벤처기업부 디딤돌 R&D 국책과제 선정 (2026)',
     '중소벤처기업부 초기창업패키지 선발·졸업 (2025)',
   ],
+  // 벤처기업 확인은 상이 아니라 **유효기간이 있는 자격**이다. award 배열에 섞으면
+  // 만료된다는 사실이 사라지므로 hasCredential로 따로 둔다 — expires까지 기계가 읽는다.
+  hasCredential: {
+    '@type': 'EducationalOccupationalCredential',
+    name: '벤처기업 확인 (혁신성장유형)',
+    credentialCategory: '벤처기업확인서',
+    identifier: '제20260909030005호',
+    recognizedBy: {
+      '@type': 'Organization',
+      name: '벤처기업확인기관 (사단법인 벤처기업협회)',
+    },
+    dateCreated: '2026-09-09',
+    expires: '2029-09-08',
+  },
   knowsAbout: [
     '무선 IoT 구축',
     '스마트오피스',

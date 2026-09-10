@@ -168,8 +168,19 @@ export default function AboutPage() {
           </div>
 
           {/* 포브스 대상은 이 페이지 맨 위로 올라갔다. 여기서 또 크게 반복하면 광고가 된다 —
-              연혁 항목으로만 남기고, 국책과제 두 건을 사실 그대로 잇는다. */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
+              연혁 항목으로만 남기고, 공적 확인 세 건을 사실 그대로 잇는다.
+              벤처기업 확인은 상이 아니라 **유효기간이 있는 자격**이라, 확인유형과 기간을
+              함께 적는다. 2029-09-08이 지나면 이 카드는 사실이 아니게 된다. */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+            <div className="rounded-3xl bg-white border border-slate-200/70 p-8">
+              <p className="text-xl md:text-2xl font-black leading-snug break-keep text-slate-900">
+                벤처기업 확인
+              </p>
+              <p className="mt-2 text-sm font-bold text-gslt-700">혁신성장유형 · 2026</p>
+              <p className="mt-3 text-sm text-slate-500 break-keep leading-relaxed">
+                벤처기업확인기관 확인 — 유효기간 2026.09.09 ~ 2029.09.08
+              </p>
+            </div>
             <div className="rounded-3xl bg-white border border-slate-200/70 p-8">
               <p className="text-xl md:text-2xl font-black leading-snug break-keep text-slate-900">
                 디딤돌 R&amp;D 국책과제 선정
@@ -208,8 +219,8 @@ export default function AboutPage() {
               <div className="relative md:pt-12">
                 <div className="tl-now hidden md:block absolute top-0 left-0 w-[22px] h-[22px] rounded-full bg-amber-400 border-[3px] border-white shadow-md"></div>
                 <p className="text-5xl font-black text-amber-600 leading-none mb-3 select-none">2026</p>
-                <p className="font-bold text-slate-900 mb-1">디딤돌 R&D 선정 · 포브스 코리아 대상</p>
-                <p className="text-sm text-slate-500 break-keep">국책과제 선정과 대상 수상을 함께 이룬 해</p>
+                <p className="font-bold text-slate-900 mb-1">포브스 대상 · 디딤돌 R&D · 벤처기업 확인</p>
+                <p className="text-sm text-slate-500 break-keep">대상 수상과 국책과제 선정에 이어, 9월 벤처기업(혁신성장유형) 확인을 받았습니다</p>
               </div>
             </div>
           </TimelineProgress>
