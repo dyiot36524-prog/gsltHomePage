@@ -65,23 +65,43 @@ export default function AboutPage() {
               className="w-full h-auto block"
               priority
             />
-            <div className="p-8 md:p-12">
-              <p className="text-2xl md:text-4xl font-black leading-[1.2] break-keep text-white">
-                포브스 코리아 2026 소비자 선정 최고의 브랜드 대상
-              </p>
-              <p className="mt-3 text-lg md:text-xl font-bold text-amber-400 break-keep">
-                무선 IoT 기반 스마트 공간 부문
-              </p>
-              <p className="mt-4 text-sm md:text-base text-slate-300 break-keep leading-relaxed max-w-2xl">
-                포브스코리아 2026-02-27 선정, 한국경제TV 2026-04-21 보도.
-                배선 공사 없이 기존 공간을 스마트 공간으로 바꾸는 무선 IoT 구축 역량을 평가받았습니다.
-              </p>
-              <Link
-                href="/news"
-                className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-white border-b-2 border-amber-400 pb-1 hover:text-amber-400 transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
-              >
-                보도 원문 보기
-              </Link>
+            {/* 위의 큰 그림은 수상 엠블럼(연출물)이고, 오른쪽 작은 사진은 시상식 현장이다.
+                엠블럼만 있으면 '만든 그림'이지만 현장 사진이 붙으면 '실제로 받았다'가 된다.
+                원본이 306px라 300px가 상한이다 — 더 키우면 뭉갠다.
+                사진 속 인물은 이름을 적지 않는다. 그림만 보고 누구인지 단정할 수 없다. */}
+            <div className="p-8 md:p-12 grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+              <div>
+                <p className="text-2xl md:text-4xl font-black leading-[1.2] break-keep text-white">
+                  포브스 코리아 2026 소비자 선정 최고의 브랜드 대상
+                </p>
+                <p className="mt-3 text-lg md:text-xl font-bold text-amber-400 break-keep">
+                  무선 IoT 기반 스마트 공간 부문
+                </p>
+                <p className="mt-4 text-sm md:text-base text-slate-300 break-keep leading-relaxed max-w-2xl">
+                  포브스코리아 2026-02-27 선정, 한국경제TV 2026-04-21 보도.
+                  배선 공사 없이 기존 공간을 스마트 공간으로 바꾸는 무선 IoT 구축 역량을 평가받았습니다.
+                </p>
+                <Link
+                  href="/news"
+                  className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-white border-b-2 border-amber-400 pb-1 hover:text-amber-400 transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                >
+                  보도 원문 보기
+                </Link>
+              </div>
+
+              <figure className="lg:w-[300px] shrink-0">
+                <Image
+                  src="/img/forbes-ceremony-2026.png"
+                  alt="포브스 코리아 2026 소비자 선정 최고의 브랜드 대상 시상식 현장. 수상자가 상패를 들고 무대에 서 있고, 배경 화면에 '2026 소비자선정 최고의 브랜드 大賞 Korea Best Brand Awards', 2026년 2월 27일 금요일 오전 10시 20분, 중앙일보·과학기술정보통신부·산업통상자원부·Forbes 로고가 보인다."
+                  width={306}
+                  height={230}
+                  sizes="(max-width: 1023px) 90vw, 300px"
+                  className="w-full h-auto block rounded-xl border border-white/15"
+                />
+                <figcaption className="mt-3 text-xs text-slate-400 break-keep">
+                  시상식 현장 · 2026-02-27
+                </figcaption>
+              </figure>
             </div>
           </div>
         </div>
@@ -228,26 +248,58 @@ export default function AboutPage() {
           </div>
 
           {/* 포브스 대상은 이 페이지 맨 위로 올라갔다. 여기서 또 크게 반복하면 광고가 된다 —
-              연혁 항목으로만 남기고, 국책과제 두 건을 사실 그대로 잇는다. */}
+              연혁 항목으로만 남기고, 국책과제 두 건을 사실 그대로 잇는다.
+
+              두 서류의 원본이 158px밖에 안 된다. 104px 이상으로 키우면 뭉개지고,
+              그 크기에서는 어차피 안에 적힌 글자를 읽을 수 없다. 그래서 확대 링크를
+              달지 않는다 — '크게 보기'를 눌렀는데 거의 같은 크기가 나오면 속은 것이다.
+              서류는 '실물이 있다'는 표식으로만 두고, 내용은 옆의 글자가 갖는다. */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
-            <div className="rounded-3xl bg-white border border-slate-200/70 p-8">
-              <p className="text-xl md:text-2xl font-black leading-snug break-keep text-slate-900">
-                디딤돌 R&amp;D 국책과제 선정
-              </p>
-              <p className="mt-2 text-sm font-bold text-bizmoa-600">중소벤처기업부 · 2026</p>
-              <p className="mt-3 text-sm text-slate-500 break-keep leading-relaxed">
-                창업성장기술개발사업 — 무선 IoT 스마트 공간 기술 고도화
-              </p>
-            </div>
-            <div className="rounded-3xl bg-white border border-slate-200/70 p-8">
-              <p className="text-xl md:text-2xl font-black leading-snug break-keep text-slate-900">
-                초기창업패키지 선발 · 졸업
-              </p>
-              <p className="mt-2 text-sm font-bold text-emerald-700">중소벤처기업부 · 2025</p>
-              <p className="mt-3 text-sm text-slate-500 break-keep leading-relaxed">
-                기술 고도화·사업화 지원 프로그램 수행 완료
-              </p>
-            </div>
+            {[
+              {
+                title: '디딤돌 R&D 국책과제 선정',
+                by: '중소벤처기업부 · 2026',
+                byClass: 'text-bizmoa-600',
+                desc: '창업성장기술개발사업 — 무선 IoT 스마트 공간 기술 고도화',
+                src: '/img/rnd-agreement-2026.png',
+                alt: '국가연구개발사업 협약서 서류 이미지. 과제 정보와 협약 조건이 표로 정리되어 있고 하단에 서명란이 있다.',
+                w: 158,
+                h: 222,
+              },
+              {
+                title: '초기창업패키지 선발 · 졸업',
+                by: '중소벤처기업부 · 2025',
+                byClass: 'text-emerald-700',
+                desc: '기술 고도화·사업화 지원 프로그램 수행 완료',
+                src: '/img/startup-package-certificate-2025.png',
+                alt: '초기창업패키지 수행 확인서. 사업 수행 내용이 적혀 있고 하단에 창업진흥원장 직인이 찍혀 있다.',
+                w: 157,
+                h: 222,
+              },
+            ].map((c) => (
+              <div
+                key={c.title}
+                className="rounded-3xl bg-white border border-slate-200/70 p-8 flex flex-col sm:flex-row gap-6 sm:items-center"
+              >
+                <div className="shrink-0 self-start rounded-lg bg-slate-100 border border-slate-200/70 p-2.5">
+                  <Image
+                    src={c.src}
+                    alt={c.alt}
+                    width={c.w}
+                    height={c.h}
+                    sizes="104px"
+                    className="block w-[104px] h-auto rounded-sm border border-slate-300/70 shadow-[0_6px_14px_-8px_rgb(15_23_42/0.45)]"
+                  />
+                </div>
+                <div>
+                  <p className="text-xl md:text-2xl font-black leading-snug break-keep text-slate-900">
+                    {c.title}
+                  </p>
+                  <p className={`mt-2 text-sm font-bold ${c.byClass}`}>{c.by}</p>
+                  <p className="mt-3 text-sm text-slate-500 break-keep leading-relaxed">{c.desc}</p>
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* 가로 타임라인 */}
