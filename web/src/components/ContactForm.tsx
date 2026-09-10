@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { COMPANY } from '@/lib/site';
 import { ArrowRight } from '@/components/Icon';
 
@@ -43,6 +43,13 @@ export default function ContactForm() {
    * 죽어 사용자가 스스로 할 수 있는 게 없을 때만 다른 길을 제시한다.
    */
   const [offerFallback, setOfferFallback] = useState(false);
+  /**
+   * 이 폼이 그려진 시각.
+   *
+   * 봇은 폼을 읽자마자 제출한다. 사람은 최소 몇 초는 타이핑한다. 서버가 이 간격을 보고
+   * 판단한다. useState가 아니라 ref인 이유는 값이 바뀌어도 다시 그릴 필요가 없기 때문이다.
+   */
+  const startedAt = useRef(Date.now());
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -64,6 +71,8 @@ export default function ContactForm() {
           email: value('email'),
           phone: value('phone'),
           message: value('message'),
+          website: value('website'),
+          startedAt: startedAt.current,
         }),
       });
       const body: { message?: string } = await res.json().catch(() => ({}));
@@ -91,6 +100,15 @@ export default function ContactForm() {
 
   return (
     <form onSubmit={onSubmit} className="pt-8">
+      {/* 허니팟. 사람에게는 존재하지 않는 칸이고, 채워져 오면 봇이다.
+          `hidden` 속성이나 display:none 대신 화면 밖으로 밀어내는 이유는, 일부 봇이
+          숨겨진 필드를 건너뛰기 때문이다. 스크린리더에게는 aria-hidden과 tabIndex로
+          없는 것으로 만들고, 브라우저 자동완성도 꺼 둔다. */}
+      <div aria-hidden="true" className="absolute -left-[9999px] top-0 h-0 w-0 overflow-hidden">
+        <label htmlFor="cf-website">이 칸은 비워 두세요</label>
+        <input id="cf-website" name="website" type="text" tabIndex={-1} autoComplete="off" />
+      </div>
+
       <p className="text-sm text-slate-500 mb-8">
         <span className="text-gslt-700" aria-hidden="true">*</span> 표시는 필수 항목입니다.
       </p>
