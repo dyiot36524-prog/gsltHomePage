@@ -14,29 +14,31 @@ import CountUp from './CountUp';
 import styles from './siot.module.css';
 
 export const metadata: Metadata = pageSeo({
-  title: '시옷 — 공간 예약 자동화',
+  title: '시옷 — 공간 운영 플랫폼',
   description:
-    '예약 스케줄에 맞춰 공간이 스스로 준비됩니다. 테니스코트·골프타석·회의실의 조명·공조·스마트글라스를 예약과 함께 제어하는 시옷.',
+    '예약과 출입, 조명과 공조, 에너지와 기록까지 한 플랫폼에서. 빌딩 전체를 한 화면으로 관제하는 지능형 공간 운영 솔루션 시옷.',
   path: '/siot',
 });
 
 const ld = {
   '@context': 'https://schema.org',
   '@type': 'SoftwareApplication',
-  name: '시옷 (Siot)',
+  name: '시옷 (SIOT)',
+  alternateName: 'SIOT Space Operating Platform',
   url: `${SITE.url}/siot`,
   applicationCategory: 'BusinessApplication',
   operatingSystem: 'Web',
   description:
-    '실시간 공간 예약과 예약 스케줄에 연동된 공간 자동화를 한 시스템으로 묶은 솔루션. ' +
-    '테니스코트·골프타석·볼링장·당구장·회의실처럼 시간 단위로 배정되는 공간에서, ' +
-    '예약이 확정되면 그 공간의 조명·공조·스마트글라스가 스케줄에 맞춰 스스로 켜지고 꺼진다.',
+    '지능형 공간 운영 플랫폼. 전력·환경·재실·기기 상태를 한 화면에서 관제하고, ' +
+    '실제 도면 위에서 장비를 실시간 제어하며, 공간 예약부터 QR 출입권 발급과 ' +
+    '조명·공조 제어까지 하나의 흐름으로 잇는다. 조건이 겹치는 복합 레이어 자동화를 지원한다.',
   featureList: [
-    '실시간 공간 예약 — 타임테이블 편성, 입장 QR 발송, 노쇼 자동 기록',
-    '예약 연동 자동화 — 공간마다 입실·퇴실 자동화와 출입 단말을 연결',
-    '도면 제어 — 평면도 위에 장비와 자동화를 배치해 현장에 가지 않고 관제',
-    '통합 제어 — 조명·공조·스마트글라스·전원·커튼·리모컨을 제조사와 무관하게 하나로',
-    '회원·이력 관리 — 방문·노쇼 기록, 출입 인증 기록, CSV 반출',
+    '통합 관제 — 전력·환경·재실·기기 상태를 한 화면에서 실시간 확인',
+    '공간 예약 — 층·회의실·타석별 타임라인 편성과 예약 등록',
+    '출입 연동 — 예약 시간에만 유효한 모바일 QR 출입권, 문 열림과 동시에 조명·공조 실행',
+    '자동화 — 시각·재실·구역 조건이 겹치는 복합 레이어 자동화',
+    '도면 제어 — 실제 도면 위에 장비를 배치해 태블릿·PC·터치DID·모바일에서 제어',
+    '에너지 — 기기별 전력 계측과 사용량 추이, 공기질 센서 측정',
   ],
   provider: { '@type': 'Organization', name: '지에스엘티(GSLT)' },
 };
@@ -46,149 +48,197 @@ const d = (value: string) => ({ '--d': value }) as CSSProperties;
 /** 계단식 지연의 순번. 불빛이 지나가는 순서와 카드가 들어오는 순서를 CSS에 넘긴다. */
 const i = (n: number) => ({ '--i': n }) as CSSProperties;
 
-const CDN = 'https://res.cloudinary.com/r9pnckwj/image/upload/f_auto,q_auto,w_2048';
+const CDN = 'https://res.cloudinary.com/r9pnckwj/image/upload/f_auto,q_auto';
 
-/** 예약이 확정된 뒤 퇴실까지, 사람이 손대지 않는 구간. */
+/* ── 제안서 슬라이드(1280×720 → 192dpi = 3414×1920) ──
+   슬라이드마다 제목이 그림 안에 글자로 박혀 있다. 그대로 걸면 같은 문장이
+   HTML 제목과 그림에서 두 번 나온다 — 실제로 그렇게 보였다.
+   제목 띠를 잘라내고 그림만 남긴다. 제안서의 문장은 HTML 쪽에 한 번만 서고,
+   그래야 검색엔진과 스크린리더도 그 문장을 읽는다.
+   표지(cover)는 좌우 2단이라 가로로 잘라 기기 목업만 쓴다.
+
+   c_crop에 x·w를 빼면 Cloudinary가 자르기를 **조용히 무시하고** 원본을 그대로 준다.
+   16:9가 그대로 나와도 오류가 아니라 정상 응답이라 눈으로만 봐서는 놓친다. */
+type Slide = { src: string; w: number; h: number };
+const slide = (crop: string, id: string, w: number, h: number): Slide => ({
+  src: `${CDN.replace('/upload', `/upload/${crop}`)},w_2560/${id}`,
+  w,
+  h,
+});
+
+const SLIDE = {
+  cover: slide('c_crop,x_1500,y_360,w_1870,h_1300', 'v1789053808/xr8ucukaldzgg96ispk9.png', 1870, 1300),
+  booking: slide('c_crop,x_0,w_3414,y_420,h_750', 'v1789053855/wjzxdzgjjxbrsr4gs5xv.png', 3414, 750),
+  control: slide('c_crop,x_0,w_3414,y_540,h_1380', 'v1789053818/mndewcysfx1ovq7rg5dg.png', 3414, 1380),
+  floor: slide('c_crop,x_0,w_3414,y_330,h_1100', 'v1789053848/wng8jvfn5ef8kyx3f4wa.png', 3414, 1100),
+  automation: slide('c_crop,x_0,w_3414,y_360,h_980', 'v1789053829/rdo4vb5jdfdh3y83mvet.png', 3414, 980),
+} as const;
+
+/** 예약이 확정된 뒤 문이 열리기까지. 제안서 19쪽의 네 단계 그대로다. */
 const CHAIN = [
-  { n: '예약 확정', d: '타임테이블에서 공간과 시간을 배정합니다.' },
-  { n: '입장 QR 발송', d: '예약자에게 입장용 QR을 보냅니다.' },
-  { n: 'QR 스캔 · 입실', d: '출입 단말에서 인증하면 입실로 기록됩니다.' },
-  { n: '자동화 실행', d: '그 공간의 조명·공조·스마트글라스가 켜집니다.' },
-  { n: '퇴실 · 정리', d: '시간이 끝나면 자동으로 꺼집니다. 안 오면 노쇼로 남습니다.' },
+  { n: '관리자 예약 등록', d: '공간 · 시간 · 인원을 선택합니다.' },
+  { n: '예약 현황 · 타임라인', d: '층 · 회의실 · 타석별 타임라인에 놓입니다.' },
+  { n: '모바일 QR 출입권', d: '출입 가능한 시간에만 쓸 수 있는 코드가 나갑니다.' },
+  { n: '출입 제어', d: '문 열림 + 조명·공조 ON + 예약 프로그램 실행.' },
 ] as const;
 
-type Feature = {
+/** 제안서 17쪽의 복합 레이어 예시. 뒤 규칙이 앞 규칙을 덮어쓰므로 순서가 곧 정보다. */
+const RULES = [
+  '오전 8시에 모든 층의 실내 온도를 23℃로 맞춰.',
+  '그 전에 움직임이 감지되면, 감지된 구역의 온도를 23℃로 맞춰.',
+  '밤 10시에 공용부를 제외한 모든 구역의 전등과 EHP 전원을 끄되, 누군가 재실해 있다면 끄지 마.',
+  '밤 10시 이후부터 오전 8시까지 움직임이 5분 동안 없으면 모든 전원을 꺼.',
+] as const;
+
+type Section = {
   title: ReactNode;
   lead: string;
   specs?: readonly (readonly [string, string])[];
-  src: string;
+  slide: Slide;
   alt: string;
-  w: number;
-  h: number;
-  /** 세로로 긴 화면. 아래를 잘라 바닥으로 녹인다. */
-  tall?: boolean;
 };
 
-/* 전부 성남 쇼룸에서 실제로 돌고 있는 화면이다. 화면에서 읽은 것만 쓴다. */
-const FEATURES: readonly Feature[] = [
+/* 제안서 다섯 장이 이 페이지의 본문이다. 슬라이드 안에 박힌 글자는 기계가 못 읽으므로,
+   같은 내용을 옆에 HTML 글자로 다시 세운다. */
+const SECTIONS: readonly Section[] = [
   {
-    title: (<>예약을 받는 순간,<br />준비가 시작됩니다</>),
+    title: (<>예약과 출입, 조명과 공조,<br />에너지와 기록까지</>),
     lead:
-      '타임테이블에서 끌어서 공간과 시간을 조정합니다. 공간마다 출입 단말과 입실·퇴실 ' +
-      '자동화를 묶어 두면, 그다음은 시스템이 합니다.',
+      '공간을 운영하는 데 필요한 일이 시스템마다 흩어져 있으면, 결국 사람이 그 사이를 ' +
+      '오갑니다. 시옷은 다섯 가지를 하나의 플랫폼 위에 올립니다.',
     specs: [
-      ['상태 구분', '예약확정 · 이용중 · 이용완료 · 노쇼를 자동으로 나눠 기록합니다.'],
-      ['조작 이력', '사람이 누른 것과 시스템이 처리한 것을 나눠 남겨 책임 소재가 분명합니다.'],
-      ['반출', '예약 변경 · QR 발송 · 출입 인증이 한 이력에 모이고 CSV로 나갑니다.'],
+      ['통합 관제', '전력 · 환경 · 재실 · 기기 상태를 한 화면에서 봅니다.'],
+      ['공간 예약', '층 · 회의실 · 타석 단위로 시간을 배정합니다.'],
+      ['출입 연동', '예약 시간에만 유효한 QR 출입권을 발급합니다.'],
+      ['자동화', '조건이 겹치는 복합 규칙까지 걸어 둡니다.'],
+      ['에너지', '기기별 사용 전력을 계측하고 추이를 봅니다.'],
     ],
-    src: `${CDN}/v1788165657/ha7psroqjjge0gbsuedp.png`,
-    alt: '시옷 공간 예약 화면 — 타임테이블에 예약이 배치되고 운영 요약이 표시된다',
-    w: 2048,
-    h: 1086,
+    slide: SLIDE.cover,
+    alt:
+      '시옷(SIOT) 소개 슬라이드. SPACE OPERATING PLATFORM, 지능형 공간 운영을 도와주는 프리미엄 솔루션. ' +
+      '노트북에 통합 대시보드가, 휴대폰에 예약 QR 출입권이 떠 있고 통합 관제·공간 예약·출입 연동·자동화·에너지 다섯 항목이 표시된다.',
   },
   {
-    title: (<>A코트에 들어오면<br />A코트가 켜집니다</>),
+    title: (<>공간 예약부터<br />공조 · 조명 · 출입제어까지 한 번에</>),
     lead:
-      'A코트에 들어오면 그 코트의 조명과 공조가, B코트면 B코트 것이 켜집니다. 공간 · 출입 단말 · ' +
-      '자동화를 한 줄로 묶어 두는 방식이라, 코트가 늘어도 설정만 추가하면 됩니다.',
-    specs: [
-      ['공간별 지정', '입실 자동화와 퇴실 자동화를 공간마다 따로 걸어 둡니다.'],
-      ['수동 개입', '운영 중에는 입·퇴실을 손으로 눌러 넘길 수도 있습니다.'],
-    ],
-    src: `${CDN}/v1788165668/aqfxczxhqre56zxj0wuu.png`,
-    alt: '시옷 공간 관리 화면 — 공간마다 출입 단말과 입실·퇴실 자동화가 연결되어 있다',
-    w: 2048,
-    h: 982,
+      '예약 시스템을 개발한 노하우로, 예약부터 디바이스 제어와 출입통제까지 ' +
+      '스케줄 데이터와 물리 설비를 잇습니다.',
+    slide: SLIDE.booking,
+    alt:
+      '시옷 공간예약 솔루션 슬라이드. 관리자 예약 등록, 예약 현황·타임라인, 모바일 QR 출입권, ' +
+      '출입 제어 네 단계가 모니터·노트북·휴대폰·출입 단말 사진으로 이어진다.',
   },
   {
-    title: (<>평면도가 그대로<br />관제판이 됩니다</>),
+    title: (<>한 화면에서<br />빌딩 전체를 관제합니다</>),
     lead:
-      '평면도 위에 장비를 그대로 배치합니다. 어느 자리의 무엇이 꺼져 있는지를 목록이 아니라 ' +
-      '위치로 봅니다. 현장에 가지 않아도 공간 전체가 한눈에 들어옵니다.',
+      '전력 · 환경 · 재실 · 기기 상태가 실시간으로 모입니다. 실시간 알림과 현재 상태를 ' +
+      '바로 나타내어, 어디를 먼저 봐야 하는지 화면이 알려줍니다.',
     specs: [
-      ['구역 자동화', '자동화 버튼도 도면 위에 얹어, 그 구역을 누르면 그 구역이 움직입니다.'],
+      ['오늘 전력 사용량', '통계 및 추이'],
+      ['온라인 / 오프라인', '연결 디바이스 상태를 실시간으로'],
+      ['공기질 측정', '실내 CO₂ 등 각종 환경 센서'],
+      ['자동화 실행', '루틴화된 자동화의 실행 현황'],
+    ],
+    slide: SLIDE.control,
+    alt:
+      '시옷 빌딩관제 솔루션 슬라이드. 노트북 화면에 전력 사용량, 디바이스 연결 현황, 환경센서 측정값, ' +
+      '재실·출입, 전력 상위 5개, 디바이스 로그, 자동화 로그 위젯이 한 대시보드에 모여 있다.',
+  },
+  {
+    title: (<>실제 도면 위에서<br />실시간으로 제어합니다</>),
+    lead:
+      '각 층의 세분화된 IoT 장비와 이기종 장비를 실제 도면 위에 배치해, 한 화면 안에서 ' +
+      '보여주고 제어합니다.',
+    specs: [
+      ['도면 위 배치', '어느 자리의 무엇이 꺼져 있는지를 목록이 아니라 위치로 봅니다.'],
+      [
+        '기기 무관',
+        '태블릿 · PC · 대형 터치DID · 모바일까지. 상세한 권한 분리를 통해 각각의 장비에서 서로 실시간 연동됩니다.',
+      ],
       [
         '견적에서 운영으로',
         '같은 회사의 비즈모아는 도면 위에 장비를 배치해 견적을 냅니다. 그 도면이 그대로 관제판이 됩니다.',
       ],
     ],
-    src: `${CDN}/v1788165649/xders8akw9r5gf70yztp.png`,
-    alt: '시옷 도면 제어 화면 — 평면도 위에 장비와 자동화가 배치되어 있다',
-    w: 2048,
-    h: 1039,
+    slide: SLIDE.floor,
+    alt:
+      '시옷 도면 제어 슬라이드. 입체 평면도 위에 전등·TV전원·플러그·센서 아이콘이 자리마다 놓여 있고, ' +
+      '노트북과 태블릿 두 기기에서 같은 도면을 제어하고 있다.',
   },
   {
-    title: (<>잘 되는 것보다<br />안 되는 것을 먼저</>),
+    title: (<>다양한 장비의 제어와<br />복합 레이어 자동화</>),
     lead:
-      '대시보드는 연결된 장비 수 옆에 오프라인 장비 수를 붉게 띄웁니다. 눌러서 어느 것이 ' +
-      '끊겼는지 바로 봅니다.',
-    specs: [
-      ['위젯 구성', '전력 사용량, 환경 센서, 재실·출입, 자동화 실행 이력을 골라 자기 화면을 만듭니다.'],
-    ],
-    src: `${CDN}/v1788165630/ob1mkhtesmc1i5xug9oh.png`,
-    alt: '시옷 대시보드 — 전력 사용량, 장비 연결 현황, 자동화 로그 위젯',
-    w: 2048,
-    h: 1365,
-    tall: true,
-  },
-  {
-    title: (<>한 번 눌러<br />공간 하나를 통째로</>),
-    lead:
-      '장면 하나에 여러 장비를 묶습니다. ‘입실’을 누르면 그 구역의 전등과 빔프로젝터, 공조가 ' +
-      '함께 켜지고 ‘퇴실’이면 함께 꺼집니다.',
-    specs: [
-      ['예약 연동', '예약과 연결해 두면 사람이 누르지 않아도 시간에 맞춰 실행됩니다.'],
-      [
-        '실증',
-        '성남 쇼룸에서는 스크린골프 3사(카카오VX 프렌즈스크린 · 골프존파크 · GDR 아카데미) 타석마다 입·퇴실 장면을 걸어 두고 돌리고 있습니다.',
-      ],
-    ],
-    src: `${CDN}/v1788165692/xycz4pulxk4euucgq3oc.png`,
-    alt: '시옷 자동화 제어 화면 — 입실·퇴실 장면 카드가 나열되어 있다',
-    w: 2048,
-    h: 1586,
-    tall: true,
-  },
-  {
-    title: (<>누가 언제 왔는지<br />전부 남습니다</>),
-    lead: '예약 변경, 입장 QR 발송, 출입 인증이 한 표에 시간순으로 쌓입니다.',
-    specs: [
-      ['처리 주체', '사람이 눌렀는지, 시스템이 자동으로 했는지, QR 스캔인지가 구분되어 남습니다.'],
-      ['회원 집계', '방문·노쇼 횟수를 회원별로 세어 상습 노쇼를 운영에 반영합니다.'],
-      ['개인정보', '연락처는 마스킹해 보관하고, 필요할 때 CSV로 반출합니다.'],
-    ],
-    src: `${CDN}/v1788170672/dsawwe8q4bjyyyo1qllq.png`,
-    alt: '시옷 이력 화면 — 예약 변경·QR 발송·출입 인증 기록이 한 표에 남는다',
-    w: 2048,
-    h: 2178,
-    tall: true,
-  },
-  {
-    title: (<>장비 하나까지<br />손으로 잡습니다</>),
-    lead:
-      '자동화가 전부는 아닙니다. 공간별·장비 종류별로 묶어 두고 스위치 한 구, 블라인드 열림 ' +
-      '정도, 에어컨 온도를 개별로 조작합니다.',
-    specs: [
-      ['기존 기기', '적외선 리모컨이 필요한 기기도 그대로 붙습니다.'],
-      ['상태 표시', '끊긴 장비는 카드에 오프라인으로 표시됩니다.'],
-    ],
-    src: `${CDN}/v1788170696/kf5vy5atuzxkhfuszak6.png`,
-    alt: '시옷 홈 관리 화면 — 스위치·커튼·플러그·센서를 종류별 탭으로 제어한다',
-    w: 2048,
-    h: 1362,
-    tall: true,
+      '에어컨, 디밍조명, 매직글라스, 산업장비까지. 각 층의 세분화된 IoT 장비와 이기종 ' +
+      '장비를 통합해 한 화면에서 보여주고 제어합니다.',
+    slide: SLIDE.automation,
+    alt:
+      '시옷 자동화 슬라이드. 태블릿 두 대에 조명·센서·플러그·리모컨 등 기기 카드와 ' +
+      '가상·모드·빔프로젝터 자동화 카드가 격자로 나열되어 있다.',
   },
 ];
 
+/* 관리자가 쓰는 실제 화면. 제안서가 본문이 된 뒤로는 근거 자료다. */
+const SCREENS = [
+  {
+    src: `${CDN},w_1600/v1788165657/ha7psroqjjge0gbsuedp.png`,
+    w: 2048,
+    h: 1086,
+    cap: '예약 현황',
+    desc: '타임테이블에 예약을 배치하고 운영 요약을 봅니다',
+  },
+  {
+    src: `${CDN},w_1600/v1788165668/aqfxczxhqre56zxj0wuu.png`,
+    w: 2048,
+    h: 982,
+    cap: '공간 관리',
+    desc: '공간마다 출입 단말과 입실·퇴실 자동화를 연결합니다',
+  },
+  {
+    src: `${CDN},w_1600/v1788165649/xders8akw9r5gf70yztp.png`,
+    w: 2048,
+    h: 1039,
+    cap: '도면 제어',
+    desc: '평면도 위에 장비와 자동화를 배치합니다',
+  },
+  {
+    src: `${CDN},w_1600/v1788165630/ob1mkhtesmc1i5xug9oh.png`,
+    w: 2048,
+    h: 1365,
+    cap: '대시보드',
+    desc: '전력·환경·재실·자동화를 위젯으로 구성합니다',
+  },
+  {
+    src: `${CDN},w_1600/v1788165692/xycz4pulxk4euucgq3oc.png`,
+    w: 2048,
+    h: 1586,
+    cap: '자동화',
+    desc: '입실·퇴실 장면을 카드로 묶어 관리합니다',
+  },
+  {
+    src: `${CDN},w_1600/v1788170672/dsawwe8q4bjyyyo1qllq.png`,
+    w: 2048,
+    h: 2178,
+    cap: '이력',
+    desc: '예약 변경·QR 발송·출입 인증이 한 표에 남습니다',
+  },
+  {
+    src: `${CDN},w_1600/v1788170696/kf5vy5atuzxkhfuszak6.png`,
+    w: 2048,
+    h: 1362,
+    cap: '홈 관리',
+    desc: '스위치·커튼·플러그·센서를 종류별로 제어합니다',
+  },
+] as const;
+
 const DEVICE_KINDS = [
-  ['조명 · 스위치', '점등·소등, 구역별 일괄 제어'],
+  ['조명 · 디밍', '점등·소등, 밝기와 색온도 조절'],
   ['공조 · 환기', '온도·습도에 따른 자동 운전'],
-  ['스마트글라스', '투명도 전환으로 구역 분리'],
+  ['매직글라스', '투명도 전환으로 구역 분리'],
   ['전원 플러그', '기기별 사용 전력 계측'],
-  ['환경 센서', '온습도·미세먼지·조도·누수'],
+  ['환경 센서', '온습도·CO₂·미세먼지·조도·누수'],
   ['재실 · 동작', '사람이 있을 때만 켜기'],
   ['적외선 리모컨', '에어컨·TV 등 기존 기기'],
-  ['범용 컨트롤러', '접점 제어로 나머지 설비'],
+  ['산업 장비', '접점 제어로 나머지 설비'],
 ] as const;
 
 export default function SiotPage() {
@@ -229,24 +279,26 @@ export default function SiotPage() {
                 className="h-5 md:h-6 w-auto shrink-0"
               />
               <span className="text-[11px] md:text-xs font-semibold tracking-[0.35em] uppercase text-siot-400">
-                · Wireless IoT Construction
+                · Space Operating Platform
               </span>
             </div>
+            {/* 제안서 표지의 문장을 그대로 쓴다. 회사가 자기 제품을 부르는 말이
+                우리가 지어낸 문장보다 정확하다. */}
             <h1 className="font-black tracking-tight leading-[1.1] break-keep text-white text-4xl sm:text-6xl lg:text-7xl mb-8">
               <span className={styles.heroLine}>
-                <span className={styles.heroLineInner} style={d('.3s')}>예약한 시간에 맞춰,</span>
+                <span className={styles.heroLineInner} style={d('.3s')}>보고 · 열고 · 끄는 일을</span>
               </span>
               <span className={styles.heroLine}>
-                <span className={`${styles.heroLineInner} text-siot-500`} style={d('.45s')}>공간이 스스로 준비됩니다.</span>
+                <span className={`${styles.heroLineInner} text-siot-500`} style={d('.45s')}>한 화면에서.</span>
               </span>
             </h1>
             <p
               className={`${styles.fadeUp} max-w-2xl text-base md:text-lg text-white/55 leading-relaxed break-keep mb-12`}
               style={d('.7s')}
             >
-              테니스코트·골프타석·볼링장·당구장·회의실처럼 시간 단위로 배정되는 공간을 위한
-              솔루션입니다. 실시간 예약을 받고, 그 스케줄에 맞춰 조명·공조·스마트글라스를
-              자동으로 제어합니다. 배선 공사 없이 지금 쓰는 공간 그대로 얹습니다.
+              예약과 출입, 조명과 공조, 에너지와 기록까지 하나의 플랫폼 위에 올립니다.
+              지능형 공간 운영을 도와주는 프리미엄 솔루션, 시옷(SIOT)입니다.
+              배선 공사 없이 지금 쓰는 공간 그대로 얹습니다.
             </p>
             <div className={`${styles.fadeUp} flex flex-wrap items-center gap-4 mb-16`} style={d('.9s')}>
               <Link href="/contact" className="px-8 py-4 rounded-full bg-siot-500 hover:bg-siot-400 text-slate-900 font-bold transition-all">도입 문의하기</Link>
@@ -273,51 +325,33 @@ export default function SiotPage() {
           </div>
         </section>
 
-        {/* ── 1막: 관제실 ──
-            제품 화면은 그 자체가 흰 UI다. 흰 지면에 얹으면 경계가 사라지고, 640px로 줄이면
-            화면 속 글자가 뭉갠다. 어두운 바닥으로 옮겨 지면 전체 폭으로 키운다.
-            여기서부터 CTA 직전까지가 하나의 어두운 방이고, 빛은 제품 화면에서만 나온다. */}
-        <section className="bg-[#0a0a0f] px-4 sm:px-6 lg:px-8 pt-8 pb-28 md:pb-36">
-          <Reveal className="max-w-7xl mx-auto">
-            <h2 className="text-[2rem] md:text-[3rem] font-black tracking-tight leading-[1.15] break-keep text-white">
-              손님이 문을 열기 전에<br />불이 켜져 있습니다
-            </h2>
-            <p className="mt-6 max-w-[62ch] text-lg md:text-xl text-white/70 leading-[1.75] break-keep">
-              예약을 받는 시스템과 공간을 제어하는 시스템이 따로 놀면, 결국 사람이 그 사이를
-              메웁니다. 시간표를 보고 가서 스위치를 올리고, 끝나면 다시 가서 끕니다. 시옷은 그
-              둘을 하나로 묶습니다. 예약이 확정되는 순간부터 퇴실까지가 한 흐름입니다.
-            </p>
-          </Reveal>
-
-          {/* 이 페이지의 유일한 연출된 순간. 불빛이 레일을 타고 지나가며 단계가 차례로 켜진다 —
-              공간이 예약 시간에 맞춰 켜지는 것과 같은 움직임이다. */}
-          <Reveal as="ol" className={`${styles.chain} max-w-7xl mx-auto mt-16`}>
-            {CHAIN.map((s, n) => (
-              <li key={s.n} className={styles.chainStep} style={i(n)}>
-                <span aria-hidden="true" className={styles.chainDot} />
-                <p className="font-bold text-white break-keep mb-1.5">{s.n}</p>
-                <p className="text-sm text-white/60 leading-[1.7] break-keep">{s.d}</p>
-              </li>
-            ))}
-          </Reveal>
-        </section>
-
-        {/* 제품 화면. 판이 어두운 방에서 스스로 빛을 내는 것처럼 앉는다. */}
-        {/* 번짐이 지면 밖으로 넘쳐 가로 스크롤을 만든다. 넘치게 두되 여기서 자른다.
-            clip을 쓰는 이유는 hidden과 달리 스크롤 컨테이너를 만들지 않기 때문이다. */}
-        <section className="bg-[#0a0a0f] px-4 sm:px-6 lg:px-8 pb-28 md:pb-36 space-y-28 md:space-y-36 overflow-x-clip">
-          {FEATURES.map((f) => (
-            <Reveal key={f.alt} className={`${styles.feature} max-w-7xl mx-auto`}>
+        {/* ── 1막: 제안서 ──
+            여기서부터 CTA 직전까지가 하나의 어두운 방이고, 빛은 화면에서만 나온다.
+            슬라이드는 1280×720 설계물이라 지면 전체 폭에서 제 크기로 앉는다. */}
+        <section className="bg-[#0a0a0f] px-4 sm:px-6 lg:px-8 pt-10 pb-28 md:pb-36 space-y-28 md:space-y-36 overflow-x-clip">
+          {SECTIONS.map((s, n) => (
+            <Reveal key={s.alt} className={`${styles.feature} max-w-7xl mx-auto`}>
+              {/* 사양표가 있으면 [제목+리드 | 사양], 없으면 [제목 | 리드]로 두 기둥을 채운다.
+                  없는 쪽을 비워 두면 오른쪽에 큰 구멍이 남는다. */}
               <div className={styles.head}>
-                <div>
-                  <h2 className="text-[2rem] md:text-[2.75rem] font-black tracking-tight leading-[1.15] break-keep text-white">
-                    {f.title}
-                  </h2>
-                  <p className="mt-6 text-lg md:text-xl text-white/70 leading-[1.75] break-keep">{f.lead}</p>
-                </div>
-                {f.specs && (
+                {s.specs ? (
+                  <div>
+                    <h2 className="text-[2rem] md:text-[2.75rem] font-black tracking-tight leading-[1.15] break-keep text-white">
+                      {s.title}
+                    </h2>
+                    <p className="mt-6 text-lg md:text-xl text-white/70 leading-[1.75] break-keep">{s.lead}</p>
+                  </div>
+                ) : (
+                  <>
+                    <h2 className="text-[2rem] md:text-[2.75rem] font-black tracking-tight leading-[1.15] break-keep text-white">
+                      {s.title}
+                    </h2>
+                    <p className="text-lg md:text-xl text-white/70 leading-[1.75] break-keep lg:pb-2">{s.lead}</p>
+                  </>
+                )}
+                {s.specs && (
                   <ul className={styles.specs}>
-                    {f.specs.map(([k, v]) => (
+                    {s.specs.map(([k, v]) => (
                       <li key={k} className="grid gap-1 sm:grid-cols-[7.5rem_minmax(0,1fr)] sm:gap-5 sm:items-baseline">
                         <span className="text-sm font-bold text-siot-500 break-keep">{k}</span>
                         <span className="text-sm text-white/60 leading-[1.75] break-keep">{v}</span>
@@ -327,21 +361,94 @@ export default function SiotPage() {
                 )}
               </div>
 
-              <figure className={`${styles.stage} ${f.tall ? styles.tall : ''}`}>
+              <figure className={styles.stage}>
                 <span aria-hidden="true" className={styles.bloom} />
                 <span className={styles.screen}>
                   <Image
-                    src={f.src}
-                    alt={f.alt}
-                    width={f.w}
-                    height={f.h}
+                    src={s.slide.src}
+                    alt={s.alt}
+                    width={s.slide.w}
+                    height={s.slide.h}
                     sizes="(max-width: 1280px) 100vw, 1216px"
                     className={styles.shot}
                   />
                 </span>
               </figure>
+
+              {/* 예약 슬라이드 아래에는 네 단계를 다시 세운다. 그림 속 순서를 불빛이
+                  한 번 지나가며 짚어 주는 것이 이 페이지의 유일한 연출이다. */}
+              {n === 1 && (
+                <Reveal as="ol" className={`${styles.chain} mt-14`}>
+                  {CHAIN.map((c, k) => (
+                    <li key={c.n} className={styles.chainStep} style={i(k)}>
+                      <span aria-hidden="true" className={styles.chainDot} />
+                      <p className="font-bold text-white break-keep mb-1.5">{c.n}</p>
+                      <p className="text-sm text-white/60 leading-[1.7] break-keep">{c.d}</p>
+                    </li>
+                  ))}
+                </Reveal>
+              )}
+
+              {/* 자동화 슬라이드 아래에는 실제 규칙 문장을 옮긴다. 이 제품이 무엇을
+                  할 수 있는지는 기능 이름보다 이 네 줄이 정확하게 말한다. */}
+              {n === 4 && (
+                <Reveal className="mt-14 rounded-2xl border border-white/10 bg-white/[0.03] p-7 md:p-9">
+                  <p className="text-sm font-bold text-siot-500 mb-6">고도화된 복합 레이어 자동화의 예</p>
+                  <ol className="space-y-4">
+                    {RULES.map((r, k) => (
+                      <li key={r} className="grid grid-cols-[1.75rem_minmax(0,1fr)] gap-2 items-baseline">
+                        <span className="text-sm font-black tabular-nums text-white/35">
+                          {String(k + 1).padStart(2, '0')}
+                        </span>
+                        <span className="text-base md:text-lg text-white/80 leading-[1.7] break-keep">
+                          {r}
+                        </span>
+                      </li>
+                    ))}
+                  </ol>
+                </Reveal>
+              )}
             </Reveal>
           ))}
+        </section>
+
+        {/* ── 2막: 실제 화면 ──
+            제안서가 본문이 되었으니 관리자 화면은 근거 자료로 내려온다.
+            비율을 하나로 묶어 격자로 세운다 — 한 장씩 크게 볼 것이 아니라
+            "이만큼이 실제로 돌고 있다"를 한눈에 보는 자리다. */}
+        <section className="bg-[#0a0a0f] px-4 sm:px-6 lg:px-8 pb-28 md:pb-36 overflow-x-clip">
+          <Reveal className="max-w-7xl mx-auto">
+            <h2 className="text-[2rem] md:text-[2.75rem] font-black tracking-tight leading-[1.15] break-keep text-white">
+              실제로 돌고 있는 화면
+            </h2>
+            <p className="mt-6 max-w-[62ch] text-lg md:text-xl text-white/70 leading-[1.75] break-keep">
+              성남 쇼룸에서 운영 중인 관리자 화면입니다. 스크린골프 3사(카카오VX
+              프렌즈스크린 · 골프존파크 · GDR 아카데미) 시스템과 함께 타석 단위
+              입·퇴실 자동화를 실증하고 있습니다.
+            </p>
+          </Reveal>
+
+          <Reveal className={`${styles.feature} ${styles.ref} max-w-7xl mx-auto mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3`}>
+            {SCREENS.map((s) => (
+              <figure key={s.cap} className={styles.stage}>
+                <span aria-hidden="true" className={styles.bloom} />
+                <span className={styles.screen}>
+                  <Image
+                    src={s.src}
+                    alt={`시옷 ${s.cap} 화면 — ${s.desc}`}
+                    width={s.w}
+                    height={s.h}
+                    sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 400px"
+                    className={styles.shot}
+                  />
+                </span>
+                <figcaption className="mt-4">
+                  <span className="block font-bold text-white break-keep">{s.cap}</span>
+                  <span className="block mt-1 text-sm text-white/55 leading-relaxed break-keep">{s.desc}</span>
+                </figcaption>
+              </figure>
+            ))}
+          </Reveal>
         </section>
 
         {/* 공간 영상 — 화면을 다 보고 난 뒤, 실제 공간의 공기를 한 번 보여주며 어두운 방을 닫는다.
@@ -376,7 +483,7 @@ export default function SiotPage() {
           </Reveal>
         </section>
 
-        {/* ── 2막: 사양 ──
+        {/* ── 3막: 사양 ──
             여기서 지면이 다시 밝아진다. 앞이 '무엇을 하는가'였다면 여기는 '무엇에 붙는가'다.
             읽고 대조하는 내용이라 흰 지면이 맞다. 밝기가 바뀌는 것 자체가 막의 구분이다. */}
         <section className="py-24 md:py-32 px-4 sm:px-6 lg:px-8">
@@ -388,9 +495,8 @@ export default function SiotPage() {
                 </h2>
                 <p className="max-w-[68ch] text-slate-500 leading-[1.85] break-keep">
                   Wi-Fi·블루투스·ZigBee·Z-Wave를 함께 지원하는 개방형 구조입니다. 특정 제조사에
-                  묶이지 않아 이미 설치된 설비를 그대로 두고 위에 얹을 수 있습니다.
-                  성남 쇼룸에서는 스크린골프 3사(카카오VX 프렌즈스크린·골프존파크·GDR 아카데미)
-                  시스템과 함께 타석 단위 입·퇴실 자동화를 실증하고 있습니다.
+                  묶이지 않아 이미 설치된 설비를 그대로 두고 위에 얹을 수 있습니다. 에어컨과
+                  디밍조명, 매직글라스, 산업장비까지 한 화면 안에서 함께 제어합니다.
                 </p>
               </Reveal>
 
@@ -417,7 +523,7 @@ export default function SiotPage() {
                 공간마다 켤 것을 다르게 정해 두면 됩니다.
               </p>
               <ul className="flex flex-wrap gap-2.5">
-                {['테니스코트', '골프 타석', '볼링장', '당구장', '회의실', '스터디룸', '연습실', '공유 오피스'].map((t) => (
+                {['회의실', '테니스코트', '골프 타석', '볼링장', '당구장', '스터디룸', '연습실', '공유 오피스'].map((t) => (
                   <li
                     key={t}
                     className="rounded-full border border-slate-300 px-4 py-2 text-sm font-bold text-slate-700"

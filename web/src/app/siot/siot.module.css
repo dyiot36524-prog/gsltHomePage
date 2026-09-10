@@ -49,7 +49,7 @@
 
 .chain {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1rem;
 }
 
@@ -375,4 +375,39 @@
 
   :global(.js-reveal) .stagger > li { opacity: 1; }
   .stagger:global(.on) > li { animation: none; }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   참고 화면 격자.
+
+   제안서 다섯 장이 이 페이지의 본문이 된 뒤, 관리자 실제 화면은 근거 자료로
+   내려간다. 본문에서 쓰던 전체 폭 연출을 그대로 줄이면 세로로 긴 화면(이력·장면)만
+   튀어 격자가 들쭉날쭉해진다. 여기서는 비율을 하나로 묶고 위쪽을 보여준다 —
+   화면마다 위쪽이 무엇을 하는 화면인지 말하는 부분이다.
+   ───────────────────────────────────────────────────────────── */
+
+.ref .stage { margin-top: 0; }
+
+.ref .screen {
+  aspect-ratio: 16 / 10;
+}
+
+.ref .shot {
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+
+/* 일곱 장이 동시에 번쩍이면 연출이 아니라 소음이다.
+   .feature.on .screen::after(0,3,1)를 이기려면 .ref까지 붙여야 한다. */
+.feature.ref:global(.on) .screen::after { animation: none; }
+
+@media (max-width: 767px) {
+  .ref .stage { margin-inline: 0; }
+
+  .ref .screen {
+    border-radius: 1rem;
+    border-left: 1px solid rgba(255, 255, 255, 0.12);
+    border-right: 1px solid rgba(255, 255, 255, 0.12);
+  }
 }
