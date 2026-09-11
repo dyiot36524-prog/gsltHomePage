@@ -259,7 +259,7 @@ export default function SiotPage() {
 
       <main className={`${styles.page} bg-slate-50 text-slate-900`}>
         {/* 히어로: IoT 노드 네트워크 */}
-        <section className="relative min-h-[92vh] flex items-center bg-[#0a0a0f] overflow-hidden pb-20 px-4 sm:px-6 lg:px-8">
+        <section className="relative min-h-[92vh] flex items-center bg-[#0a0a0f] overflow-hidden pt-16 pb-24 md:pt-20 md:pb-28 px-4 sm:px-6 lg:px-8">
           <NodeCanvas className="absolute inset-0 w-full h-full pointer-events-none" />
           <div className="absolute -bottom-40 -right-32 w-[34rem] h-[34rem] bg-siot-600 rounded-full blur-[160px] opacity-[0.12] pointer-events-none" />
 
@@ -283,30 +283,51 @@ export default function SiotPage() {
               </span>
             </div>
             {/* 제안서 표지의 문장을 그대로 쓴다. 회사가 자기 제품을 부르는 말이
-                우리가 지어낸 문장보다 정확하다. */}
-            <h1 className="font-black tracking-tight leading-[1.1] break-keep text-white text-4xl sm:text-6xl lg:text-7xl mb-8">
+                우리가 지어낸 문장보다 정확하다.
+
+                한 줄짜리 큰 글씨(7xl)를 쓰지 않는 이유: 이 문장은 22자라 7xl에서 세 줄로
+                꺾이고, 그만큼 히어로가 길어져 첫 줄이 헤더 밑으로 들어간다. 실제로
+                1280×640에서 그렇게 잘리고 있었다. 크기를 낮추고 위 여백을 세웠다. */}
+            <h1 className="font-black tracking-tight break-keep text-white mb-8">
               <span className={styles.heroLine}>
-                <span className={styles.heroLineInner} style={d('.3s')}>보고 · 열고 · 끄는 일을</span>
+                <span
+                  className={`${styles.heroLineInner} block text-2xl md:text-3xl leading-[1.3] text-white/80`}
+                  style={d('.3s')}
+                >
+                  시옷 (SIOT)
+                </span>
               </span>
               <span className={styles.heroLine}>
-                <span className={`${styles.heroLineInner} text-siot-500`} style={d('.45s')}>한 화면에서.</span>
+                <span
+                  className={`${styles.heroLineInner} block text-[1.75rem] sm:text-4xl lg:text-[3.25rem] leading-[1.2] mt-1`}
+                  style={d('.45s')}
+                >
+                  지능형 공간 운영을 도와주는
+                </span>
+              </span>
+              <span className={styles.heroLine}>
+                <span
+                  className={`${styles.heroLineInner} block text-[1.75rem] sm:text-4xl lg:text-[3.25rem] leading-[1.2] text-siot-500`}
+                  style={d('.6s')}
+                >
+                  프리미엄 솔루션
+                </span>
               </span>
             </h1>
             <p
               className={`${styles.fadeUp} max-w-2xl text-base md:text-lg text-white/55 leading-relaxed break-keep mb-12`}
-              style={d('.7s')}
+              style={d('.8s')}
             >
-              예약과 출입, 조명과 공조, 에너지와 기록까지 하나의 플랫폼 위에 올립니다.
-              지능형 공간 운영을 도와주는 프리미엄 솔루션, 시옷(SIOT)입니다.
-              배선 공사 없이 지금 쓰는 공간 그대로 얹습니다.
+              보고 · 열고 · 끄는 일을 한 화면에서. 예약과 출입, 조명과 공조, 에너지와 기록까지
+              하나의 플랫폼 위에 올립니다. 배선 공사 없이 지금 쓰는 공간 그대로 얹습니다.
             </p>
-            <div className={`${styles.fadeUp} flex flex-wrap items-center gap-4 mb-16`} style={d('.9s')}>
+            <div className={`${styles.fadeUp} flex flex-wrap items-center gap-4 mb-16`} style={d('1s')}>
               <Link href="/contact" className="px-8 py-4 rounded-full bg-siot-500 hover:bg-siot-400 text-slate-900 font-bold transition-all">도입 문의하기</Link>
               {/* 포트폴리오는 올릴 사례가 쌓일 때까지 메뉴에서 숨긴 상태다. 숨긴 곳으로
                   보내지 않고, 구축 과정을 실제로 설명하는 회사소개로 보낸다. */}
               <Link href="/about" className="px-8 py-4 rounded-full border-2 border-white/15 text-white/80 font-bold hover:border-siot-500 hover:text-siot-400 transition-all">구축 과정 보기</Link>
             </div>
-            <div className={`${styles.fadeUp} grid grid-cols-3 max-w-xl gap-6`} style={d('1.1s')}>
+            <div className={`${styles.fadeUp} grid grid-cols-3 max-w-xl gap-6`} style={d('1.2s')}>
               {/* 쇼룸에서 실제로 돌고 있는 수치다. 화면에서 읽은 값만 쓴다 —
                   지어낸 수치를 넣지 않는 것이 이 회사의 규칙이다. */}
               <div>

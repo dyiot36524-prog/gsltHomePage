@@ -67,9 +67,10 @@ export default function AboutPage() {
             />
             {/* 위의 큰 그림은 수상 엠블럼(연출물)이고, 오른쪽 작은 사진은 시상식 현장이다.
                 엠블럼만 있으면 '만든 그림'이지만 현장 사진이 붙으면 '실제로 받았다'가 된다.
-                원본이 306px라 520px에서는 1.7배로 늘어난다. 사진(연속 계조)은 UI 스크린샷과
-                달리 확대에 관대해서 이 정도는 버티지만, **원본이 있으면 그쪽이 훨씬 낫다.**
-                사진 속 인물은 이름을 적지 않는다. 그림만 보고 누구인지 단정할 수 없다. */}
+                처음에는 306px짜리 축소본을 써서 520px로 늘리면 무릎이 보였다. 대표님이 4032px
+                원본을 주셔서 1600px(185KB)로 다시 떴다 — 이제 확대가 아니라 축소다.
+                사진 속 명찰에 '최광수'가 찍혀 있어 캡션에 이름을 적는다. 앞선 축소본에서는
+                읽히지 않아 '수상자'로만 뒀던 자리다. */}
             <div className="p-8 md:p-12 grid gap-8 lg:gap-12 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-end">
               <div>
                 <p className="text-2xl md:text-4xl font-black leading-[1.2] break-keep text-white">
@@ -92,15 +93,15 @@ export default function AboutPage() {
 
               <figure>
                 <Image
-                  src="/img/forbes-ceremony-2026.png"
-                  alt="포브스 코리아 2026 소비자 선정 최고의 브랜드 대상 시상식 현장. 수상자가 상패를 들고 무대에 서 있고, 배경 화면에 '2026 소비자선정 최고의 브랜드 大賞 Korea Best Brand Awards', 2026년 2월 27일 금요일 오전 10시 20분, 중앙일보·과학기술정보통신부·산업통상자원부·Forbes 로고가 보인다."
-                  width={306}
-                  height={230}
+                  src="/img/forbes-ceremony-2026.jpg"
+                  alt="포브스 코리아 2026 소비자 선정 최고의 브랜드 대상 시상식 현장. 최광수 대표가 GSLT 이름이 적힌 인증서와 상패를 들고 무대에 서 있고, 배경 화면에 '2026 소비자선정 최고의 브랜드 大賞 Korea Best Brand Awards', 2026년 2월 27일 금요일 오전 10시 20분, 중앙일보·과학기술정보통신부·산업통상자원부·Forbes Korea 로고가 보인다."
+                  width={1600}
+                  height={1200}
                   sizes="(max-width: 1023px) 92vw, 520px"
                   className="w-full h-auto block rounded-xl border border-white/15"
                 />
                 <figcaption className="mt-3 text-xs text-slate-400 break-keep">
-                  시상식 현장 · 2026-02-27
+                  시상식 현장 · 최광수 대표 · 2026-02-27
                 </figcaption>
               </figure>
             </div>
