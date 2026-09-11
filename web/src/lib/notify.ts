@@ -73,8 +73,11 @@ function seoulNow(): string {
  */
 async function sendEmail(v: Inquiry, warning: string): Promise<NotifyResult> {
   const key = process.env.RESEND_API_KEY;
+  // 수신자를 따로 정하지 않았으면 회사 대표 메일로 보낸다. 키만 넣었는데 변수 하나가
+  // 더 없어서 조용히 건너뛰는 일은 없어야 한다 — 실제로 그렇게 됐다.
   const to = list(process.env.NOTIFY_EMAILS);
-  if (!key || to.length === 0) return { channel: 'email', ok: false, skipped: true };
+  if (to.length === 0) to.push(COMPANY.email);
+  if (!key) return { channel: 'email', ok: false, skipped: true };
 
   // 도메인 인증 전에는 Resend가 내주는 발신 주소로 먼저 돌린다.
   const from = process.env.NOTIFY_EMAIL_FROM || 'GSLT 문의 <onboarding@resend.dev>';
