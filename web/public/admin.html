@@ -54,15 +54,15 @@
         <p id="login-error" class="hidden text-sm text-rose-600 text-center pt-1"></p>
         <p id="login-note" class="hidden text-sm text-gslt-700 text-center pt-1"></p>
       </form>
-      <div class="flex items-center justify-between gap-3 mt-5 pt-4 border-t border-slate-100">
-        <button type="button" id="signup-btn"
-          class="text-xs font-bold text-slate-600 hover:text-gslt-700 transition-colors">계정 만들기</button>
+      <!-- 계정은 여기서 만들지 않는다. 누구나 누를 수 있는 '계정 만들기'가 로그인 화면에
+           있으면 관리자 페이지에 가입 창구가 열려 있는 셈이다. 계정은 소유자가 관리 화면
+           안에서 만들고, 여기서는 로그인과 비밀번호 재설정만 한다. -->
+      <div class="flex items-center justify-end gap-3 mt-5 pt-4 border-t border-slate-100">
         <button type="button" id="reset-btn"
           class="text-xs font-bold text-slate-600 hover:text-gslt-700 transition-colors">비밀번호 재설정</button>
       </div>
       <p class="text-[11px] text-slate-400 leading-relaxed mt-3">
-        계정을 만들어도 관리자 명단에 없는 이메일은 글을 쓸 수 없습니다.
-        소유자에게 명단 추가를 먼저 요청하세요.
+        계정은 소유자가 발급합니다. 계정이 필요하면 소유자에게 요청하세요.
       </p>
     </div>
   </div>
@@ -298,10 +298,10 @@
       <div id="admins-panel" class="hidden">
         <h2 class="text-xl font-black mb-2">관리자</h2>
         <p class="text-sm text-slate-500 mb-6 leading-relaxed max-w-2xl">
-          여기 등록된 이메일만 글을 쓰고 고칠 수 있습니다.
-          <strong class="text-slate-700">명단에 추가한다고 계정이 만들어지지는 않습니다</strong> —
-          추가한 뒤, 그분이 이 페이지의 <strong class="text-slate-700">'계정 만들기'</strong>로 직접
-          비밀번호를 정해 가입해야 로그인이 됩니다. 비밀번호는 본인만 알게 됩니다.
+          계정은 여기서만 만들어집니다. 이메일과 처음 비밀번호를 정해 발급하면 그 계정으로
+          바로 로그인할 수 있고, 권한은 소유자와 같습니다 — 글·자료·문의·지식베이스 전부.
+          다만 <strong class="text-slate-700">계정을 만들고 지우는 것은 소유자만</strong> 할 수 있습니다.
+          받은 분은 로그인 화면의 '비밀번호 재설정'으로 비밀번호를 바꿀 수 있습니다.
         </p>
 
         <div id="admins-owner" class="max-w-xl mb-4 rounded-2xl border border-gslt-200 bg-gslt-50 p-5">
@@ -313,11 +313,12 @@
         </div>
 
         <div class="max-w-xl">
-          <div class="flex gap-2">
-            <input id="admin-email" type="email" class="field" placeholder="추가할 관리자 이메일" autocomplete="off">
-            <button id="admin-add"
-              class="shrink-0 px-5 py-2.5 rounded-xl bg-gslt-500 hover:bg-gslt-600 text-white text-sm font-bold transition-all">추가</button>
-          </div>
+          <form id="admin-add-form" class="grid gap-2 sm:grid-cols-[1fr_1fr_auto]" autocomplete="off">
+            <input id="admin-email" type="email" required class="field" placeholder="이메일" autocomplete="off">
+            <input id="admin-pw" type="password" required minlength="8" class="field" placeholder="처음 비밀번호 (8자 이상)" autocomplete="new-password">
+            <button id="admin-add" type="submit"
+              class="shrink-0 px-5 py-2.5 rounded-xl bg-gslt-500 hover:bg-gslt-600 text-white text-sm font-bold transition-all">계정 발급</button>
+          </form>
           <p id="admins-status" class="text-sm mt-3"></p>
           <div id="admins-list" class="mt-4 bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100"></div>
           <p id="admins-empty" class="hidden py-10 text-center text-slate-400 text-sm">추가된 관리자가 없습니다.</p>
@@ -327,7 +328,8 @@
   </div>
 
   <script type="module">
-    import { app, db, CATEGORY_LABEL } from './assets/site.js';
+    import { app, db, firebaseConfig, CATEGORY_LABEL } from './assets/site.js';
+    import { initializeApp, deleteApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
     import {
       getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged,
       createUserWithEmailAndPassword, sendPasswordResetEmail
@@ -414,24 +416,6 @@
       el.classList.remove('hidden');
     }
 
-    /* 계정 만들기 — 비밀번호는 본인이 정하고 우리는 보관하지 않는다.
-       명단에 없는 이메일도 계정은 만들어지지만 글은 못 쓴다(보안 규칙이 막는다). */
-    $('signup-btn').addEventListener('click', async () => {
-      const email = $('login-email').value.trim();
-      const pw = $('login-pw').value;
-      if (!email || !pw) return loginMsg('이메일과 쓰실 비밀번호를 입력한 뒤 눌러주세요.');
-      if (pw.length < 6) return loginMsg('비밀번호는 6자 이상이어야 합니다.');
-      try {
-        await createUserWithEmailAndPassword(auth, email, pw);
-      } catch (ex) {
-        loginMsg(ex.code === 'auth/email-already-in-use'
-          ? '이미 있는 계정입니다. 그대로 로그인하시거나 비밀번호를 재설정하세요.'
-          : ex.code === 'auth/weak-password'
-            ? '비밀번호가 너무 단순합니다. 6자 이상으로 정해주세요.'
-            : `계정 생성 실패 (${ex.code || '알 수 없음'})`);
-      }
-    });
-
     /* 비밀번호 재설정 — 해당 주소로 재설정 메일이 간다.
        계정이 없어도 성공으로 답한다(있는 계정을 캐내지 못하게 하는 Firebase 기본 동작). */
     $('reset-btn').addEventListener('click', async () => {
@@ -497,29 +481,54 @@
       }
     }
 
-    $('admin-add').addEventListener('click', async () => {
+    /* 계정 발급 — 명단 등록과 Auth 계정 생성을 한 번에.
+
+       createUserWithEmailAndPassword를 지금 로그인된 auth에 그대로 부르면 **소유자가
+       로그아웃되고 새 계정으로 바뀐다.** 그래서 같은 설정으로 두 번째 Firebase 앱을 띄워
+       그쪽 auth에서 만든다. 소유자 세션은 그대로 남고, 끝나면 보조 앱을 지운다.
+
+       순서는 명단 → 계정이다. 계정만 있고 명단에 없으면 로그인은 되는데 아무것도 못 하는
+       상태가 되고, 명단만 있고 계정이 없으면 다음에 다시 시도하면 된다 — 후자가 안전한 실패다. */
+    $('admin-add-form').addEventListener('submit', async e => {
+      e.preventDefault();
       const status = $('admins-status');
       const email = $('admin-email').value.trim().toLowerCase();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        status.textContent = '이메일 형식을 확인하세요.';
-        status.className = 'text-sm mt-3 text-rose-600';
-        return;
-      }
-      if (email === OWNER_EMAIL) {
-        status.textContent = '소유자는 이미 항상 접근됩니다. 명단에 넣을 필요가 없습니다.';
-        status.className = 'text-sm mt-3 text-slate-500';
-        return;
-      }
+      const pw = $('admin-pw').value;
+      const say = (t, cls) => { status.textContent = t; status.className = `text-sm mt-3 ${cls}`; };
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return say('이메일 형식을 확인하세요.', 'text-rose-600');
+      if (pw.length < 8) return say('처음 비밀번호는 8자 이상으로 정해주세요.', 'text-rose-600');
+      if (email === OWNER_EMAIL) return say('소유자는 이미 항상 접근됩니다. 발급할 필요가 없습니다.', 'text-slate-500');
+      if (auth.currentUser?.email !== OWNER_EMAIL) return say('계정 발급은 소유자만 할 수 있습니다.', 'text-rose-600');
+
+      say('발급 중…', 'text-slate-500');
       try {
-        // 문서 ID를 이메일로 쓴다. 보안 규칙이 exists()로 이 경로를 그대로 확인한다.
+        // 1) 명단. 문서 ID를 이메일로 쓴다 — 보안 규칙이 exists()로 이 경로를 그대로 확인한다.
         await setDoc(doc(db, 'admins', email), { addedAt: serverTimestamp(), addedBy: auth.currentUser?.email || '' });
+
+        // 2) 계정. 보조 앱에서 만들어 소유자 세션을 건드리지 않는다.
+        const second = initializeApp(firebaseConfig, `issue-${Date.now()}`);
+        try {
+          await createUserWithEmailAndPassword(getAuth(second), email, pw);
+          await signOut(getAuth(second));
+        } finally {
+          await deleteApp(second);
+        }
+
         $('admin-email').value = '';
+        $('admin-pw').value = '';
         await loadAdmins();
-        status.textContent = `${email} 추가됨. 이제 그분이 '계정 만들기'로 비밀번호를 정해 가입하면 로그인됩니다.`;
-        status.className = 'text-sm mt-3 text-gslt-700';
-      } catch (e) {
-        status.textContent = '추가 실패: ' + e.message;
-        status.className = 'text-sm mt-3 text-rose-600';
+        say(`${email} 발급됨. 이 이메일과 방금 정한 비밀번호로 바로 로그인할 수 있습니다.`, 'text-gslt-700');
+      } catch (ex) {
+        if (ex.code === 'auth/email-already-in-use') {
+          // 계정은 이미 있고 명단만 새로 올라간 경우다. 로그인은 그 사람이 쓰던 비밀번호로.
+          await loadAdmins();
+          return say(`${email}은(는) 이미 계정이 있어 명단에만 추가했습니다. 기존 비밀번호로 로그인하거나 재설정하세요.`, 'text-gslt-700');
+        }
+        const why = ex.code === 'auth/weak-password' ? '비밀번호가 너무 단순합니다.'
+          : ex.code === 'auth/admin-restricted-operation' ? 'Firebase 콘솔에서 계정 생성이 꺼져 있습니다. Authentication → Settings → User actions에서 켜주세요.'
+          : (ex.message || ex.code || '알 수 없는 오류');
+        say('발급 실패: ' + why, 'text-rose-600');
       }
     });
 
