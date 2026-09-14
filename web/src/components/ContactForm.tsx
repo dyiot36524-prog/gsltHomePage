@@ -2,18 +2,20 @@
 
 import Link from 'next/link';
 import { useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { COMPANY } from '@/lib/site';
 import { ArrowRight } from '@/components/Icon';
 
 /**
  * 상담 신청 폼. 원본 index.html의 문의 모달을 페이지로 옮긴 것이라
  * 필드 구성·문구·관용 정책(하나라도 성공하면 접수 완료)을 그대로 유지한다.
+ * 접수가 되면 /contact/done 으로 옮긴다 — 이 화면에 완료 문구를 띄우지 않는다.
  *
  * 제출만 클라이언트에서 돈다. JS가 없거나 전송이 실패한 방문자를 위해
  * 전화·이메일은 이 폼 밖(서버 렌더된 좌측 열)에 항상 서 있다.
  */
 
-type State = 'idle' | 'sending' | 'sent' | 'error';
+type State = 'idle' | 'sending' | 'error';
 
 /* 기록 면 규칙: 직각·그림자 없음. 테두리는 헤어라인보다 한 단계 진한 slate-300.
    포커스 표시는 사이트 공통 방식(outline-2 + offset)을 따르고, 색만 흰 바탕에서
@@ -50,6 +52,7 @@ export default function ContactForm() {
    * 판단한다. useState가 아니라 ref인 이유는 값이 바뀌어도 다시 그릴 필요가 없기 때문이다.
    */
   const startedAt = useRef(Date.now());
+  const router = useRouter();
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -87,8 +90,10 @@ export default function ContactForm() {
         setState('error');
         return;
       }
-      form.reset();
-      setState('sent');
+      // 성공하면 이 화면에 남지 않는다. 방금 채운 폼이 텅 빈 채 그대로 있고 아래에
+      // 작은 글씨만 바뀌는 화면은 "보내졌나?"를 남긴다. 완료 페이지가 접수 사실과
+      // 다음 순서, 갈 곳을 한 번에 말한다. 'sending' 상태는 이동이 끝날 때까지 유지한다.
+      router.push('/contact/done');
     } catch {
       setError('네트워크 연결이 끊겨 전송하지 못했습니다.');
       setOfferFallback(true);
@@ -194,12 +199,6 @@ export default function ContactForm() {
           <p className="border-l-2 border-slate-900 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-900">
             전송 중…
           </p>
-        ) : null}
-        {state === 'sent' ? (
-          <div className="border-l-2 border-gslt-700 bg-slate-50 px-5 py-4">
-            <p className="text-sm font-bold text-slate-900">상담 신청이 접수되었습니다.</p>
-            <p className="mt-1 text-sm text-slate-600">전문가가 24시간 내에 연락드리겠습니다.</p>
-          </div>
         ) : null}
         {state === 'error' ? (
           <div className="border-l-2 border-slate-900 bg-slate-50 px-5 py-4">
