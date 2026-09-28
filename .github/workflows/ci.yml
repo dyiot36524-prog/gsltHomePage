@@ -1,0 +1,48 @@
+# 타입 검사와 빌드.
+#
+# 지금까지는 배포 전 검사를 사람이 손으로 돌렸다. 빠뜨린 날 깨진 빌드가 그대로
+# `vercel --prod`로 나갈 수 있었다. 이 저장소의 배포는 CLI 수동이라 CI가 배포를
+# 막지는 못하지만, 푸시할 때마다 초록불/빨간불이 남는다 — 배포 직전에 그 불을 본다.
+#
+# 접근성·SEO 검사(scripts/a11y-check.mjs, seo-check.mjs)는 넣지 않았다. 앞의 것은 로컬
+# Chrome 경로에, 뒤의 것은 운영 URL에 묶여 있어 여기서 돌리면 거짓 실패가 난다.
+# 그 둘은 배포 뒤에 운영본을 대상으로 돌린다.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - run: npm ci
+
+      - name: 타입 검사
+        run: npx tsc --noEmit
+
+      # prebuild가 루트 img/ 의 git 추적 파일을 public/img로 복사한다(scripts/copy-assets.mjs).
+      # 빌드 중 Firestore를 읽는 페이지가 있어 네트워크가 필요하다 — Actions 러너는 기본으로 열려 있다.
+      - name: 빌드
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'

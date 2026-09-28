@@ -10,6 +10,7 @@ import {
 import Script from 'next/script';
 import ScrollTop from '@/components/ScrollTop';
 import { Analytics } from '@vercel/analytics/next';
+import ConversionTracker from '@/components/ConversionTracker';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -130,6 +131,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             문의까지 몇 %가 닿는지를 전혀 몰랐다. 쿠키를 쓰지 않고 개인을 식별하지 않아
             별도 동의 배너 없이 쓸 수 있다. Vercel 프로젝트에서 Analytics를 켜야 수집된다. */}
         <Analytics />
+        <ConversionTracker />
       </body>
     </html>
   );

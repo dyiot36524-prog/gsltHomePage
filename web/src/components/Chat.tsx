@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { ArrowRight } from '@/components/Icon';
 import { COMPANY } from '@/lib/site';
+import { conversions } from '@/lib/analytics';
 
 /**
  * 히어로 안에서 이어지는 상담 챗봇.
@@ -44,6 +46,30 @@ function transcript(messages: Msg[]): string {
     .join('\n\n');
 }
 
+/** /api/inquiry가 받는 문의 본문 상한. 넘으면 400으로 거절된다. */
+const INQUIRY_MAX = 5000;
+const LOG_HEAD = '\n\n──── 대화 기록 ────\n';
+
+/**
+ * 문의 본문 + 대화 기록을 상한 안에 맞춘다.
+ *
+ * 전에는 대화 기록을 통째로 붙였다. 대화가 길어지면 5,000자를 넘겨 서버가 거절했고,
+ * **방문자가 사람과 이어지려는 바로 그 순간에** 접수가 실패했다. 본문은 지키고 기록을 자른다.
+ */
+function composeMessage(body: string, messages: Msg[], withLog: boolean): string {
+  const base = body.slice(0, INQUIRY_MAX);
+  if (!withLog) return base;
+  const room = INQUIRY_MAX - base.length - LOG_HEAD.length;
+  if (room < 200) return base;
+  const log = transcript(messages);
+  return base + LOG_HEAD + (log.length > room ? `${log.slice(0, room - 12)}\n…(이하 생략)` : log);
+}
+
+/** 대화 하나의 식별자. 서버가 대화 기록을 한 문서로 묶는 데 쓴다. 128비트 무작위. */
+function newSession(): string {
+  return crypto.randomUUID().replace(/-/g, '');
+}
+
 export default function Chat({
   onEngage,
   onStart,
@@ -62,7 +88,18 @@ export default function Chat({
   const [notice, setNotice] = useState('');
   const [contactOpen, setContactOpen] = useState(false);
   const [sent, setSent] = useState(false);
+  /** 담당자 연결 폼의 '문의 내용'. 대화 요약이 여기 채워지고, 방문자가 고칠 수 있다. */
+  const [draft, setDraft] = useState('');
+  const [summarizing, setSummarizing] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const session = useRef('');
+  /** 담당자 연결 폼이 열린 시각. /contact 폼과 같은 봇 판별(3초 미만 제출)에 쓴다. */
+  const formOpenedAt = useRef(0);
+
+  // 서버 렌더와 어긋나지 않게 세션은 마운트 뒤에 만든다.
+  useEffect(() => {
+    session.current = newSession();
+  }, []);
 
   const started = messages.length > 0;
 
@@ -76,7 +113,10 @@ export default function Chat({
     // 히어로에게 "이제 대화 중"이라고 알린다. 그래야 스크롤이 조금 움직여도
     // 대화 도중에 이 판이 사라지지 않는다.
     onEngage?.();
-    if (messages.length === 0) onStart?.();
+    if (messages.length === 0) {
+      onStart?.();
+      conversions.chatStarted();
+    }
     const next: Msg[] = [...messages, { role: 'user', content: clean }];
     setMessages(next);
     setInput('');
@@ -86,7 +126,7 @@ export default function Chat({
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: next }),
+        body: JSON.stringify({ messages: next, session: session.current }),
       });
       const data = (await res.json()) as {
         ok?: boolean;
@@ -107,6 +147,31 @@ export default function Chat({
     }
   }
 
+  /**
+   * 담당자 연결을 연다. 동시에 지금까지의 대화를 요약해 '문의 내용' 칸을 채운다 —
+   * 방문자가 챗봇에게 이미 한 설명을 폼에 다시 쓰게 하지 않기 위해서다.
+   * 요약이 늦거나 실패해도 폼은 바로 쓸 수 있다. 방문자가 먼저 쓰기 시작했으면 덮지 않는다.
+   */
+  async function openContact() {
+    conversions.chatHandoff();
+    setContactOpen(true);
+    formOpenedAt.current = Date.now();
+    setSummarizing(true);
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: 'summary', messages, session: session.current }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { summary?: string };
+      if (data.summary) setDraft((cur) => (cur.trim() ? cur : data.summary!));
+    } catch {
+      // 요약은 편의다. 실패하면 빈 칸으로 둔다.
+    } finally {
+      setSummarizing(false);
+    }
+  }
+
   async function submitContact(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
@@ -122,9 +187,14 @@ export default function Chat({
           company: String(fd.get('company') || ''),
           email: String(fd.get('email') || ''),
           phone: String(fd.get('phone') || ''),
-          message:
-            String(fd.get('message') || '홈페이지 상담 챗봇을 통한 문의입니다.') +
-            (withLog ? `\n\n──── 대화 기록 ────\n${transcript(messages)}` : ''),
+          message: composeMessage(
+            draft.trim() || '홈페이지 상담 챗봇을 통한 문의입니다.',
+            messages,
+            withLog,
+          ),
+          website: String(fd.get('website') || ''),
+          startedAt: formOpenedAt.current,
+          session: session.current,
         }),
       });
       const data = (await res.json()) as { ok?: boolean; message?: string };
@@ -132,6 +202,7 @@ export default function Chat({
         setError(data.message || `접수에 실패했습니다. ${COMPANY.tel}로 연락 주세요.`);
         return;
       }
+      conversions.inquirySubmitted('chat');
       setSent(true);
     } catch {
       setError(`접수에 실패했습니다. ${COMPANY.tel}로 연락 주세요.`);
@@ -171,6 +242,9 @@ export default function Chat({
               setNotice('');
               setContactOpen(false);
               setSent(false);
+              setDraft('');
+              // 닫고 다시 시작하면 다른 대화다. 기록도 새 문서로 남긴다.
+              session.current = newSession();
               onClose?.();
             }}
             className="shrink-0 rounded-full border border-white/15 hover:border-white/30 px-4 py-2 text-sm font-bold text-white/70 hover:text-white transition-colors"
@@ -256,7 +330,7 @@ export default function Chat({
               </p>
               <button
                 type="button"
-                onClick={() => setContactOpen(true)}
+                onClick={openContact}
                 className="group inline-flex items-center gap-2 rounded-full bg-gslt-500 hover:bg-gslt-400 text-slate-900 px-5 py-2.5 text-sm font-bold transition-colors"
               >
                 담당자 연결
@@ -264,11 +338,33 @@ export default function Chat({
               </button>
             </div>
           ) : (
-            <form onSubmit={submitContact} className="grid gap-2.5 sm:grid-cols-2">
-              <Field name="name" label="이름" required />
-              <Field name="company" label="회사명" />
-              <Field name="email" label="이메일" type="email" required />
-              <Field name="phone" label="연락처" type="tel" />
+            <form onSubmit={submitContact} className="relative grid gap-2.5 sm:grid-cols-2">
+              {/* 허니팟 — /contact 폼과 같은 봇 차단. 사람에게는 없는 칸이다. */}
+              <div aria-hidden="true" className="absolute -left-[9999px] top-0 h-0 w-0 overflow-hidden">
+                <label htmlFor="chat-website">이 칸은 비워 두세요</label>
+                <input id="chat-website" name="website" type="text" tabIndex={-1} autoComplete="off" />
+              </div>
+              <Field name="name" label="이름" required autoComplete="name" />
+              <Field name="company" label="회사명" autoComplete="organization" />
+              <Field name="email" label="이메일" type="email" required autoComplete="email" />
+              <Field name="phone" label="연락처" type="tel" autoComplete="tel" />
+              <label className="block sm:col-span-2">
+                <span className="flex items-baseline justify-between gap-3 text-xs font-bold text-white/65 mb-1.5">
+                  문의 내용
+                  <span className="font-medium text-white/55" aria-live="polite">
+                    {summarizing ? '대화를 정리하는 중…' : draft ? '대화에서 정리했습니다. 고쳐 쓰셔도 됩니다.' : ''}
+                  </span>
+                </span>
+                <textarea
+                  name="message"
+                  rows={4}
+                  maxLength={3000}
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  placeholder="어떤 공간에 무엇을 하고 싶으신지 적어 주세요."
+                  className="w-full resize-y rounded-xl bg-white/[0.07] border border-white/15 focus:border-gslt-400 focus:outline-none focus:ring-4 focus:ring-gslt-400/20 px-3.5 py-2.5 text-sm text-white placeholder:text-white/45 leading-relaxed transition-colors"
+                />
+              </label>
               <label className="sm:col-span-2 flex items-center gap-2.5 text-sm text-white/80 py-1">
                 <input
                   type="checkbox"
@@ -278,6 +374,29 @@ export default function Chat({
                 />
                 지금까지의 대화 내용을 함께 보냅니다
               </label>
+              {/* 이름·연락처를 받는 모든 폼은 동의를 받아야 한다. 전에는 이 폼만 빠져 있었다. */}
+              <div className="sm:col-span-2 flex items-start gap-2.5 text-sm text-white/80 py-1">
+                <input
+                  id="chat-privacy"
+                  type="checkbox"
+                  name="privacy"
+                  required
+                  aria-required="true"
+                  className="mt-0.5 w-4 h-4 shrink-0 accent-gslt-500"
+                />
+                <p className="break-keep">
+                  <label htmlFor="chat-privacy" className="cursor-pointer">
+                    개인정보 수집·이용에 동의합니다.<span className="text-gslt-400"> *</span>
+                  </label>{' '}
+                  <Link
+                    href="/legal/privacy"
+                    target="_blank"
+                    className="font-medium text-gslt-300 underline underline-offset-4 decoration-gslt-400/40 hover:decoration-gslt-300"
+                  >
+                    처리방침 보기
+                  </Link>
+                </p>
+              </div>
               <button
                 type="submit"
                 disabled={busy}
@@ -342,11 +461,13 @@ function Field({
   label,
   type = 'text',
   required = false,
+  autoComplete,
 }: {
   name: string;
   label: string;
   type?: string;
   required?: boolean;
+  autoComplete?: string;
 }) {
   return (
     <label className="block">
@@ -358,6 +479,7 @@ function Field({
         name={name}
         type={type}
         required={required}
+        autoComplete={autoComplete}
         className="w-full rounded-xl bg-white/[0.07] border border-white/15 focus:border-gslt-400 focus:outline-none focus:ring-4 focus:ring-gslt-400/20 px-3.5 py-2.5 text-sm text-white transition-colors"
       />
     </label>

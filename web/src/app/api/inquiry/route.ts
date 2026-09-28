@@ -1,5 +1,7 @@
 import { COMPANY } from '@/lib/site';
-import { notifyAll, summarize, type Inquiry } from '@/lib/notify';
+import { after } from 'next/server';
+import { notifyAll, sendAutoReply, summarize, type Inquiry } from '@/lib/notify';
+import { markHandoff, SESSION_RE } from '@/lib/chat-log';
 import { adminPatch, isAdminAvailable } from '@/lib/firestore-admin';
 
 /**
@@ -226,9 +228,21 @@ export async function POST(request: Request) {
   if (summary.failed.length) console.error('[inquiry] notify failed:', summary.failed.join(' | '));
   if (!saveError) await recordNotify(id, summary);
 
+
   // 저장도 알림도 전부 실패했을 때만 방문자에게 실패를 알린다.
   // 어느 하나라도 남았으면 우리가 문의를 잡고 있는 것이므로 접수 완료다.
   if (saveError && summary.ok.length === 0) return fail(FALLBACK, 502);
+
+  // 응답을 보낸 뒤에 한다. 둘 다 방문자가 기다릴 이유가 없는 일이다.
+  // 위의 502 판정보다 **뒤에** 둔다 — 우리가 문의를 잡지 못했는데 '잘 받았습니다'를 보내면 거짓말이다.
+  //  - 챗봇에서 넘어온 신청이면 그 대화에 '상담으로 이어짐'을 표시한다.
+  //  - 문의자에게 접수 확인 메일(도메인 인증 전에는 조용히 건너뛴다).
+  const session = typeof fields.session === 'string' && SESSION_RE.test(fields.session) ? fields.session : '';
+  after(async () => {
+    if (session) await markHandoff(session);
+    const reply = await sendAutoReply(checked.data);
+    if (!reply.ok && !reply.skipped) console.error('[inquiry] auto-reply failed:', reply.error);
+  });
 
   return Response.json({ ok: true });
 }

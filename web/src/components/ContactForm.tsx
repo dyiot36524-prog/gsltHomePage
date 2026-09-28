@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { COMPANY } from '@/lib/site';
+import { conversions } from '@/lib/analytics';
 import { ArrowRight } from '@/components/Icon';
 
 /**
@@ -93,6 +94,7 @@ export default function ContactForm() {
       // 성공하면 이 화면에 남지 않는다. 방금 채운 폼이 텅 빈 채 그대로 있고 아래에
       // 작은 글씨만 바뀌는 화면은 "보내졌나?"를 남긴다. 완료 페이지가 접수 사실과
       // 다음 순서, 갈 곳을 한 번에 말한다. 'sending' 상태는 이동이 끝날 때까지 유지한다.
+      conversions.inquirySubmitted('form');
       router.push('/contact/done');
     } catch {
       setError('네트워크 연결이 끊겨 전송하지 못했습니다.');

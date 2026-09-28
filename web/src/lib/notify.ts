@@ -308,3 +308,58 @@ export function summarize(results: NotifyResult[]): { ok: string[]; failed: stri
     skipped: results.filter((r) => r.skipped).map((r) => r.channel),
   };
 }
+
+/* ──────────────────────────── 문의자 자동 회신 ──────────────────────────── */
+
+/**
+ * 문의자에게 "잘 받았습니다" 메일.
+ *
+ * 폼을 보낸 사람은 완료 페이지를 닫는 순간 증거가 사라진다. 받은편지함에 한 통이 남아 있으면
+ * "보냈나?"를 다시 묻지 않고, 24시간 안에 전화가 왔을 때 누군지 알아본다.
+ *
+ * **`NOTIFY_EMAIL_FROM`이 있을 때만 보낸다.** Resend는 도메인 인증 전에는 가입자 본인 주소로만
+ * 발송을 허락한다 — 그 상태로 문의자에게 보내면 매번 403이다. 도메인을 인증하고 그 도메인의
+ * 발신 주소를 이 변수에 넣는 순간, 코드 변경 없이 켜진다.
+ *
+ * **방문자가 적은 글자는 한 글자도 싣지 않는다 — 이름도.** 받는 주소를 방문자가 정하므로,
+ * 남의 주소를 적고 이름 칸에 광고 문구를 넣으면 우리 도메인이 그 사람에게 스팸을 대신
+ * 보내 주는 통로가 된다. 고정 문구만 쓴다. 조금 덜 다정한 대신 악용할 틈이 없다.
+ */
+export async function sendAutoReply(v: Inquiry): Promise<NotifyResult> {
+  const key = process.env.RESEND_API_KEY;
+  const from = process.env.NOTIFY_EMAIL_FROM;
+  if (!key || !from) return { channel: 'email', ok: false, skipped: true };
+
+  const html = `<div style="font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;max-width:560px;color:#0f172a;line-height:1.7">
+<p style="margin:0 0 16px;font-size:15px"><strong>상담 신청을 잘 받았습니다.</strong></p>
+<p style="margin:0 0 16px;font-size:14px;color:#334155">담당자가 <strong>24시간 이내</strong>에 남겨 주신 연락처로 연락드립니다.
+상담에서 공간 용도와 원하시는 제어 범위를 여쭙고, 필요하면 현장 실측 일정을 잡습니다. 견적은 실측 뒤에 확정됩니다.</p>
+<p style="margin:0 0 24px;font-size:14px;color:#334155">급하시면 <a href="tel:${COMPANY.tel.replace(/-/g, '')}" style="color:#1c7682;font-weight:700">${COMPANY.tel}</a>로 전화 주셔도 됩니다.</p>
+<p style="margin:0;font-size:12px;color:#64748b;border-top:1px solid #e2e8f0;padding-top:12px">${SITE.nameKo}(${SITE.name}) · ${SITE.url.replace('https://', '')}<br>
+이 메일은 ${SITE.url.replace('https://', '')}에서 상담을 신청하신 분께 한 번 보내는 접수 확인입니다.</p>
+</div>`;
+  const text =
+    `상담 신청을 잘 받았습니다.\n\n` +
+    `담당자가 24시간 이내에 남겨 주신 연락처로 연락드립니다. 급하시면 ${COMPANY.tel}로 전화 주세요.\n\n` +
+    `${SITE.nameKo}(${SITE.name}) · ${SITE.url}`;
+
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from,
+        to: [v.email],
+        reply_to: COMPANY.email,
+        subject: `[${SITE.nameKo}] 상담 신청이 접수되었습니다`,
+        html,
+        text,
+      }),
+      signal: AbortSignal.timeout(CHANNEL_TIMEOUT_MS),
+    });
+    if (!res.ok) return { channel: 'email', ok: false, error: `Resend ${res.status}: ${(await res.text()).slice(0, 200)}` };
+    return { channel: 'email', ok: true };
+  } catch (e) {
+    return { channel: 'email', ok: false, error: String(e).slice(0, 200) };
+  }
+}

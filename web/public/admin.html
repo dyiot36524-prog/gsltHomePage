@@ -84,6 +84,28 @@
     </div>
 
     <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+      <!-- 이번 주 한 줄. 로그인하자마자 '요즘 사이트가 일을 하고 있나'가 보여야 한다.
+           전에는 문의 탭에 들어가 세어 봐야 알았고, 챗봇 대화는 아예 볼 방법이 없었다. -->
+      <div id="stats-strip" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        <div class="bg-white rounded-2xl border border-slate-200 px-5 py-4">
+          <p class="text-xs font-bold text-slate-500">최근 7일 문의</p>
+          <p id="stat-inq" class="mt-1 text-2xl font-black tabular-nums">—</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 px-5 py-4">
+          <p class="text-xs font-bold text-slate-500">미확인 문의</p>
+          <p id="stat-unread" class="mt-1 text-2xl font-black tabular-nums">—</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 px-5 py-4">
+          <p class="text-xs font-bold text-slate-500">최근 7일 챗봇 대화</p>
+          <p id="stat-chat" class="mt-1 text-2xl font-black tabular-nums">—</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 px-5 py-4">
+          <p class="text-xs font-bold text-slate-500">챗봇 → 상담 신청</p>
+          <p id="stat-handoff" class="mt-1 text-2xl font-black tabular-nums">—</p>
+        </div>
+      </div>
+      <p id="stats-note" class="hidden -mt-3 mb-6 text-xs text-amber-700"></p>
+
       <!-- 탭 -->
       <div class="flex flex-wrap items-center gap-2 mb-8">
         <button data-tab="news" class="tab-btn px-5 py-2.5 rounded-full text-sm font-bold transition-all">뉴스</button>
@@ -92,6 +114,7 @@
         <button data-tab="inquiries" class="tab-btn px-5 py-2.5 rounded-full text-sm font-bold transition-all">문의
           <span id="inq-badge" class="hidden ml-1 px-1.5 py-0.5 rounded-full bg-rose-500 text-white text-[10px] font-black align-middle"></span>
         </button>
+        <button data-tab="chats" class="tab-btn px-5 py-2.5 rounded-full text-sm font-bold transition-all">챗봇 대화</button>
         <button data-tab="knowledge" class="tab-btn px-5 py-2.5 rounded-full text-sm font-bold transition-all">지식베이스</button>
         <button data-tab="settings" class="tab-btn px-5 py-2.5 rounded-full text-sm font-bold transition-all">메뉴 설정</button>
         <button data-tab="admins" class="tab-btn px-5 py-2.5 rounded-full text-sm font-bold transition-all">관리자</button>
@@ -236,6 +259,22 @@
         <p id="inq-empty" class="hidden py-16 text-center text-slate-400 text-sm">접수된 문의가 없습니다.</p>
       </div>
 
+      <!-- ── 챗봇 대화 ──
+           방문자가 챗봇에 무엇을 묻는지. 자주 나오는데 지식베이스에 없는 질문이 다음에 쓸 콘텐츠다.
+           연락처는 서버가 저장 전에 가린다 — 여기엔 [연락처]·[이메일]로만 보인다. -->
+      <div id="chats-panel" class="hidden">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-xl font-black">챗봇 대화</h2>
+          <label class="flex items-center gap-2 cursor-pointer select-none text-sm font-bold text-slate-600">
+            <input id="chat-handoff-only" type="checkbox" class="w-4 h-4 accent-[#28b8c5]">
+            상담으로 이어진 대화만
+          </label>
+        </div>
+        <p class="text-sm text-slate-500 mb-5">최근 200건. 자주 나오는데 답이 약한 질문은 지식베이스에 자료로 보태 주세요.</p>
+        <div id="chat-list" class="space-y-3"></div>
+        <p id="chat-empty" class="hidden py-16 text-center text-slate-400 text-sm">기록된 대화가 없습니다.</p>
+      </div>
+
       <!-- ── 메뉴 설정 ── -->
       <div id="knowledge-panel" class="hidden">
         <div class="flex items-center justify-between mb-4">
@@ -336,7 +375,7 @@
     } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
     import {
       collection, doc, addDoc, updateDoc, deleteDoc, getDocs, setDoc, getDoc,
-      query, where, serverTimestamp
+      query, where, serverTimestamp, orderBy, limit
     } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
     /* 소유자 — firestore.rules에 박아 둔 값과 반드시 같아야 한다.
@@ -386,6 +425,7 @@
       if (user) {
         switchTab('news');
         initInquiryBadge();
+        loadStats();
       }
     });
 
@@ -554,7 +594,11 @@
       $('inquiries-panel').classList.add('hidden');
       $('admins-panel').classList.add('hidden');
       $('knowledge-panel').classList.add('hidden');
-      if (tab === 'knowledge') {
+      $('chats-panel').classList.add('hidden');
+      if (tab === 'chats') {
+        $('chats-panel').classList.remove('hidden');
+        loadChats();
+      } else if (tab === 'knowledge') {
         $('knowledge-panel').classList.remove('hidden');
         loadKnowledge();
       } else if (tab === 'settings') {
@@ -1094,6 +1138,88 @@
     let cachedInquiries = [];
     const esc = s => String(s ?? '').replace(/[&<>"']/g, c => (
       { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+    /* ══ 이번 주 한 줄 ══
+       문의는 inquiries, 챗봇은 chatLogs에서 직접 센다. Vercel 커스텀 이벤트는 유료 플랜에서만
+       집계되므로, 핵심 수치는 우리 DB가 원본이다. chatLogs 규칙이 아직 게시되지 않았으면
+       그 두 칸만 비워 두고 이유를 적는다 — 0으로 보이면 '대화가 없다'로 잘못 읽힌다. */
+    async function loadStats() {
+      const weekAgo = Date.now() / 1000 - 7 * 24 * 3600;
+      const secs = t => t?.seconds || 0;
+      try {
+        const snap = await getDocs(collection(db, 'inquiries'));
+        const all = snap.docs.map(d => d.data());
+        $('stat-inq').textContent = all.filter(q => secs(q.createdAt) >= weekAgo).length;
+        $('stat-unread').textContent = all.filter(q => q.read !== true).length;
+      } catch { /* 문의 탭이 자체 오류를 보여 준다 */ }
+      try {
+        const snap = await getDocs(query(collection(db, 'chatLogs'), orderBy('updatedAt', 'desc'), limit(200)));
+        const week = snap.docs.map(d => d.data()).filter(c => secs(c.updatedAt) >= weekAgo);
+        $('stat-chat').textContent = week.length;
+        const handed = week.filter(c => c.handoff === true).length;
+        $('stat-handoff').textContent = week.length ? `${handed} (${Math.round(handed / week.length * 100)}%)` : '0';
+      } catch (e) {
+        const note = $('stats-note');
+        note.textContent = e.code === 'permission-denied'
+          ? '챗봇 대화 수치는 Firestore 규칙을 게시한 뒤부터 보입니다.'
+          : `챗봇 대화를 불러오지 못했습니다: ${e.code || e.message}`;
+        note.classList.remove('hidden');
+      }
+    }
+
+    /* ══ 챗봇 대화 ══ */
+    let cachedChats = [];
+
+    async function loadChats() {
+      const listEl = $('chat-list');
+      listEl.innerHTML = '<p class="py-8 text-center text-slate-400 text-sm">불러오는 중...</p>';
+      try {
+        const snap = await getDocs(query(collection(db, 'chatLogs'), orderBy('updatedAt', 'desc'), limit(200)));
+        cachedChats = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      } catch (e) {
+        listEl.innerHTML = e.code === 'permission-denied'
+          ? '<p class="py-8 text-center text-slate-500 text-sm">Firestore 규칙을 게시하면 여기에 대화가 쌓입니다.</p>'
+          : `<p class="py-8 text-center text-rose-600 text-sm">대화를 불러오지 못했습니다: ${e.code || e.message}</p>`;
+        return;
+      }
+      renderChats();
+    }
+
+    /** 대화 기록의 첫 방문자 발화. 목록에서 한 줄로 무슨 대화였는지 알게 한다. */
+    function firstQuestion(t) {
+      const m = String(t || '').match(/^방문자: ([^\n]*)/m);
+      return m ? m[1] : '';
+    }
+
+    function renderChats() {
+      const listEl = $('chat-list');
+      const handoffOnly = $('chat-handoff-only').checked;
+      const items = cachedChats.filter(c => !handoffOnly || c.handoff === true);
+      $('chat-empty').classList.toggle('hidden', items.length > 0);
+      listEl.innerHTML = items.map(c => `
+        <details class="group bg-white rounded-xl border ${c.handoff ? 'border-gslt-400' : 'border-slate-200'}">
+          <summary class="flex items-center gap-3 flex-wrap cursor-pointer list-none p-5">
+            ${c.handoff ? '<span class="px-2 py-0.5 rounded-md bg-gslt-100 text-gslt-700 text-[11px] font-black">상담 신청</span>' : ''}
+            <p class="font-bold text-sm text-slate-900 min-w-0 flex-1 truncate">${esc(firstQuestion(c.transcript)) || '(질문 없음)'}</p>
+            <p class="text-xs text-slate-500 tabular-nums">${Math.ceil((c.turnCount || 0) / 2)}회 주고받음</p>
+            <p class="text-xs text-slate-400 tabular-nums">${c.updatedAt?.seconds ? new Date(c.updatedAt.seconds * 1000).toLocaleString('ko-KR') : ''}</p>
+          </summary>
+          <div class="px-5 pb-5">
+            <p class="text-sm text-slate-700 whitespace-pre-wrap break-keep bg-slate-50 rounded-lg p-4">${esc(c.transcript)}</p>
+            <button data-del-chat="${c.id}" class="mt-3 text-sm font-bold text-rose-400 hover:text-rose-600">삭제</button>
+          </div>
+        </details>`).join('');
+      listEl.querySelectorAll('[data-del-chat]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!confirm('이 대화 기록을 삭제할까요? 되돌릴 수 없습니다.')) return;
+          await deleteDoc(doc(db, 'chatLogs', btn.dataset.delChat));
+          cachedChats = cachedChats.filter(x => x.id !== btn.dataset.delChat);
+          renderChats();
+        });
+      });
+    }
+
+    $('chat-handoff-only').addEventListener('change', renderChats);
 
     async function loadInquiries() {
       const listEl = $('inq-list');

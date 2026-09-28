@@ -80,6 +80,25 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
+    // 챗봇 대화 기록: 서버(/api/chat)가 공개 키로 쓴다. 방문자 연락처는 쓰기 전에 가려진다.
+    // 문서 ID는 128비트 무작위 세션이라 남의 대화를 추측해 덮을 수 없다.
+    // 쓰기는 정해진 키·자료형·크기만 — lib/chat-log.ts의 LOG_LIMIT과 같은 값이다.
+    match /chatLogs/{session} {
+      allow create, update: if session.matches('^[0-9a-f]{32}$')
+        && request.resource.data.keys().hasOnly(
+          ['transcript', 'turnCount', 'lastUser', 'updatedAt', 'handoff'])
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.transcript is string
+        && request.resource.data.transcript.size() <= 60000
+        && request.resource.data.turnCount is int
+        && request.resource.data.turnCount >= 1
+        && request.resource.data.turnCount <= 100
+        && request.resource.data.lastUser is string
+        && request.resource.data.lastUser.size() <= 2000
+        && (!('handoff' in request.resource.data) || request.resource.data.handoff is bool);
+      allow read, delete: if isAdmin();
+    }
+
     // 그 외 모든 경로 차단
     match /{document=**} {
       allow read, write: if false;

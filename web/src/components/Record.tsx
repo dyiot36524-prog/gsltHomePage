@@ -113,6 +113,8 @@ export function RecordRow({
       <Link
         href={href}
         {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+        // 내려받기 행은 전환 지점이다. ConversionTracker가 이 속성을 보고 센다.
+        {...(action === 'download' ? { 'data-track': 'download', 'data-track-label': title } : {})}
         className={`group grid grid-cols-[4.5rem_1fr] ${
           mark ? 'md:grid-cols-[7.5rem_9rem_1fr_auto]' : 'md:grid-cols-[7.5rem_1fr_auto]'
         } gap-x-5 md:gap-x-6 gap-y-3 md:gap-y-0 py-7 md:py-8 items-start transition-colors duration-300 hover:bg-slate-50/80 -mx-4 px-4 md:-mx-6 md:px-6`}
