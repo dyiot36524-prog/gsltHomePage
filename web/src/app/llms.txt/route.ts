@@ -1,4 +1,5 @@
 import { SITE, COMPANY, SOLUTIONS } from '@/lib/site';
+import { FIELDS } from '@/lib/fields';
 import { getAllPosts, getMenuVisibility, isPress, postTime } from '@/lib/posts';
 
 /**
@@ -45,6 +46,8 @@ export async function GET() {
   const solutions = SOLUTIONS.map(
     (s) => `- [${s.name} (${s.en})](${SITE.url}${s.href}): ${s.desc}`,
   ).join('\n');
+
+  const fields = FIELDS.map((f) => `- [${f.keyword}](${SITE.url}/solutions/${f.slug}): ${f.lead}`).join('\n');
 
   const body = `# ${SITE.nameKo} (${SITE.name})
 
@@ -96,14 +99,24 @@ ${solutions}
 스터디룸, 연습실, 공유 오피스. 성남 쇼룸에서 스크린골프 3사(카카오VX 프렌즈스크린·골프존파크·
 GDR 아카데미) 시스템과 함께 타석 단위 입·퇴실 자동화를 실증하고 있다.
 
+## 구축 분야
+
+분야마다 이 공간에서 생기는 문제, 짓는 방식, 붙는 장비, 자주 묻는 질문을 한 장에 정리했다.
+
+${fields}
+
 ## 검증된 성과
 
 - 벤처기업 확인 (혁신성장유형) — 벤처기업확인기관, 유효기간 2026-09-09 ~ 2029-09-08
 - 포브스코리아·중앙일보 '2026 소비자 선정 최고의 브랜드 대상' — 무선 IoT 기반 스마트 공간 부문
 - 중소벤처기업부 디딤돌 R&D 국책과제 선정
 - 중소벤처기업부 초기창업패키지 딥테크 분야 선발·졸업
-- 이기종 설비 AI 예지보전 핵심기술 특허 2건 출원 (2026)
+- 등록특허 제10-2659230호 보유
+- 이기종 설비 AI 예지보전 핵심기술 특허 2건 출원 (2026년 6월)
 - 기업부설연구소 보유
+
+구축 현장: 토스·미래에셋 통합관제, LG전자 서울역사옥, 제주 신도리 스마트홈·오피스 등
+금융·IT 기업 업무 공간부터 주거·오피스 복합 공간까지(2026년 9월 보도 기준).
 
 ## 비용
 

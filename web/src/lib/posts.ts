@@ -1,4 +1,4 @@
-import { PRESS_SEED } from './press-seed';
+import { PRESS_SEED, PRESS_POSTS } from './press-seed';
 /**
  * Firestore 조회 (서버 전용).
  *
@@ -93,6 +93,24 @@ function withPressSeed(p: Post): Post {
   if (!String(p.body || '').trim()) out.body = seed.body;
   if (!String(p.thumbnail || '').trim()) out.thumbnail = seed.thumbnail;
   return out;
+}
+
+/**
+ * 코드에만 있는 언론보도(PRESS_POSTS)를 목록에 더한다.
+ *
+ * DB에 같은 원문 주소나 같은 제목의 글이 있으면 더하지 않는다 — 관리자가 올린 쪽이 원본이다.
+ * 제목까지 보는 이유는, 관리자가 포털 사본이 아닌 언론사 원문 주소로 올릴 수도 있기 때문이다.
+ */
+function withCodePosts(posts: Post[], category?: Category): Post[] {
+  const urls = new Set(posts.map((p) => String(p.sourceUrl || '').trim()).filter(Boolean));
+  const titles = new Set(posts.map((p) => String(p.title || '').trim()));
+  const extra = PRESS_POSTS.filter(
+    (p) =>
+      (!category || p.category === category) &&
+      !urls.has(String(p.sourceUrl)) &&
+      !titles.has(p.title),
+  );
+  return [...posts, ...extra];
 }
 
 async function runQuery(body: unknown): Promise<Post[]> {
@@ -255,7 +273,7 @@ export async function getPosts(category: Category): Promise<Post[]> {
       },
     },
   });
-  return posts.sort(
+  return withCodePosts(posts, category).sort(
     (a, b) => Number(b.pinned === true) - Number(a.pinned === true) || postTime(b) - postTime(a),
   );
 }
@@ -270,7 +288,7 @@ export async function getAllPosts(): Promise<Post[]> {
       },
     },
   });
-  return posts.sort((a, b) => postTime(b) - postTime(a));
+  return withCodePosts(posts).sort((a, b) => postTime(b) - postTime(a));
 }
 
 /** 상세용 단건. 없거나 비공개면 null. */
@@ -279,9 +297,11 @@ export async function getPost(id: string): Promise<Post | null> {
     `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/posts/${encodeURIComponent(id)}?key=${API_KEY}`,
     { next: { revalidate: REVALIDATE } },
   );
-  if (!res.ok) return null;
+  // DB에 없으면 코드에만 있는 보도인지 본다.
+  const codePost = () => PRESS_POSTS.find((p) => p.id === id) ?? null;
+  if (!res.ok) return codePost();
   const doc = (await res.json()) as { name?: string; fields?: Record<string, FsValue> };
-  if (!doc.name) return null;
+  if (!doc.name) return codePost();
   const fields = Object.fromEntries(
     Object.entries(doc.fields || {}).map(([k, v]) => [k, decode(v)]),
   );
