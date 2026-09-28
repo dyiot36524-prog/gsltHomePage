@@ -23,26 +23,32 @@ import { SOLUTIONS } from '@/lib/site';
 const FIELDS = [
   {
     k: '커스텀 스마트오피스',
+    href: '/solutions/smart-office',
     d: '사무실마다 층 구조와 업무 방식이 다릅니다. 스마트오피스 구축은 표준 패키지가 아니라 그 공간을 실측하는 데서 시작합니다.',
   },
   {
     k: '스마트홈',
+    href: '/solutions/smart-home',
     d: '이미 지어진 주택과 아파트도 대규모 공사 없이 바꿉니다. 클라우드 월패드와 로비폰으로 조명·냉난방·보안을 하나로 묶습니다.',
   },
   {
     k: '커스텀 스마트빌딩',
+    href: '/solutions/smart-building',
     d: '출입 통제와 에너지 관리, 안전 설비를 한 플랫폼에 모읍니다. 신축이 아니어도 기존 빌딩 위에 그대로 얹습니다.',
   },
   {
     k: '무인 자동화',
+    href: '/solutions/unmanned-automation',
     d: '예약과 출입, 전원을 하나로 잇습니다. 관리자가 상주하지 않아도 예약 시간에 맞춰 공간이 스스로 열리고 닫힙니다.',
   },
   {
     k: 'AI 빌딩 · BMS',
+    href: '/solutions/ai-building-bms',
     d: '설비 데이터를 모아 이상 징후를 예측합니다. 인공지능 빌딩 관제는 경보에서 끝나지 않고 조치 절차와 작업 지시까지 잇습니다.',
   },
   {
     k: '인공지능 오피스',
+    href: '/solutions/ai-office',
     d: '재실과 사용 패턴을 근거로 조명과 공조를 자동 조절합니다. 사람이 없는 구역에 전력을 쓰지 않습니다.',
   },
 ] as const;
@@ -63,13 +69,21 @@ export default function HomeBody() {
         </p>
 
         <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {/* 카드가 곧 각 분야 전용 페이지(/solutions/*)로 가는 문이다. 검색어가 h3로 서 있는
+              이 판에서 그 검색어를 깊게 다룬 페이지로 이어져야 검색엔진도 둘을 한 묶음으로 본다. */}
           {FIELDS.map((f) => (
-            <li
-              key={f.k}
-              className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 transition-colors hover:border-white/20 hover:bg-white/[0.07]"
-            >
-              <h3 className="text-lg font-bold text-white break-keep">{f.k}</h3>
-              <p className="mt-3 text-sm text-white/70 leading-[1.75] break-keep">{f.d}</p>
+            <li key={f.k}>
+              <Link
+                href={f.href}
+                className="group flex h-full flex-col rounded-2xl border border-white/10 bg-white/[0.04] p-6 transition-colors hover:border-white/25 hover:bg-white/[0.07] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gslt-400"
+              >
+                <h3 className="text-lg font-bold text-white break-keep">{f.k}</h3>
+                <p className="mt-3 text-sm text-white/70 leading-[1.75] break-keep">{f.d}</p>
+                <span className="mt-auto pt-5 inline-flex items-center gap-1.5 text-sm font-bold text-gslt-400">
+                  자세히
+                  <ArrowUpRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                </span>
+              </Link>
             </li>
           ))}
         </ul>

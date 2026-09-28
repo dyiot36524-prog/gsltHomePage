@@ -10,7 +10,7 @@ import { SITE, COMPANY, SOLUTIONS } from '@/lib/site';
  * 지어낸 값을 넣지 않는다. 전부 PRODUCT.md와 실제 보도로 확인된 사실이다.
  */
 
-const ORG_ID = `${SITE.url}/#organization`;
+export const ORG_ID = `${SITE.url}/#organization`;
 
 /** 회사 자체. 사이트 전 페이지에 한 번씩 실린다. */
 export const organizationSchema = {

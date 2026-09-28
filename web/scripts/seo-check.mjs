@@ -20,6 +20,8 @@ const DESC_MAX = 85;
 const ROUTES = [
   '/', '/about', '/siot', '/bizmoa', '/morak',
   '/news', '/downloads', '/faq', '/contact', '/support',
+  '/solutions/smart-office', '/solutions/smart-home', '/solutions/smart-building',
+  '/solutions/unmanned-automation', '/solutions/ai-building-bms', '/solutions/ai-office',
 ];
 
 let fail = 0;
@@ -120,6 +122,8 @@ console.log('\n══ 구조화 데이터 ══');
     '/faq': ['FAQPage', 'BreadcrumbList'],
     '/news': ['BreadcrumbList'],
     '/contact': ['BreadcrumbList'],
+    '/solutions/smart-office': ['Service', 'FAQPage', 'BreadcrumbList'],
+    '/solutions/ai-building-bms': ['Service', 'FAQPage', 'BreadcrumbList'],
   };
   for (const [route, types] of Object.entries(need)) {
     const { body } = await text(BASE + route);
