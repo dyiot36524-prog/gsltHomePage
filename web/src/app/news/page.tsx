@@ -11,7 +11,8 @@ import { ArrowUpRight } from '@/components/Icon';
 import { getPosts, isHiddenCategory, isPress, mediaUrl, postDateLabel, postHref, postMirrors, type Post } from '@/lib/posts';
 
 export const metadata: Metadata = pageSeo({
-  title: "GSLT 소식",
+  // 틀이 뒤에 상호를 붙이므로 앞에 또 쓰지 않는다('GSLT 소식 | GSLT'였다).
+  title: "소식",
   description:
     "지에스엘티의 새 소식과 언론보도입니다. 수상·특허 출원·국책과제 선정 기록을 시간순으로 모아 전해 드립니다.",
   path: '/news',

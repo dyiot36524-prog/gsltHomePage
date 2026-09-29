@@ -1,4 +1,4 @@
-import { SITE, COMPANY, SOLUTIONS } from '@/lib/site';
+import { SITE, COMPANY, FURNITURE, SOLUTIONS } from '@/lib/site';
 
 /**
  * 구조화 데이터(JSON-LD).
@@ -64,6 +64,10 @@ export const organizationSchema = {
     dateCreated: '2026-09-09',
     expires: '2029-09-08',
   },
+  // 같은 법인의 가구 사업(gslf.kr). 상호가 같아 검색에서 두 사이트가 섞인다 — 같은
+  // 회사의 다른 브랜드라는 관계를 기계가 읽는 형식으로 적는다. sameAs가 아닌 이유는
+  // sameAs가 "이 회사 자신을 가리키는 다른 주소"(공식 채널 등)를 뜻하기 때문이다.
+  brand: { '@type': 'Brand', name: FURNITURE.name, url: FURNITURE.url },
   knowsAbout: [
     '무선 IoT 구축',
     '스마트오피스',

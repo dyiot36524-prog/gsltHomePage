@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { COMPANY, SITE, SOLUTIONS } from '@/lib/site';
+import { COMPANY, FURNITURE, SITE, SOLUTIONS } from '@/lib/site';
+import { ArrowUpRight } from '@/components/Icon';
 import { getMenuVisibility, type MenuKey } from '@/lib/posts';
 
 /** 상단 메뉴와 같은 설정을 따른다 — 헤더에서 숨긴 항목이 푸터에만 남으면 앞뒤가 안 맞는다. */
@@ -83,8 +84,19 @@ export default async function Footer({ flush = false }: { flush?: boolean }) {
               &nbsp;|&nbsp; <span className="text-slate-300 font-medium">Email</span>&nbsp;
               <a href={`mailto:${COMPANY.email}`} className="hover:text-white transition-colors">{COMPANY.email}</a>
             </p>
+            {/* 같은 법인의 가구 사업. 상호가 같아 검색에서 서로 섞이므로, 두 사이트가
+                같은 회사라는 것을 여기서 밝히고 서로 링크한다(site.ts FURNITURE). */}
+            <p>
+              <span className="text-slate-300 font-medium">패밀리 사이트</span>&nbsp;
+              <a href={FURNITURE.url} target="_blank" rel="noopener"
+                className="inline-flex items-center gap-0.5 hover:text-white transition-colors">
+                {FURNITURE.name} ({FURNITURE.desc})
+                <ArrowUpRight className="w-3 h-3" />
+                <span className="sr-only">(새 창)</span>
+              </a>
+            </p>
           </div>
-          <p className="text-xs text-slate-400 mt-1 md:mt-0 shrink-0">© 2025 GSLT. All rights reserved.</p>
+          <p className="text-xs text-slate-400 mt-1 md:mt-0 shrink-0">© 2025 {SITE.siteName}. All rights reserved.</p>
         </div>
       </div>
     </footer>

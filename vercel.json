@@ -4,20 +4,20 @@
   "trailingSlash": false,
 
   "redirects": [
-    { "source": "/about.html", "destination": "https://www.gslt.kr/about", "permanent": true },
-    { "source": "/siot.html", "destination": "https://www.gslt.kr/siot", "permanent": true },
-    { "source": "/bizmoa.html", "destination": "https://www.gslt.kr/bizmoa", "permanent": true },
-    { "source": "/morak.html", "destination": "https://www.gslt.kr/morak", "permanent": true },
-    { "source": "/news.html", "destination": "https://www.gslt.kr/news", "permanent": true },
-    { "source": "/downloads.html", "destination": "https://www.gslt.kr/downloads", "permanent": true },
-    { "source": "/portfolio.html", "destination": "https://www.gslt.kr/portfolio", "permanent": true },
-    { "source": "/dailo.html", "destination": "https://www.gslt.kr/", "permanent": true },
-    { "source": "/404.html", "destination": "https://www.gslt.kr/", "permanent": true },
-    { "source": "/index.html", "destination": "https://www.gslt.kr/", "permanent": true },
-    { "source": "/admin.html", "destination": "https://www.gslt.kr/admin.html", "permanent": true },
-    { "source": "/p/:id.html", "destination": "https://www.gslt.kr/news/:id", "permanent": true },
-    { "source": "/post.html", "destination": "https://www.gslt.kr/news", "permanent": true },
-    { "source": "/(.*)", "destination": "https://www.gslt.kr/$1", "permanent": true }
+    { "source": "/about.html", "destination": "https://www.gslt.kr/about", "statusCode": 301 },
+    { "source": "/siot.html", "destination": "https://www.gslt.kr/siot", "statusCode": 301 },
+    { "source": "/bizmoa.html", "destination": "https://www.gslt.kr/bizmoa", "statusCode": 301 },
+    { "source": "/morak.html", "destination": "https://www.gslt.kr/morak", "statusCode": 301 },
+    { "source": "/news.html", "destination": "https://www.gslt.kr/news", "statusCode": 301 },
+    { "source": "/downloads.html", "destination": "https://www.gslt.kr/downloads", "statusCode": 301 },
+    { "source": "/portfolio.html", "destination": "https://www.gslt.kr/portfolio", "statusCode": 301 },
+    { "source": "/dailo.html", "destination": "https://www.gslt.kr/", "statusCode": 301 },
+    { "source": "/404.html", "destination": "https://www.gslt.kr/", "statusCode": 301 },
+    { "source": "/index.html", "destination": "https://www.gslt.kr/", "statusCode": 301 },
+    { "source": "/admin.html", "destination": "https://www.gslt.kr/admin.html", "statusCode": 301 },
+    { "source": "/p/:id.html", "destination": "https://www.gslt.kr/news/:id", "statusCode": 301 },
+    { "source": "/post.html", "destination": "https://www.gslt.kr/news", "statusCode": 301 },
+    { "source": "/(.*)", "destination": "https://www.gslt.kr/$1", "statusCode": 301 }
   ],
 
   "headers": [

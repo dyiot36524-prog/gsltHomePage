@@ -11,11 +11,17 @@
  *   node scripts/seo-check.mjs https://www.gslt.kr
  */
 
+import LIMITS from '../src/lib/seo-limits.json' with { type: 'json' };
+
 const BASE = (process.argv[2] || 'https://www.gslt.kr').replace(/\/$/, '');
 
-const TITLE_MAX = 30; // 한글 기준 구글 표시 폭
-const DESC_MIN = 60;
-const DESC_MAX = 85;
+// 상한은 src/lib/seo.ts와 같은 파일에서 읽는다. 두 곳에 숫자를 따로 적으면 한쪽만 고쳐진다.
+const { TITLE_MAX, DESC_MIN, DESC_MAX } = LIMITS; // 제목 30자 = 한글 기준 구글 표시 폭
+
+// 네이버에서 이 회사를 찾는 말. 홈 제목에 이 말이 없어서, 제목이 이 말 그대로인 같은 회사
+// 가구 쇼핑몰(gslf.kr)이 상호 검색 1위를 가져갔다(2026-09). 누가 제목을 다듬다 빠뜨리면
+// 조용히 같은 일이 되풀이되므로 실패로 막는다.
+const BRAND_QUERY = '지에스엘티';
 
 const ROUTES = [
   '/', '/about', '/siot', '/bizmoa', '/morak',
@@ -56,6 +62,8 @@ for (const route of ROUTES) {
   else if (desc.length > DESC_MAX) notes.push(`설명 ${desc.length}자(>${DESC_MAX})`);
   else if (desc.length < DESC_MIN) notes.push(`설명 ${desc.length}자(<${DESC_MIN})`);
   if (!canonical) notes.push('canonical 없음');
+  if (title && !title.includes(BRAND_QUERY)) notes.push(`제목에 '${BRAND_QUERY}' 없음`);
+  if (route === '/' && title && !title.startsWith(BRAND_QUERY)) notes.push(`홈 제목이 '${BRAND_QUERY}'로 시작하지 않음`);
 
   // 설명이 페이지마다 같으면 검색엔진이 어느 쪽을 보여줄지 정하지 못한다.
   if (desc) {

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import PageHead from '@/components/PageHead';
-import { COMPANY } from '@/lib/site';
+import { COMPANY, SITE } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: '서비스 이용약관',
@@ -11,10 +11,9 @@ export const metadata: Metadata = {
   alternates: { canonical: '/legal/terms' },
   openGraph: {
     type: 'website',
-    siteName: 'GSLT',
+    siteName: SITE.siteName,
     locale: 'ko_KR',
     url: '/legal/terms',
-    title: '서비스 이용약관 | GSLT',
     description: '지에스엘티(GSLT)가 제공하는 서비스의 이용 조건과 절차를 정한 약관입니다.',
     images: ['/img/og-image.png'],
   },

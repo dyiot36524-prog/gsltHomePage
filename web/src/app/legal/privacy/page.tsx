@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import PageHead from '@/components/PageHead';
-import { COMPANY } from '@/lib/site';
+import { COMPANY, SITE } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: '개인정보 처리방침',
@@ -11,10 +11,9 @@ export const metadata: Metadata = {
   alternates: { canonical: '/legal/privacy' },
   openGraph: {
     type: 'website',
-    siteName: 'GSLT',
+    siteName: SITE.siteName,
     locale: 'ko_KR',
     url: '/legal/privacy',
-    title: '개인정보 처리방침 | GSLT',
     description: '지에스엘티(GSLT)가 개인정보를 어떻게 수집·이용·보관하는지 안내합니다.',
     images: ['/img/og-image.png'],
   },

@@ -1,4 +1,4 @@
-import { SITE, COMPANY, SOLUTIONS } from '@/lib/site';
+import { SITE, COMPANY, FURNITURE, SOLUTIONS } from '@/lib/site';
 import { FIELDS } from '@/lib/fields';
 import { getAllPosts, getMenuVisibility, isPress, postTime } from '@/lib/posts';
 
@@ -51,7 +51,7 @@ export async function GET() {
 
   const body = `# ${SITE.nameKo} (${SITE.name})
 
-> ${SITE.description} 배선 공사 없이 오피스·주거·빌딩을 스마트 공간으로 바꾸고,
+> ${SITE.description}
 > 상담·요구분석 → 현장실측 → 설계·견적 → 시공·설치 → 검수·유지보수 다섯 단계를
 > 직접 수행한다. 솔루션만 공급하는 것이 아니라 현장에 들어가 시공하고 운영까지 맡는다.
 
@@ -61,6 +61,8 @@ export async function GET() {
 - 주소: ${COMPANY.address}
 - 연락처: ${COMPANY.tel} · ${COMPANY.email}
 - 웹사이트: ${SITE.url}/
+- 가구 사업: ${FURNITURE.desc}는 같은 회사의 가구 사업인 ${FURNITURE.name}(${FURNITURE.url})가 맡는다.
+  상호가 같지만 무선 IoT 구축 문의는 이 사이트, 가구 주문은 그 쇼핑몰이다.
 
 ## 핵심 기술
 

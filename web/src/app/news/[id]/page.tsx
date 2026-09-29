@@ -27,10 +27,9 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     alternates: { canonical: url },
     openGraph: {
       type: 'article',
-      siteName: 'GSLT',
+      siteName: SITE.siteName,
       locale: 'ko_KR',
       url,
-      title: `${post.title} | GSLT`,
       description: post.excerpt || post.title,
       images: [mediaUrl(post.thumbnail) || '/img/og-image.png'],
     },

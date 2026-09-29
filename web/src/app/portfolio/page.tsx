@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import PageHead, { FilterBar } from '@/components/PageHead';
 import { RecordEmpty, RecordHead, RecordList, RecordRow } from '@/components/Record';
 import { getPosts, isHiddenCategory, mediaUrl, postDateLabel, type Post } from '@/lib/posts';
+import { SITE } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: '시공사례',
@@ -13,10 +14,9 @@ export const metadata: Metadata = {
   alternates: { canonical: '/portfolio' },
   openGraph: {
     type: 'website',
-    siteName: 'GSLT',
+    siteName: SITE.siteName,
     locale: 'ko_KR',
     url: '/portfolio',
-    title: '시공사례 | GSLT',
     description: '지에스엘티가 실제로 구축한 공간들. 현장 조건과 적용 솔루션을 기록으로 남깁니다.',
     images: ['/img/og-image.png'],
   },

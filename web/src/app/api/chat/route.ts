@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { after } from 'next/server';
-import { COMPANY, SITE } from '@/lib/site';
+import { COMPANY, FURNITURE, SITE } from '@/lib/site';
 import { getKnowledge, knowledgeBlock } from '@/lib/knowledge';
 import { saveChatLog, SESSION_RE } from '@/lib/chat-log';
 
@@ -183,9 +183,16 @@ function validateSummary(raw: unknown): { ok: true; turns: Turn[] } | { ok: fals
  *
  * 모델이 전화번호나 이메일을 지어내면 방문자가 엉뚱한 곳에 연락하게 된다. 회사 공식
  * 연락처는 그대로 두고 나머지는 문구로 바꾼다.
+ *
+ * 가구 사업(지에스엘티 퍼니처)의 주문 번호도 우리 번호다. 빠뜨리면 락커를 묻는 방문자에게
+ * 지식에 적힌 가구 번호가 IoT 사무실 번호로 바뀌어 나간다 — 틀린 번호를 안내하는 셈이다.
  */
 function scrubContacts(text: string): string {
-  const ours = new Set([COMPANY.tel, COMPANY.tel.replace(/-/g, ''), COMPANY.email.toLowerCase()]);
+  const ours = new Set([
+    COMPANY.tel, COMPANY.tel.replace(/-/g, ''),
+    FURNITURE.tel, FURNITURE.tel.replace(/-/g, ''),
+    COMPANY.email.toLowerCase(),
+  ]);
   return text
     .replace(/\b0\d{1,2}[-.\s]?\d{3,4}[-.\s]?\d{4}\b/g, (m) =>
       ours.has(m) || ours.has(m.replace(/[-.\s]/g, '')) ? m : COMPANY.tel,

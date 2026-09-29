@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { SITE } from '@/lib/site';
+import { TITLE_TEMPLATE } from '@/lib/seo';
 import {
   jsonLd,
   localBusinessSchema,
@@ -17,9 +18,13 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
   // 홈 제목이 77자여서 검색 결과에서 잘리고 있었다. 한글 기준 구글이 보여 주는 폭은
   // 약 30자다. 잘린 뒤에 무엇이 남는지 통제하지 못하느니, 노리는 질의 하나로 짧게 쓴다.
+  //
+  // 홈 제목은 상호로 시작한다. 네이버 가이드가 홈 제목을 "사이트를 대표하는 이름(상호명)"으로
+  // 쓰라고 하고, 네이버가 결과에 보여 주는 "사이트명"이 곧 이 값이다. 하위 페이지는 틀이
+  // 뒤에 상호를 붙인다 — 틀은 seo.ts의 TITLE_TEMPLATE 하나에서 온다(길이 검사와 같은 값).
   title: {
-    default: '무선 IoT 구축 전문기업 | GSLT',
-    template: '%s | GSLT',
+    default: `${SITE.siteName} | 무선 IoT 구축 전문기업`,
+    template: TITLE_TEMPLATE,
   },
   description: SITE.description,
   // 홈의 정본 주소. 하위 페이지는 각자 alternates.canonical을 갖고 있다.
@@ -31,7 +36,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: 'website',
-    siteName: SITE.name,
+    siteName: SITE.siteName,
     locale: 'ko_KR',
     url: SITE.url,
     images: ['/img/og-image.png'],
