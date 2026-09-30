@@ -52,6 +52,15 @@ export function Download({ className }: Props) {
   );
 }
 
+/** 재생. 같은 선 굵기로 그리고 속을 채운다 — 빈 삼각형은 작게 줄면 화살표처럼 읽힌다. */
+export function Play({ className }: Props) {
+  return (
+    <svg {...base} fill="currentColor" className={className}>
+      <path d="M8 5.5v13l10.5-6.5z" />
+    </svg>
+  );
+}
+
 export function ChevronDown({ className }: Props) {
   return (
     <svg {...base} className={className}>

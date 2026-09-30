@@ -31,7 +31,7 @@ export default function PrivacyPage() {
 
         <article className="max-w-[68ch]">
           <p className="border-t-2 border-slate-900 pt-4 text-sm text-slate-500 tabular-nums">
-            최종 업데이트: 2025년 1월 1일
+            최종 업데이트: 2026년 9월 30일
           </p>
 
           <div className="post-body mt-10">
@@ -64,13 +64,32 @@ export default function PrivacyPage() {
               합니다.
             </p>
 
-            <h2>5. 이용자의 권리</h2>
+            {/* 회사소개 페이지의 유튜브 영상·구글 지도. 유튜브는 누르기 전까지 연결하지 않도록
+                만들었지만(VideoShowcase), 누른 뒤에는 Google이 처리하므로 그 사실을 적는다.
+                지도는 전부터 있었는데 여기 빠져 있었다. */}
+            <h2>5. 외부 서비스 연결(동영상·지도)</h2>
+            <p>
+              회사소개 페이지에는 Google LLC가 제공하는 YouTube 동영상과 Google 지도가 포함되어 있습니다.
+              동영상은 이용자가 재생 버튼을 누르기 전까지 YouTube에 연결하지 않으며, 누르면 YouTube 개인정보
+              보호 강화 모드(youtube-nocookie.com) 플레이어가 열립니다. 지도는 해당 부분이 화면에 표시될 때
+              Google 지도에서 불러옵니다.
+            </p>
+            <p>
+              이때 Google이 이용자의 IP 주소, 기기·브라우저 정보를 처리하거나 쿠키 등 브라우저 저장 기능을
+              사용할 수 있으며, 회사는 이 정보를 수집하거나 전달받지 않습니다. 해당 처리에는{' '}
+              <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">
+                Google 개인정보처리방침
+              </a>
+              이 적용됩니다.
+            </p>
+
+            <h2>6. 이용자의 권리</h2>
             <p>
               이용자는 언제든지 개인정보 열람, 정정, 삭제, 처리 정지를 요청할 수 있습니다. 요청은{' '}
               <a href={`mailto:${COMPANY.email}`}>{COMPANY.email}</a>으로 이메일 주시면 즉시 처리합니다.
             </p>
 
-            <h2>6. 개인정보 보호책임자</h2>
+            <h2>7. 개인정보 보호책임자</h2>
             {/* 표시 의무 항목이라 연락처는 site.ts의 회사 상수 하나만 본다. */}
             <ul>
               <li>성명: GSLT 개인정보 담당자</li>
@@ -84,7 +103,7 @@ export default function PrivacyPage() {
           </div>
 
           <p className="mt-14 pt-6 border-t border-slate-200 text-xs text-slate-500 tabular-nums">
-            본 방침은 2025년 1월 1일부터 시행됩니다.
+            본 방침은 2026년 9월 30일부터 시행됩니다. (외부 서비스 연결 항목 추가)
           </p>
         </article>
       </main>

@@ -6,6 +6,8 @@ import Image from 'next/image';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import TimelineProgress from './TimelineProgress';
+import VideoShowcase from './VideoShowcase';
+import { getAboutVideos } from '@/lib/about-videos';
 
 export const metadata: Metadata = pageSeo({
   title: "회사소개",
@@ -32,7 +34,8 @@ const pageCss = `
 
 `;
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const videos = await getAboutVideos();
   return (
     <div className="bg-slate-50 text-slate-900">
       {/* 검색 결과의 경로 표시와 AI의 사이트 구조 이해에 함께 쓰인다. */}
@@ -201,6 +204,19 @@ export default function AboutPage() {
             </div>
           </div>
         </div>
+
+        {/* 영상 — 관리자 '회사소개 영상' 탭에서 넣고 뺀다(settings/aboutVideos).
+            절차를 글로 읽은 바로 다음에 실제 모습을 보여 주는 자리다. 공개 영상이 없거나
+            읽기에 실패하면 구역 자체를 그리지 않는다 — 빈 판을 보여 주느니 없는 편이 낫다. */}
+        {videos.length > 0 && (
+          <section aria-labelledby="about-videos" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20 md:mb-28">
+            <div className="flex items-center gap-4 mb-10">
+              <h2 id="about-videos" className="text-2xl md:text-3xl font-black">영상으로 보는 지에스엘티</h2>
+              <div className="flex-1 h-px bg-slate-200"></div>
+            </div>
+            <VideoShowcase videos={videos} />
+          </section>
+        )}
 
         {/* 성과 & 연혁 */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20 md:mb-28">

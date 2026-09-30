@@ -116,6 +116,7 @@
         </button>
         <button data-tab="chats" class="tab-btn px-5 py-2.5 rounded-full text-sm font-bold transition-all">챗봇 대화</button>
         <button data-tab="knowledge" class="tab-btn px-5 py-2.5 rounded-full text-sm font-bold transition-all">지식베이스</button>
+        <button data-tab="videos" class="tab-btn px-5 py-2.5 rounded-full text-sm font-bold transition-all">회사소개 영상</button>
         <button data-tab="settings" class="tab-btn px-5 py-2.5 rounded-full text-sm font-bold transition-all">메뉴 설정</button>
         <button data-tab="admins" class="tab-btn px-5 py-2.5 rounded-full text-sm font-bold transition-all">관리자</button>
       </div>
@@ -311,6 +312,88 @@
         <div id="kb-list" class="space-y-2"></div>
       </div>
 
+      <!-- ── 회사소개 영상 ── -->
+      <div id="videos-panel" class="hidden">
+        <div class="flex items-center justify-between mb-4 gap-3 flex-wrap">
+          <h2 class="text-xl font-black">회사소개 영상</h2>
+          <div class="flex items-center gap-4">
+            <label class="flex items-center gap-2 text-sm font-bold text-slate-700 cursor-pointer">
+              <input id="vid-enabled" type="checkbox" class="w-5 h-5 accent-[#28b8c5] cursor-pointer"> 영상 구역 보이기</label>
+            <button id="vid-new-btn" class="px-5 py-2.5 rounded-full bg-gslt-500 hover:bg-gslt-600 text-white text-sm font-bold transition-all">영상 추가</button>
+          </div>
+        </div>
+        <div class="mb-5 px-4 py-3 rounded-xl bg-amber-50 text-amber-900 text-sm leading-relaxed space-y-1">
+          <p>회사소개 페이지의 <b>'영상으로 보는 지에스엘티'</b>에 나옵니다. <b>맨 위의 공개 영상이 대표 영상</b>이며, 저장하면 <b>1분 안에</b> 반영됩니다.</p>
+          <p><b>긴 홍보 영상과 방송·언론 영상은 유튜브 주소로</b> 넣어 주세요. 방송사 영상을 파일로 올리면 저작권 문제가 됩니다.
+            파일은 1~2분짜리 현장 클립에 권합니다 — 재생될 때마다 무료 전송 용량을 씁니다.
+            <b>말소리가 있는 영상은 자막을 붙일 수 있는 유튜브로</b> 올려 주세요(파일 영상에는 자막을 넣을 수 없습니다).</p>
+          <p>'비공개'는 페이지에 안 보인다는 뜻입니다. 목록 자체는 외부에서 읽을 수 있으니 대외비 영상은 넣지 마세요.</p>
+        </div>
+        <p id="vid-status" class="text-sm mb-4"></p>
+
+        <div id="vid-editor" class="hidden mb-6 p-5 rounded-2xl border border-slate-200 bg-white">
+          <p id="vid-editor-title" class="font-black mb-4">영상 추가</p>
+          <div class="flex gap-2 mb-4">
+            <button type="button" data-vkind="youtube" class="vkind-btn px-4 py-2 rounded-full text-sm font-bold">유튜브 주소</button>
+            <button type="button" data-vkind="file" class="vkind-btn px-4 py-2 rounded-full text-sm font-bold">영상 파일 올리기</button>
+          </div>
+
+          <div id="vid-yt-box">
+            <label class="block"><span class="block text-xs font-bold text-slate-500 mb-1">유튜브 주소</span>
+              <input id="vid-url" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm" placeholder="https://youtu.be/… 또는 https://www.youtube.com/watch?v=…" autocomplete="off"></label>
+            <p id="vid-url-status" class="text-xs mt-1.5"></p>
+          </div>
+
+          <div id="vid-file-box" class="hidden">
+            <label class="block"><span class="block text-xs font-bold text-slate-500 mb-1">영상 파일 (mp4 권장 · 100MB 이하)</span>
+              <input id="vid-file" type="file" accept="video/mp4,video/webm,video/quicktime" class="block w-full text-sm"></label>
+            <div id="vid-progress-wrap" class="hidden mt-2 h-2 rounded-full bg-slate-100 overflow-hidden">
+              <div id="vid-progress" class="h-2 bg-gslt-500 transition-all" style="width:0%"></div>
+            </div>
+            <p id="vid-file-status" class="text-xs mt-1.5"></p>
+          </div>
+
+          <div id="vid-preview-wrap" class="hidden mt-4">
+            <div id="vid-preview" class="relative aspect-video max-w-xl rounded-xl overflow-hidden bg-slate-900"></div>
+            <p class="text-xs text-slate-500 mt-1.5">미리 재생해서 영상이 제대로 나오는지 확인하세요. 유튜브에서 퍼가기를 막은 영상은 여기서 오류가 납니다.</p>
+          </div>
+
+          <div class="grid gap-3 sm:grid-cols-2 mt-4">
+            <label class="block sm:col-span-2"><span class="block text-xs font-bold text-slate-500 mb-1">제목 (필수, 80자 이내)</span>
+              <input id="vid-title" maxlength="80" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm"></label>
+            <label class="block"><span class="block text-xs font-bold text-slate-500 mb-1">분류</span>
+              <select id="vid-category" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm">
+                <option value="intro">회사 소개</option><option value="site">시공 현장</option>
+                <option value="demo">제품 시연</option><option value="press">언론·행사</option>
+              </select></label>
+            <label class="block"><span class="block text-xs font-bold text-slate-500 mb-1">날짜 (선택)</span>
+              <input id="vid-date" type="date" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm"></label>
+            <label class="block sm:col-span-2"><span class="block text-xs font-bold text-slate-500 mb-1">설명 (선택, 200자 이내)</span>
+              <textarea id="vid-desc" rows="3" maxlength="200" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm leading-relaxed"></textarea></label>
+            <label id="vid-channel-row" class="block sm:col-span-2"><span class="block text-xs font-bold text-slate-500 mb-1">출처 채널 (자동으로 채워집니다 — 우리 채널 영상이면 지워 주세요)</span>
+              <input id="vid-channel" maxlength="60" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm"></label>
+            <div class="sm:col-span-2">
+              <span class="block text-xs font-bold text-slate-500 mb-1">표지 이미지 (선택 — 없으면 유튜브 썸네일이나 영상 첫 장면)</span>
+              <div class="flex items-center gap-3 flex-wrap">
+                <input id="vid-poster-file" type="file" accept="image/*" class="text-sm">
+                <button type="button" id="vid-poster-clear" class="hidden px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-600">표지 지우기</button>
+                <span id="vid-poster-status" class="text-xs"></span>
+              </div>
+              <img id="vid-poster-preview" alt="" class="hidden mt-2 w-48 aspect-video object-cover rounded-lg border border-slate-200">
+            </div>
+            <label class="flex items-center gap-2 text-sm"><input id="vid-vertical" type="checkbox" class="w-4 h-4 accent-gslt-500"> 세로 영상 (쇼츠·세로 촬영)</label>
+            <label class="flex items-center gap-2 text-sm"><input id="vid-published" type="checkbox" checked class="w-4 h-4 accent-gslt-500"> 공개 (회사소개에 보임)</label>
+          </div>
+          <div class="flex gap-2 mt-5">
+            <button id="vid-save" class="px-5 py-2.5 rounded-full bg-gslt-500 hover:bg-gslt-600 text-white text-sm font-bold">저장</button>
+            <button id="vid-cancel" class="px-5 py-2.5 rounded-full border border-slate-300 text-slate-600 text-sm font-bold">취소</button>
+            <span id="vid-save-status" class="self-center text-sm"></span>
+          </div>
+        </div>
+
+        <div id="vid-list" class="space-y-2"></div>
+      </div>
+
       <div id="settings-panel" class="hidden">
         <h2 class="text-xl font-black mb-2">메뉴 설정</h2>
         <p class="text-sm text-slate-500 mb-6">끄면 사이트 헤더와 푸터에서 해당 메뉴가 숨겨집니다. 페이지 주소를 직접 아는 사람에게는 목록이 계속 보이므로, 완전 비공개가 필요하면 글을 비공개로 전환하세요.</p>
@@ -375,7 +458,7 @@
     } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
     import {
       collection, doc, addDoc, updateDoc, deleteDoc, getDocs, setDoc, getDoc,
-      query, where, serverTimestamp, orderBy, limit
+      query, where, serverTimestamp, orderBy, limit, runTransaction
     } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
     /* 소유자 — firestore.rules에 박아 둔 값과 반드시 같아야 한다.
@@ -595,7 +678,11 @@
       $('admins-panel').classList.add('hidden');
       $('knowledge-panel').classList.add('hidden');
       $('chats-panel').classList.add('hidden');
-      if (tab === 'chats') {
+      $('videos-panel').classList.add('hidden');
+      if (tab === 'videos') {
+        $('videos-panel').classList.remove('hidden');
+        loadVideos();
+      } else if (tab === 'chats') {
         $('chats-panel').classList.remove('hidden');
         loadChats();
       } else if (tab === 'knowledge') {
@@ -1300,6 +1387,493 @@
 
     $('inq-unread-only').addEventListener('change', renderInquiries);
 
+    /* ══ 회사소개 영상 ══
+       목록 전체가 settings/aboutVideos 문서 하나다. settings는 이미 "누구나 읽고 관리자만
+       쓰는" 규칙이 있어 규칙을 다시 게시할 필요가 없고, 배열 순서가 곧 노출 순서다.
+       사이트는 web/src/lib/about-videos.ts가 60초 캐시로 읽고, 거기서 한 번 더 검증한다.
+
+       영상 파일은 uploadToCloudinary를 쓰지 않는다. 그 함수는 이미지가 아니면 비공개 Blob으로
+       보내고, /api/file은 다운로드만 시키며 재생에 필요한 부분 요청(Range)을 받지 않는다 —
+       올라가도 재생이 안 된다(특히 iOS). Cloudinary /video/upload로 직접 올린다. */
+    const VIDEO_DOC = () => doc(db, 'settings', 'aboutVideos');
+    const VIDEO_MAX = 12;
+    const VIDEO_WARN = 6;
+    const VIDEO_FILE_MAX = 100 * 1024 * 1024;      // Cloudinary 무료 요금제의 영상 한 개 상한
+    const VIDEO_TRANSFORM_MAX = 40 * 1024 * 1024;  // 넘으면 화질 변환·자동 표지를 만들 수 없다
+    const VIDEO_CATEGORY = { intro: '회사 소개', site: '시공 현장', demo: '제품 시연', press: '언론·행사' };
+    const YT_ID = /^[A-Za-z0-9_-]{11}$/;
+    const CLOUD_VIDEO = `https://res.cloudinary.com/${CLOUDINARY.cloudName}/video/upload/`;
+    const CLOUD_IMAGE = `https://res.cloudinary.com/${CLOUDINARY.cloudName}/image/upload/`;
+
+    let vidItems = [];
+    let vidEditing = null;  // 수정 중인 항목 id. 새 항목이면 null
+    let vidKind = 'youtube';
+    let vidSource = null;   // 붙여 넣은 주소나 올린 파일에서 얻은 값
+    let vidPoster = '';
+    let vidUrlSeq = 0;      // 늦게 도착한 영상 정보가 새로 넣은 주소를 덮지 않게
+    let vidUploadSeq = 0;   // 올리는 도중 편집기를 닫거나 다른 항목을 열면 끝난 결과를 버린다
+
+    // 상태 문구의 기본 클래스를 기억해 두고 색만 바꾼다.
+    ['vid-status', 'vid-url-status', 'vid-file-status', 'vid-poster-status', 'vid-save-status']
+      .forEach(id => { $(id).dataset.base = $(id).className; });
+    function vidSay(el, text, tone) {
+      el.textContent = text || '';
+      const c = { error: 'text-rose-600', ok: 'text-gslt-700', warn: 'text-amber-700' }[tone] || 'text-slate-500';
+      el.className = (el.dataset.base || '') + ' ' + c;
+    }
+
+    /* 붙여 넣는 주소는 모양이 제각각이다 — watch?v=, youtu.be/, shorts/, embed/, live/,
+       m.youtube.com, 공유 버튼이 붙이는 ?si=…, 시작 시각 t=1m30s. 영상 ID만 뽑아 저장하고
+       iframe 주소는 사이트가 만든다. 붙여 넣은 HTML을 그대로 쓰는 일은 없다. */
+    function parseStart(t) {
+      if (!t) return 0;
+      if (/^\d+$/.test(t)) return Math.min(Number(t), 86400);
+      const m = /^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$/.exec(t);
+      if (!m || !m[0]) return 0;
+      return Math.min((+m[1] || 0) * 3600 + (+m[2] || 0) * 60 + (+m[3] || 0), 86400);
+    }
+    function parseYouTube(raw) {
+      const s = String(raw || '').trim();
+      if (!s) return { error: '' };
+      if (YT_ID.test(s)) return { id: s, start: 0, shorts: false };
+      let u;
+      try { u = new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(s) ? s : 'https://' + s); }
+      catch { return { error: '유튜브 주소가 아닙니다.' }; }
+      if (!/^https?:$/.test(u.protocol)) return { error: '유튜브 주소가 아닙니다.' };
+      const host = u.hostname.toLowerCase().replace(/^(www|m|music)\./, '');
+      const parts = u.pathname.split('/').filter(Boolean);
+      const single = '영상 하나의 주소를 넣어 주세요.';
+      let id = '', shorts = false;
+      if (host === 'youtu.be') {
+        id = parts[0] || '';
+      } else if (host === 'youtube.com' || host === 'youtube-nocookie.com') {
+        const head = parts[0] || '';
+        if (head === 'watch') id = u.searchParams.get('v') || '';
+        else if (['shorts', 'embed', 'live', 'v', 'e'].includes(head)) { id = parts[1] || ''; shorts = head === 'shorts'; }
+        else if (head === 'playlist') return { error: '재생목록 주소입니다. ' + single };
+        else if (head.startsWith('@') || ['channel', 'c', 'user'].includes(head)) return { error: '채널 주소입니다. ' + single };
+      } else {
+        return { error: '유튜브 주소가 아닙니다.' };
+      }
+      if (!YT_ID.test(id)) {
+        return { error: u.searchParams.get('list') ? '재생목록 주소입니다. ' + single : '영상 주소를 알아보지 못했습니다. ' + single };
+      }
+      return { id, start: parseStart(u.searchParams.get('t') || u.searchParams.get('start') || ''), shorts };
+    }
+
+    /* 제목·채널 자동 채우기. 유튜브 oEmbed는 www.gslt.kr에서 직접 부를 수 있다(CORS 허용 실측).
+       응답의 html은 쓰지 않는다 — 쿠키를 심는 www.youtube.com 플레이어를 가리킨다. */
+    async function fetchOEmbed(id) {
+      const res = await fetch('https://www.youtube.com/oembed?format=json&url=' +
+        encodeURIComponent('https://www.youtube.com/watch?v=' + id));
+      if (res.status === 401 || res.status === 403) throw new Error('퍼가기가 막힌 영상일 수 있습니다');
+      if (res.status === 400 || res.status === 404) throw new Error('비공개이거나 없는 영상입니다');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    }
+
+    /* 해상도가 낮게 올라간 영상은 maxres 썸네일이 없다(120px 회색 그림이 온다). 되는 것을 고른다. */
+    function pickThumb(id) {
+      const tries = ['maxresdefault', 'sddefault', 'hqdefault'];
+      return new Promise(resolve => {
+        const next = i => {
+          if (i >= tries.length) return resolve('hqdefault');
+          const img = new Image();
+          img.onload = () => (img.naturalWidth > 120 ? resolve(tries[i]) : next(i + 1));
+          img.onerror = () => next(i + 1);
+          img.src = `https://i.ytimg.com/vi/${id}/${tries[i]}.jpg`;
+        };
+        next(0);
+      });
+    }
+
+    function vidPosterOf(it) {
+      if (it.poster) return it.poster;
+      if (it.kind === 'youtube' && YT_ID.test(it.youtubeId || '')) return `https://i.ytimg.com/vi/${it.youtubeId}/${it.thumb || 'hqdefault'}.jpg`;
+      if (it.kind === 'file' && String(it.fileUrl || '').startsWith(CLOUD_VIDEO) && (it.bytes || 0) <= VIDEO_TRANSFORM_MAX) {
+        return CLOUD_VIDEO + 'so_1,f_jpg,w_480/' + it.fileUrl.slice(CLOUD_VIDEO.length).replace(/\.[A-Za-z0-9]+$/, '.jpg');
+      }
+      return '';
+    }
+
+    function uploadVideoFile(file, onProgress) {
+      return new Promise((resolve, reject) => {
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('upload_preset', CLOUDINARY.uploadPreset);
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY.cloudName}/video/upload`);
+        xhr.upload.onprogress = e => { if (e.lengthComputable) onProgress(e.loaded / e.total); };
+        xhr.onload = () => {
+          let j = {};
+          try { j = JSON.parse(xhr.responseText); } catch { }
+          if (xhr.status >= 200 && xhr.status < 300 && j.secure_url) resolve(j);
+          else reject(new Error(j.error?.message || 'HTTP ' + xhr.status));
+        };
+        xhr.onerror = () => reject(new Error('네트워크 오류'));
+        xhr.send(fd);
+      });
+    }
+
+    /* 이 계정은 "업로드 성공인데 전송 401"을 겪은 적이 있다(PDF). 올린 주소가 실제로
+       재생되는지 영상 요소로 열어 본다 — CORS와 상관없이 확인된다. */
+    function probeVideo(url) {
+      return new Promise(resolve => {
+        const v = document.createElement('video');
+        let done = false;
+        const finish = ok => { if (done) return; done = true; v.removeAttribute('src'); v.load(); resolve(ok); };
+        v.preload = 'metadata';
+        v.muted = true;
+        v.onloadedmetadata = () => finish(true);
+        v.onerror = () => finish(false);
+        setTimeout(() => finish(false), 20000);
+        v.src = url;
+      });
+    }
+
+    async function loadVideos() {
+      const box = $('vid-list');
+      box.innerHTML = '<p class="text-sm text-slate-400 py-8 text-center">불러오는 중…</p>';
+      try {
+        const snap = await getDoc(VIDEO_DOC());
+        const d = snap.exists() ? snap.data() : {};
+        vidItems = Array.isArray(d.items) ? d.items : [];
+        $('vid-enabled').checked = d.enabled !== false;
+        renderVideos();
+      } catch (e) {
+        box.innerHTML = `<p class="text-sm text-rose-600 py-8 text-center">불러오지 못했습니다: ${esc(e.message)}</p>`;
+      }
+    }
+
+    function renderVideos() {
+      const box = $('vid-list');
+      if (!vidItems.length) {
+        box.innerHTML = '<p class="py-12 text-center text-sm text-slate-400">아직 영상이 없습니다. \'영상 추가\'로 유튜브 주소를 넣거나 파일을 올려 보세요.</p>';
+        return;
+      }
+      const firstPublic = vidItems.findIndex(it => it.published !== false);
+      const shown = vidItems.filter(it => it.published !== false).length;
+      const tag = (cls, text) => `<span class="px-2 py-0.5 rounded text-[11px] font-bold ${cls}">${text}</span>`;
+      box.innerHTML = (shown > VIDEO_WARN
+        ? `<p class="text-xs text-amber-700 mb-2">공개 영상이 ${shown}개입니다. ${VIDEO_WARN}개를 넘으면 목록이 길어져 대표 영상에 눈이 덜 갑니다.</p>` : '') +
+        vidItems.map((it, i) => {
+          const poster = vidPosterOf(it);
+          const off = it.published === false;
+          const badges = [
+            i === firstPublic ? tag('bg-slate-900 text-white', '대표') : '',
+            off ? tag('bg-slate-100 text-slate-500', '비공개') : '',
+            tag('bg-gslt-50 text-gslt-700', esc(VIDEO_CATEGORY[it.category] || '회사 소개')),
+            it.kind === 'file' ? tag('bg-amber-50 text-amber-800', '파일') : tag('bg-rose-50 text-rose-700', '유튜브'),
+            it.vertical ? tag('bg-slate-100 text-slate-600', '세로') : '',
+          ].join('');
+          const btn = (act, label, disabled, cls) =>
+            `<button data-vact="${act}" data-vid="${esc(it.id)}" ${disabled ? 'disabled' : ''} class="px-2.5 py-1.5 rounded-lg border ${cls || 'border-slate-200 text-slate-600'} text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed">${label}</button>`;
+          return `
+          <div class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 bg-white ${off ? 'opacity-70' : ''}">
+            <div class="w-32 shrink-0 aspect-video rounded-lg overflow-hidden bg-slate-900">${poster ? `<img src="${esc(poster)}" alt="" loading="lazy" class="w-full h-full object-cover">` : ''}</div>
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-1.5 mb-1">${badges}</div>
+              <p class="font-bold text-sm text-slate-900 truncate">${esc(it.title || '(제목 없음)')}</p>
+              <p class="text-xs text-slate-400 tabular-nums mt-0.5">${esc(it.date || '')}</p>
+            </div>
+            <div class="flex flex-wrap justify-end gap-1 shrink-0 max-w-[15rem]">
+              ${btn('top', '대표로', i === firstPublic)}${btn('up', '위로', i === 0)}${btn('down', '아래로', i === vidItems.length - 1)}
+              ${btn('toggle', off ? '공개' : '비공개')}${btn('edit', '수정')}${btn('del', '삭제', false, 'border-rose-200 text-rose-600')}
+            </div>
+          </div>`;
+        }).join('');
+      box.querySelectorAll('[data-vact]').forEach(b => b.addEventListener('click', () => vidAction(b.dataset.vact, b.dataset.vid)));
+    }
+
+    /* 읽고-고치고-쓰기를 트랜잭션으로 한다. 두 사람이 동시에 고쳐도 한쪽 변경이 사라지지 않는다.
+       mutate는 재시도될 수 있으므로 매번 새로 읽은 목록의 사본만 고친다. */
+    async function saveVideos(mutate, statusEl = $('vid-status')) {
+      vidSay(statusEl, '저장 중…');
+      try {
+        let next;
+        await runTransaction(db, async tx => {
+          const snap = await tx.get(VIDEO_DOC());
+          const cur = snap.exists() ? snap.data() : {};
+          const state = { enabled: cur.enabled !== false, items: Array.isArray(cur.items) ? cur.items.map(x => ({ ...x })) : [] };
+          next = mutate(state) || state;
+          if (next.items.length > VIDEO_MAX) throw new Error(`영상은 ${VIDEO_MAX}개까지 넣을 수 있습니다.`);
+          tx.set(VIDEO_DOC(), {
+            enabled: next.enabled, items: next.items,
+            updatedAt: serverTimestamp(), updatedBy: auth.currentUser?.email || ''
+          });
+        });
+        vidItems = next.items;
+        $('vid-enabled').checked = next.enabled;
+        renderVideos();
+        vidSay(statusEl, '저장했습니다. 회사소개에는 1분 안에 반영됩니다.', 'ok');
+        return true;
+      } catch (e) {
+        const why = /permission/i.test(String(e.code || e.message || ''))
+          ? '권한이 없습니다. 관리자 계정으로 로그인했는지 확인하세요.' : (e.message || e);
+        vidSay(statusEl, '저장 실패: ' + why, 'error');
+        return false;
+      }
+    }
+
+    async function vidAction(act, id) {
+      if (act === 'edit') return openVideoEditor(vidItems.find(x => x.id === id));
+      if (act === 'del' && !confirm('이 영상을 목록에서 삭제할까요? (올린 파일 자체는 Cloudinary에 남습니다)')) return;
+      await saveVideos(state => {
+        const items = state.items;
+        const i = items.findIndex(x => x.id === id);
+        if (i < 0) return state;
+        if (act === 'del') items.splice(i, 1);
+        else if (act === 'toggle') items[i] = { ...items[i], published: items[i].published === false };
+        else if (act === 'up' && i > 0) [items[i - 1], items[i]] = [items[i], items[i - 1]];
+        else if (act === 'down' && i < items.length - 1) [items[i + 1], items[i]] = [items[i], items[i + 1]];
+        // 대표는 '맨 앞의 공개 영상'이다. 비공개를 대표로 올리면 보이지 않으니 함께 공개한다.
+        else if (act === 'top') items.unshift({ ...items.splice(i, 1)[0], published: true });
+        return state;
+      });
+    }
+
+    $('vid-enabled').addEventListener('change', e => {
+      const on = e.target.checked;
+      saveVideos(state => ({ ...state, enabled: on }));
+    });
+
+    function setVidKind(kind) {
+      vidKind = kind;
+      document.querySelectorAll('.vkind-btn').forEach(b => {
+        const on = b.dataset.vkind === kind;
+        b.className = 'vkind-btn px-4 py-2 rounded-full text-sm font-bold ' +
+          (on ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-400');
+      });
+      $('vid-yt-box').classList.toggle('hidden', kind !== 'youtube');
+      $('vid-file-box').classList.toggle('hidden', kind !== 'file');
+      $('vid-channel-row').classList.toggle('hidden', kind !== 'youtube');
+    }
+    document.querySelectorAll('.vkind-btn').forEach(b => b.addEventListener('click', () => {
+      if (b.dataset.vkind === vidKind) return;
+      vidSource = null;
+      vidUploadSeq++;
+      setVidKind(b.dataset.vkind);
+      $('vid-progress-wrap').classList.add('hidden');
+      if (b.dataset.vkind === 'file') { $('vid-file').value = ''; vidSay($('vid-file-status'), ''); }
+      renderVidPreview();
+      // 칸에 주소가 남아 있는데 '주소를 넣어 주세요'가 뜨지 않게 다시 읽는다.
+      if (b.dataset.vkind === 'youtube' && $('vid-url').value.trim()) onVidUrl();
+    }));
+
+    function setVidPoster(url) {
+      vidPoster = url || '';
+      $('vid-poster-preview').src = vidPoster;
+      $('vid-poster-preview').classList.toggle('hidden', !vidPoster);
+      $('vid-poster-clear').classList.toggle('hidden', !vidPoster);
+      renderVidPreview();
+    }
+
+    function renderVidPreview() {
+      const wrap = $('vid-preview-wrap'), box = $('vid-preview');
+      if (!vidSource) { wrap.classList.add('hidden'); box.innerHTML = ''; return; }
+      wrap.classList.remove('hidden');
+      const poster = vidPoster || vidPosterOf(vidSource);
+      box.innerHTML = (poster ? `<img src="${esc(poster)}" alt="" class="absolute inset-0 w-full h-full object-cover">` : '') +
+        '<button type="button" id="vid-preview-play" class="absolute inset-0 flex items-center justify-center">' +
+        '<span class="px-4 py-2 rounded-full bg-white/90 text-slate-900 text-sm font-bold shadow">미리 재생</span></button>';
+      $('vid-preview-play').addEventListener('click', () => {
+        if (vidSource.kind === 'youtube') {
+          const q = new URLSearchParams({ autoplay: '1', playsinline: '1', rel: '0' });
+          if (vidSource.start) q.set('start', String(vidSource.start));
+          // 저장된 값은 관리자 화면 밖에서도 쓰일 수 있다. 형식을 다시 확인하고 이스케이프한다.
+          if (!YT_ID.test(vidSource.youtubeId || '')) { box.textContent = '영상 ID가 올바르지 않습니다.'; return; }
+          box.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${esc(vidSource.youtubeId)}?${esc(q)}" title="미리 재생" class="absolute inset-0 w-full h-full border-0" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+        } else {
+          box.innerHTML = `<video src="${esc(vidSource.fileUrl)}" controls autoplay playsinline class="absolute inset-0 w-full h-full bg-black"></video>`;
+        }
+      });
+    }
+
+    function openVideoEditor(it) {
+      vidUploadSeq++; vidUrlSeq++;
+      vidEditing = it ? it.id : null;
+      $('vid-editor-title').textContent = it ? '영상 수정' : '영상 추가';
+      setVidKind(it?.kind === 'file' ? 'file' : 'youtube');
+      vidSource = !it ? null : it.kind === 'file'
+        ? { kind: 'file', fileUrl: it.fileUrl, publicId: it.publicId || '', bytes: it.bytes || 0, duration: it.duration || 0, width: it.width || 0, height: it.height || 0 }
+        : YT_ID.test(it.youtubeId || '') ? { kind: 'youtube', youtubeId: it.youtubeId, start: it.start || 0, thumb: it.thumb || 'hqdefault' } : null;
+      $('vid-url').value = vidSource?.kind === 'youtube' ? `https://youtu.be/${vidSource.youtubeId}${vidSource.start ? '?t=' + vidSource.start : ''}` : '';
+      $('vid-file').value = '';
+      $('vid-progress-wrap').classList.add('hidden');
+      vidSay($('vid-url-status'), ''); vidSay($('vid-file-status'), ''); vidSay($('vid-poster-status'), '');
+      vidSay($('vid-save-status'), '');
+      $('vid-title').value = it?.title || '';
+      $('vid-category').value = it?.category || 'intro';
+      $('vid-date').value = it?.date || '';
+      $('vid-desc').value = it?.description || '';
+      $('vid-channel').value = it?.channel || '';
+      $('vid-vertical').checked = it?.vertical === true;
+      $('vid-published').checked = it ? it.published !== false : true;
+      setVidPoster(it?.poster || '');
+      $('vid-editor').classList.remove('hidden');
+      $('vid-editor').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    async function onVidUrl() {
+      const r = parseYouTube($('vid-url').value);
+      const st = $('vid-url-status');
+      const seq = ++vidUrlSeq;
+      if (r.error !== undefined) {
+        vidSource = null; renderVidPreview();
+        vidSay(st, r.error, r.error ? 'error' : '');
+        return;
+      }
+      vidSource = { kind: 'youtube', youtubeId: r.id, start: r.start, thumb: 'hqdefault' };
+      if (r.shorts) $('vid-vertical').checked = true;
+      renderVidPreview();
+      vidSay(st, '영상 정보를 확인하는 중…');
+      const [meta, thumb] = await Promise.all([
+        fetchOEmbed(r.id).catch(e => ({ error: e.message || String(e) })),
+        pickThumb(r.id),
+      ]);
+      if (seq !== vidUrlSeq || !vidSource || vidSource.youtubeId !== r.id) return;
+      vidSource.thumb = thumb;
+      renderVidPreview();
+      if (meta.error) {
+        vidSay(st, `영상 정보를 가져오지 못했습니다 (${meta.error}). 제목을 직접 입력하고, 미리 재생으로 확인해 주세요.`, 'warn');
+        return;
+      }
+      if (!$('vid-title').value.trim()) $('vid-title').value = String(meta.title || '').slice(0, 80);
+      if (!$('vid-channel').value.trim()) $('vid-channel').value = String(meta.author_name || '').slice(0, 60);
+      vidSay(st, `확인했습니다 — '${meta.author_name || '알 수 없음'}' 채널의 영상입니다. 출처 칸에 채워 두었습니다 — 우리 채널 영상이면 지워 주세요.`, 'ok');
+    }
+    $('vid-url').addEventListener('change', onVidUrl);
+    $('vid-url').addEventListener('paste', () => setTimeout(onVidUrl, 0));
+
+    $('vid-file').addEventListener('change', async e => {
+      const file = e.target.files?.[0];
+      const st = $('vid-file-status');
+      if (!file) return;
+      const mb = (file.size / 1048576).toFixed(1);
+      if (!/^video\//.test(file.type)) { vidSay(st, '영상 파일이 아닙니다.', 'error'); return; }
+      if (file.size > VIDEO_FILE_MAX) { vidSay(st, `${mb}MB — 100MB를 넘는 영상은 올릴 수 없습니다. 유튜브에 올린 뒤 주소를 넣어 주세요.`, 'error'); return; }
+      if (file.size > VIDEO_TRANSFORM_MAX && file.type !== 'video/mp4') {
+        vidSay(st, '40MB를 넘는 파일은 mp4만 받습니다. 다른 형식은 변환할 수 없어 일부 브라우저에서 재생되지 않습니다.', 'error');
+        return;
+      }
+      vidSource = null; renderVidPreview();
+      const seq = ++vidUploadSeq;
+      const stale = () => seq !== vidUploadSeq || vidKind !== 'file';
+      $('vid-progress-wrap').classList.remove('hidden');
+      $('vid-progress').style.width = '0%';
+      vidSay(st, `올리는 중… (${mb}MB)`);
+      try {
+        const j = await uploadVideoFile(file, p => {
+          if (stale()) return;
+          const pct = Math.round(p * 100);
+          $('vid-progress').style.width = pct + '%';
+          vidSay(st, `올리는 중… ${pct}%`);
+        });
+        if (stale()) return;
+        if (!String(j.secure_url).startsWith(CLOUD_VIDEO)) throw new Error('예상하지 못한 저장 위치입니다');
+        vidSay(st, '올렸습니다. 재생되는지 확인하는 중…');
+        const playable = await probeVideo(j.secure_url);
+        if (stale()) return;
+        if (!playable) {
+          throw new Error('올라가긴 했지만 재생 주소가 열리지 않습니다. Cloudinary의 전송 설정을 확인해야 합니다');
+        }
+        vidSource = {
+          kind: 'file', fileUrl: j.secure_url, publicId: j.public_id || '', bytes: j.bytes || file.size,
+          duration: Math.round(j.duration || 0), width: j.width || 0, height: j.height || 0
+        };
+        if (j.height > j.width) $('vid-vertical').checked = true;
+        if (!$('vid-title').value.trim()) $('vid-title').value = file.name.replace(/\.[^.]+$/, '').slice(0, 80);
+        renderVidPreview();
+        if (file.size > VIDEO_TRANSFORM_MAX) {
+          vidSay(st, '올렸습니다. 40MB가 넘어 화질 최적화와 자동 표지가 적용되지 않습니다 — 표지 이미지를 따로 올려 주세요.', 'warn');
+        } else {
+          vidSay(st, '올렸습니다.', 'ok');
+        }
+      } catch (err) {
+        if (stale()) return;
+        const msg = String(err.message || err);
+        const hint = /preset|format|resource|allowed|video/i.test(msg)
+          ? ' — Cloudinary 업로드 설정이 영상을 받지 않는 것 같습니다. 관리 담당자에게 알려 주세요.' : '';
+        vidSay(st, '업로드 실패: ' + msg + hint, 'error');
+      } finally {
+        if (!stale()) $('vid-progress-wrap').classList.add('hidden');
+      }
+    });
+
+    $('vid-poster-file').addEventListener('change', async e => {
+      const f = e.target.files?.[0];
+      if (!f) return;
+      const st = $('vid-poster-status');
+      if (!/^image\//.test(f.type) || f.size > CLOUDINARY_MAX) {
+        vidSay(st, '10MB 이하 이미지만 표지로 쓸 수 있습니다.', 'error');
+        e.target.value = '';
+        return;
+      }
+      const r = await uploadToCloudinary(f, st, f.name);
+      if (r && String(r.secure_url).startsWith(CLOUD_IMAGE)) setVidPoster(r.secure_url);
+      else if (r) vidSay(st, '표지는 Cloudinary 이미지여야 합니다.', 'error');
+      e.target.value = '';
+    });
+    $('vid-poster-clear').addEventListener('click', () => setVidPoster(''));
+
+    $('vid-new-btn').addEventListener('click', () => {
+      if (vidItems.length >= VIDEO_MAX) {
+        vidSay($('vid-status'), `영상은 ${VIDEO_MAX}개까지 넣을 수 있습니다. 먼저 하나를 지워 주세요.`, 'error');
+        return;
+      }
+      openVideoEditor(null);
+    });
+    $('vid-cancel').addEventListener('click', () => {
+      vidUploadSeq++; vidUrlSeq++;
+      $('vid-editor').classList.add('hidden');
+      $('vid-preview').innerHTML = '';
+    });
+    $('vid-save').addEventListener('click', async () => {
+      const st = $('vid-save-status');
+      const title = $('vid-title').value.trim().slice(0, 80);
+      if (!vidSource) { vidSay(st, vidKind === 'youtube' ? '유튜브 주소를 넣어 주세요.' : '영상 파일을 먼저 올려 주세요.', 'error'); return; }
+      if (!title) { vidSay(st, '제목을 입력하세요.', 'error'); return; }
+      const yt = vidSource.kind === 'youtube';
+      if (yt && !YT_ID.test(vidSource.youtubeId || '')) { vidSay(st, '유튜브 주소를 다시 확인해 주세요.', 'error'); return; }
+      if (!yt && !String(vidSource.fileUrl || '').startsWith(CLOUD_VIDEO)) { vidSay(st, '영상 파일을 다시 올려 주세요.', 'error'); return; }
+      const date = $('vid-date').value;
+      const cat = $('vid-category').value;
+      // Firestore는 undefined 값을 거부한다. 쓰지 않는 칸도 빈 값으로 채워 모양을 고정한다.
+      const item = {
+        id: vidEditing || (Date.now().toString(36) + Math.random().toString(36).slice(2, 7)),
+        kind: vidSource.kind,
+        category: Object.prototype.hasOwnProperty.call(VIDEO_CATEGORY, cat) ? cat : 'intro',
+        title,
+        description: $('vid-desc').value.trim().slice(0, 200),
+        date: /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : '',
+        published: $('vid-published').checked,
+        vertical: $('vid-vertical').checked,
+        poster: vidPoster.startsWith(CLOUD_IMAGE) ? vidPoster : '',
+        youtubeId: yt ? vidSource.youtubeId : '',
+        start: yt ? (vidSource.start || 0) : 0,
+        thumb: yt ? (vidSource.thumb || 'hqdefault') : '',
+        channel: yt ? $('vid-channel').value.trim().slice(0, 60) : '',
+        fileUrl: yt ? '' : vidSource.fileUrl,
+        publicId: yt ? '' : (vidSource.publicId || ''),
+        bytes: yt ? 0 : (vidSource.bytes || 0),
+        duration: yt ? 0 : (vidSource.duration || 0),
+        width: yt ? 0 : (vidSource.width || 0),
+        height: yt ? 0 : (vidSource.height || 0),
+      };
+      const editingId = vidEditing;
+      const ok = await saveVideos(state => {
+        const i = editingId ? state.items.findIndex(x => x.id === editingId) : -1;
+        if (i >= 0) state.items[i] = item;
+        else state.items.push(item);
+        return state;
+      }, st);
+      if (ok) {
+        $('vid-editor').classList.add('hidden');
+        $('vid-preview').innerHTML = '';
+        vidSay($('vid-status'), '저장했습니다. 회사소개에는 1분 안에 반영됩니다.', 'ok');
+      }
+    });
+
     /* ══ 메뉴 설정 ══ */
     async function loadMenus() {
       let menus = { news: true, downloads: true, portfolio: true };
@@ -1323,7 +1897,9 @@
           portfolio: $('m-portfolio').checked
         });
         try { sessionStorage.removeItem('gslt-menus'); } catch (e) { }
-        status.textContent = '저장되었습니다. 사이트에 바로 반영됩니다.';
+        // 서버가 이 설정을 60초 동안 캐시한다(posts.ts getMenuVisibility). '바로'라고 쓰면
+        // 저장 직후 새로고침한 관리자가 반영이 안 됐다고 오해한다.
+        status.textContent = '저장되었습니다. 사이트에는 1분 안에 반영됩니다.';
         status.className = 'text-sm mt-3 text-gslt-600 font-bold';
       } catch (e) {
         status.textContent = '저장 실패: ' + e.message;

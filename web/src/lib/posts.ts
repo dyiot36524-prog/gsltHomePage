@@ -9,9 +9,10 @@ import { PRESS_SEED, PRESS_POSTS } from './press-seed';
 
 import 'server-only';
 
-const PROJECT_ID = 'gslthomepage';
+// about-videos.ts도 같은 값과 decode()를 쓴다. 복사본을 늘리지 않으려고 내보낸다.
+export const PROJECT_ID = 'gslthomepage';
 // 공개용 웹 API 키. 실제 권한은 Firestore 보안 규칙이 통제한다 (비밀이 아님).
-const API_KEY = 'AIzaSyCjnuHSGhy97XOtoVC1fSwnGInLwVs1wok';
+export const API_KEY = 'AIzaSyCjnuHSGhy97XOtoVC1fSwnGInLwVs1wok';
 
 export type Category = 'news' | 'portfolio' | 'downloads';
 
@@ -49,9 +50,9 @@ export type Post = {
 };
 
 /* ── Firestore 값 디코딩 ── */
-type FsValue = Record<string, unknown>;
+export type FsValue = Record<string, unknown>;
 
-function decode(v: FsValue | null | undefined): unknown {
+export function decode(v: FsValue | null | undefined): unknown {
   if (v == null) return null;
   if (v.stringValue !== undefined) return v.stringValue;
   if (v.booleanValue !== undefined) return v.booleanValue;
