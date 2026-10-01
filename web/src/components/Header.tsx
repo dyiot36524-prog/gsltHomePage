@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { NAV, SOLUTIONS, type NavKey } from '@/lib/site';
+import { NAV, SITE, SOLUTIONS, type NavKey } from '@/lib/site';
 import { getMenuVisibility, type MenuKey } from '@/lib/posts';
 import SolutionsMenu from '@/components/SolutionsMenu';
 
@@ -40,10 +40,10 @@ export default async function Header({
         }
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between h-16 relative">
-          <Link href="/" className="flex items-center h-8 z-10" aria-label="GSLT 홈">
+          <Link href="/" className="flex items-center h-8 z-10" aria-label={`${SITE.siteName} 홈`}>
             <Image
               src={overlay ? '/img/gslt-logo-white.png' : '/img/gslt-logo-color.png'}
-              alt="GSLT" width={120} height={32}
+              alt={SITE.siteName} width={120} height={32}
               priority className="h-full w-auto object-contain"
               style={{ width: 'auto', height: '100%' }}
             />

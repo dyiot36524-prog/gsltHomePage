@@ -316,12 +316,19 @@
       <div id="videos-panel" class="hidden">
         <div class="flex items-center justify-between mb-4 gap-3 flex-wrap">
           <h2 class="text-xl font-black">회사소개 영상</h2>
-          <div class="flex items-center gap-4">
-            <label class="flex items-center gap-2 text-sm font-bold text-slate-700 cursor-pointer">
-              <input id="vid-enabled" type="checkbox" class="w-5 h-5 accent-[#28b8c5] cursor-pointer"> 영상 구역 보이기</label>
-            <button id="vid-new-btn" class="px-5 py-2.5 rounded-full bg-gslt-500 hover:bg-gslt-600 text-white text-sm font-bold transition-all">영상 추가</button>
-          </div>
+          <button id="vid-new-btn" class="px-5 py-2.5 rounded-full bg-gslt-500 hover:bg-gslt-600 text-white text-sm font-bold transition-all">영상 추가</button>
         </div>
+        <!-- 구역 전체를 보이거나 뺀다. 영상 목록은 그대로 남는다. 메뉴 설정 탭에도 같은 스위치가 있다. -->
+        <label for="vid-enabled" class="mb-5 flex items-center justify-between gap-4 p-5 rounded-2xl border border-slate-200 bg-white cursor-pointer max-w-3xl">
+          <span>
+            <span class="block font-bold text-sm text-slate-900">회사소개에 '영상으로 보는 지에스엘티' 구역 보이기</span>
+            <span id="vid-enabled-note" class="block text-xs text-slate-500 mt-1">끄면 영상 목록은 그대로 두고 구역만 통째로 빠집니다.</span>
+          </span>
+          <span class="flex items-center gap-2 shrink-0">
+            <span id="vid-enabled-state" class="text-sm font-bold"></span>
+            <input id="vid-enabled" type="checkbox" class="w-5 h-5 accent-[#28b8c5] cursor-pointer">
+          </span>
+        </label>
         <div class="mb-5 px-4 py-3 rounded-xl bg-amber-50 text-amber-900 text-sm leading-relaxed space-y-1">
           <p>회사소개 페이지의 <b>'영상으로 보는 지에스엘티'</b>에 나옵니다. <b>맨 위의 공개 영상이 대표 영상</b>이며, 저장하면 <b>1분 안에</b> 반영됩니다.</p>
           <p><b>긴 홍보 영상과 방송·언론 영상은 유튜브 주소로</b> 넣어 주세요. 방송사 영상을 파일로 올리면 저작권 문제가 됩니다.
@@ -409,6 +416,14 @@
           <div class="flex items-center justify-between p-5">
             <div><p class="font-bold text-sm">포트폴리오</p><p class="text-xs text-slate-400 mt-0.5">portfolio.html</p></div>
             <input type="checkbox" id="m-portfolio" class="w-5 h-5 accent-[#28b8c5] cursor-pointer">
+          </div>
+        </div>
+        <h3 class="text-sm font-black text-slate-700 mt-8 mb-2">페이지 구역</h3>
+        <div class="bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100 max-w-xl">
+          <div class="flex items-center justify-between p-5">
+            <div><p class="font-bold text-sm">회사소개 · 영상으로 보는 지에스엘티</p>
+              <p class="text-xs text-slate-400 mt-0.5">끄면 구역이 통째로 빠집니다. 영상 목록은 '회사소개 영상' 탭에서 관리합니다.</p></div>
+            <input type="checkbox" id="m-about-videos" class="w-5 h-5 accent-[#28b8c5] cursor-pointer">
           </div>
         </div>
         <button id="menus-save"
@@ -1542,10 +1557,25 @@
         renderVideos();
       } catch (e) {
         box.innerHTML = `<p class="text-sm text-rose-600 py-8 text-center">불러오지 못했습니다: ${esc(e.message)}</p>`;
+        // 못 읽었는데 스위치가 '숨김'으로 보이면 실제 상태를 오해한다.
+        $('vid-enabled-state').textContent = '확인 불가';
+        $('vid-enabled-state').className = 'text-sm font-bold text-rose-600';
       }
     }
 
+    function paintVidEnabled() {
+      const on = $('vid-enabled').checked;
+      const shown = vidItems.filter(it => it.published !== false).length;
+      $('vid-enabled-state').textContent = !on ? '숨김' : shown ? '보이는 중' : '켜짐 (공개 영상 없음)';
+      $('vid-enabled-state').className = 'text-sm font-bold ' + (on && shown ? 'text-gslt-700' : 'text-slate-500');
+      $('vid-enabled-note').textContent = !on
+        ? '지금 회사소개에 영상 구역이 없습니다. 켜면 1분 안에 다시 나타납니다.'
+        : shown ? '끄면 영상 목록은 그대로 두고 구역만 통째로 빠집니다.'
+          : '공개된 영상이 하나도 없어 지금은 구역이 보이지 않습니다. 영상을 추가하거나 공개로 바꿔 주세요.';
+    }
+
     function renderVideos() {
+      paintVidEnabled();
       const box = $('vid-list');
       if (!vidItems.length) {
         box.innerHTML = '<p class="py-12 text-center text-sm text-slate-400">아직 영상이 없습니다. \'영상 추가\'로 유튜브 주소를 넣거나 파일을 올려 보세요.</p>';
@@ -1632,9 +1662,14 @@
       });
     }
 
-    $('vid-enabled').addEventListener('change', e => {
+    $('vid-enabled').addEventListener('change', async e => {
       const on = e.target.checked;
-      saveVideos(state => ({ ...state, enabled: on }));
+      paintVidEnabled();
+      // 저장에 실패하면 스위치를 되돌린다 — 화면과 실제 상태가 어긋나 있으면 안 된다.
+      if (!(await saveVideos(state => ({ ...state, enabled: on })))) {
+        e.target.checked = !on;
+        paintVidEnabled();
+      }
     });
 
     function setVidKind(kind) {
@@ -1884,6 +1919,11 @@
       $('m-news').checked = menus.news !== false;
       $('m-downloads').checked = menus.downloads !== false;
       $('m-portfolio').checked = menus.portfolio !== false;
+      // 영상 구역은 메뉴가 아니라 settings/aboutVideos의 enabled다. 문서가 없으면 켜짐으로 본다.
+      try {
+        const v = await getDoc(doc(db, 'settings', 'aboutVideos'));
+        $('m-about-videos').checked = !v.exists() || v.data().enabled !== false;
+      } catch (e) { $('m-about-videos').checked = true; }
     }
 
     $('menus-save').addEventListener('click', async () => {
@@ -1896,6 +1936,11 @@
           downloads: $('m-downloads').checked,
           portfolio: $('m-portfolio').checked
         });
+        // merge — 영상 목록(items)은 건드리지 않고 켜짐/꺼짐만 바꾼다.
+        await setDoc(doc(db, 'settings', 'aboutVideos'), {
+          enabled: $('m-about-videos').checked,
+          updatedAt: serverTimestamp(), updatedBy: auth.currentUser?.email || ''
+        }, { merge: true });
         try { sessionStorage.removeItem('gslt-menus'); } catch (e) { }
         // 서버가 이 설정을 60초 동안 캐시한다(posts.ts getMenuVisibility). '바로'라고 쓰면
         // 저장 직후 새로고침한 관리자가 반영이 안 됐다고 오해한다.
