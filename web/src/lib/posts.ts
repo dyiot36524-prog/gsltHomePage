@@ -218,6 +218,15 @@ export function formatDate(d?: Date | null): string {
   return `${d.getFullYear()}. ${p(d.getMonth() + 1)}. ${p(d.getDate())}`;
 }
 
+/**
+ * 본문이 있는 글인가. 자료실 항목은 제목과 파일만 있는 경우가 많다 — 그런 지면은
+ * 검색엔진에 따로 수집해 달라고 할 만한 내용이 없어 sitemap·RSS에서 빼고 noindex로 둔다.
+ * 관리자에서 본문(요약)을 쓰면 그 순간부터 다시 포함된다.
+ */
+export function hasBody(p: Post): boolean {
+  return Boolean(String(p.body || '').trim());
+}
+
 /** http(s)만 통과. javascript: 등 스킴 주입 차단. */
 export function safeHttpUrl(u?: string): string {
   const s = String(u || '').trim();
@@ -300,7 +309,16 @@ export async function getPost(id: string): Promise<Post | null> {
   );
   // DB에 없으면 코드에만 있는 보도인지 본다.
   const codePost = () => PRESS_POSTS.find((p) => p.id === id) ?? null;
-  if (!res.ok) return codePost();
+  // 없는 글(404)과 비공개 글(403 — 규칙이 익명 읽기를 막는다)만 '없음'으로 본다.
+  // 429·5xx 같은 일시 장애까지 '없음'으로 돌리면 멀쩡한 글이 404로 나가고, 검색엔진은
+  // 404를 "삭제됨"으로 읽어 색인에서 뺀다(네이버 HTTP 규약 가이드: 서버 오류는 5xx).
+  // 던지면 Next가 5xx를 내고, ISR은 직전에 만든 페이지를 계속 보여 준다.
+  if (res.status === 404 || res.status === 403) return codePost();
+  if (!res.ok) {
+    const fallback = codePost();
+    if (fallback) return fallback;
+    throw new Error(`Firestore get failed: ${res.status}`);
+  }
   const doc = (await res.json()) as { name?: string; fields?: Record<string, FsValue> };
   if (!doc.name) return codePost();
   const fields = Object.fromEntries(

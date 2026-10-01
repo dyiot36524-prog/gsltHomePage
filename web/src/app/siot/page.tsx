@@ -18,6 +18,7 @@ export const metadata: Metadata = pageSeo({
   description:
     '예약과 출입, 조명과 공조, 에너지와 기록까지 한 플랫폼에서. 빌딩 전체를 한 화면으로 관제하는 지능형 공간 운영 솔루션 시옷.',
   path: '/siot',
+  image: '/img/siot1.png',
 });
 
 const ld = {

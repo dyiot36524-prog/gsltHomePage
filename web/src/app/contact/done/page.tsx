@@ -21,6 +21,8 @@ import { COMPANY, SOLUTIONS } from '@/lib/site';
 export const metadata: Metadata = {
   title: '상담 신청 완료',
   robots: { index: false, follow: true },
+  // 색인하지 않는 페이지가 홈을 정본으로 가리키면 신호가 엇갈린다. 레이아웃 값을 지운다.
+  alternates: { canonical: null },
 };
 
 /** 신청 이후의 실제 순서. contact/page.tsx의 STEPS와 같은 다섯 단계 중 첫 칸에 서 있다. */

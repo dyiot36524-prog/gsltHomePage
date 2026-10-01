@@ -15,6 +15,7 @@ export const metadata: Metadata = pageSeo({
   description:
     "도면에 장비를 배치하면 견적서·계약서·납품확인서가 자동 생성됩니다. IoT·전기 시공업체를 위한 B2B SaaS.",
   path: '/bizmoa',
+  image: '/img/bizmoa1.JPG',
 });
 
 const ld = {

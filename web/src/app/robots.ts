@@ -31,6 +31,7 @@ export default function robots(): MetadataRoute.Robots {
       { userAgent: 'Yeti', ...allowAll },
     ],
     sitemap: `${SITE.url}/sitemap.xml`,
-    host: SITE.url,
+    // Host:는 표준(RFC 9309)에 없는 얀덱스 전용 지시어라 뺐다. 정본 주소는 canonical과
+    // 301(gslt.kr → www)이 이미 알린다.
   };
 }

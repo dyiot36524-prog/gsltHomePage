@@ -7,8 +7,8 @@ import { Tag } from '@/components/Record';
 import { ArrowLeft, ArrowRight, ArrowUpRight, Download } from '@/components/Icon';
 import { renderMarkdown } from '@/lib/markdown';
 import {
-  getPost, getPosts, isHiddenCategory, isPress, mediaUrl, postDateLabel, postMirrors, postTime,
-  safeHttpUrl, type Post,
+  CATEGORY_LABEL, getPost, getPosts, hasBody, isHiddenCategory, isPress, mediaUrl, postDateLabel,
+  postMirrors, postTime, safeHttpUrl, type Post,
 } from '@/lib/posts';
 import { SITE } from '@/lib/site';
 import { jsonLd, breadcrumbSchema } from '@/lib/schema';
@@ -18,22 +18,47 @@ type Params = { params: Promise<{ id: string }> };
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { id } = await params;
   const post = await getPost(id);
+  // 없는 글은 404다. robots를 직접 적는 이유는 not-found.tsx와 같다(빼면 레이아웃의 index를 물려받는다).
+  // canonical은 레이아웃의 홈 주소를 물려받지 않게 지운다 — 404가 홈을 정본이라 주장하면 안 된다.
   if (!post || (await isHiddenCategory(post.category)))
-    return { title: '글을 찾을 수 없습니다', robots: { index: false, follow: true } };
+    return { title: '글을 찾을 수 없습니다', robots: { index: false, follow: true }, alternates: { canonical: null } };
   const url = `/news/${id}`;
+  const description = describe(post);
   return {
-    title: post.title,
-    description: post.excerpt || post.title,
-    alternates: { canonical: url },
+    // 글 제목에 이미 상호가 있으면 틀(' | 지에스엘티')을 붙이지 않는다 — 같은 말을 두 번 쓰지
+    // 말라는 것이 네이버 콘텐츠 마크업 가이드다. 보도 제목은 대개 '지에스엘티, …'로 시작한다.
+    title: post.title.includes(SITE.titleBrand) ? { absolute: post.title } : post.title,
+    description,
+    alternates: { canonical: url, types: { 'application/rss+xml': `${SITE.url}/rss.xml` } },
+    // 본문 없이 파일만 있는 자료실 항목은 색인하지 않는다(sitemap·RSS에서도 뺐다).
+    // 관리자에서 요약 본문을 쓰면 그때부터 색인된다.
+    ...(hasBody(post) ? {} : { robots: { index: false, follow: true } }),
     openGraph: {
       type: 'article',
       siteName: SITE.siteName,
       locale: 'ko_KR',
       url,
-      description: post.excerpt || post.title,
+      description,
       images: [mediaUrl(post.thumbnail) || '/img/og-image.png'],
     },
   };
+}
+
+/**
+ * 검색 결과 설명. 관리자가 쓴 요약이 있으면 그것을, 없으면 본문 첫머리를 쓴다.
+ * 둘 다 없을 때 제목을 그대로 쓰면 '설명 = 제목'이 되는데, 네이버는 이를 불이익 대상으로 본다.
+ */
+function describe(post: Post): string {
+  const excerpt = (post.excerpt || '').trim();
+  if (excerpt) return excerpt;
+  const plain = String(post.body || '')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/[#>*_`~|-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (plain) return plain.length > 85 ? plain.slice(0, 84).trimEnd() + '…' : plain;
+  return `${post.title} — ${SITE.siteName} ${CATEGORY_LABEL[post.category] ?? '소식'}`;
 }
 
 /**
@@ -209,7 +234,9 @@ export default async function PostPage({ params }: Params) {
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={mediaUrl(post.thumbnail)}
-              alt=""
+              // 대표 이미지는 수상 카드·인증서처럼 글자가 든 그래픽이 많다. 빈 alt면 그 내용이
+              // 검색엔진과 스크린리더에서 통째로 사라진다. 글이 다루는 내용으로 이름을 붙인다.
+              alt={`${post.title} 대표 이미지`}
               loading="lazy"
               decoding="async"
               className="mt-10 w-full h-auto bg-slate-100"

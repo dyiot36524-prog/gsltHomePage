@@ -65,7 +65,9 @@ export function pageSeo({ title, description, path, image }: PageSeoInput): Meta
   return {
     title,
     description,
-    alternates: { canonical: path },
+    // types를 함께 적는다. 페이지가 alternates를 쓰면 레이아웃의 RSS 자동탐지 링크가 통째로
+    // 덮여 사라진다(메타데이터는 얕게 합쳐진다). 모든 페이지가 피드를 알리게 한다.
+    alternates: { canonical: path, types: { 'application/rss+xml': `${SITE.url}/rss.xml` } },
     openGraph: {
       type: 'website',
       siteName: SITE.siteName,

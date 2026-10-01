@@ -36,13 +36,10 @@ export default async function DownloadsPage() {
   // 관리자에서 끈 분류는 주소로 직접 들어와도 없는 페이지로 낸다. 메뉴에서만 빼면
   // 검색결과·옛 링크·RSS로 그대로 닿아 '숨김'이 숨김이 아니게 된다.
   if (await isHiddenCategory('downloads')) notFound();
-  let posts: Post[] = [];
-  let failed = false;
-  try {
-    posts = await getPosts('downloads');
-  } catch {
-    failed = true;
-  }
+  // 목록을 못 읽으면 던진다. 예전에는 '불러오지 못했습니다' 화면을 200으로 냈는데, 그 화면이
+  // 캐시돼 1분간 모두에게 나가고 검색엔진은 '내용이 빈 정상 페이지'로 수집한다(네이버 HTTP 규약
+  // 가이드: 서버 오류는 5xx). 던지면 ISR은 직전에 만든 정상 페이지를 계속 내보낸다.
+  const posts = await getPosts('downloads');
 
   // 자료실의 단위는 '글'이 아니라 '파일'이다. 파일 단위로 펼쳐 한 행 = 한 다운로드가 되게 한다.
   const rows = posts.flatMap((p) => {
@@ -69,12 +66,7 @@ export default async function DownloadsPage() {
           countLabel="개 파일"
         />
 
-        {failed ? (
-          <RecordEmpty
-            title="목록을 불러오지 못했습니다"
-            body="일시적인 문제일 수 있습니다. 잠시 후 새로고침해 주세요."
-          />
-        ) : rows.length === 0 ? (
+        {rows.length === 0 ? (
           <RecordEmpty
             columns={['일자', '형식', '자료']}
             title="아직 공개된 자료가 없습니다"

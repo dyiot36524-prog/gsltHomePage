@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { SITE } from '@/lib/site';
 import { FIELDS } from '@/lib/fields';
-import { getAllPosts, getMenuVisibility, isPress, postTime } from '@/lib/posts';
+import { getAllPosts, getMenuVisibility, hasBody, isPress, postTime } from '@/lib/posts';
 
 /**
  * sitemap.xml — 검색엔진에 어떤 주소가 있는지 알려준다.
@@ -59,11 +59,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .filter(([key]) => menus[key])
       .map(([, url, priority]) => ({ url, changeFrequency: 'weekly' as const, priority }));
 
+    // 본문 없이 파일만 있는 자료실 항목은 넣지 않는다(posts.ts hasBody). 제목·파일명뿐인
+    // 지면은 수집해 달라고 할 내용이 없고, 그 페이지는 noindex로 나간다.
+    // lastmod는 '수정한 날'이다(네이버 사이트맵 가이드). 수정 기록이 없으면 게시일을 쓴다.
     const details: MetadataRoute.Sitemap = posts
-      .filter((p) => menus[p.category] !== false)
+      .filter((p) => menus[p.category] !== false && hasBody(p))
       .map((p) => ({
         url: `${base}/news/${p.id}`,
-        lastModified: new Date(postTime(p)),
+        lastModified:
+          p.updatedAt instanceof Date && !Number.isNaN(p.updatedAt.getTime())
+            ? p.updatedAt
+            : new Date(postTime(p)),
         changeFrequency: 'monthly' as const,
         priority: 0.6,
       }));

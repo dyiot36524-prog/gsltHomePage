@@ -53,7 +53,14 @@ async function isAdminToken(idToken: string): Promise<boolean> {
  * 유효한 것이고, 실패하면 그 사유가 그대로 응답에 실린다. 쓰는 내용이 고정 16바이트라
  * 외부에서 반복 호출해도 비용이 없다.
  */
-export async function GET() {
+export async function GET(request: Request) {
+  // 관리자만. 이 점검은 저장소에 실제로 쓰므로 누구나 부를 수 있게 두면 안 된다
+  // (robots.txt의 Disallow는 예의 바른 크롤러만 막는다). 쓰는 법:
+  //   curl -H "Authorization: Bearer <관리자 Firebase ID 토큰>" https://www.gslt.kr/api/upload
+  const token = (request.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
+  if (!token || !(await isAdminToken(token))) {
+    return Response.json({ ok: false, error: '관리자 로그인이 필요합니다.' }, { status: 401 });
+  }
   try {
     // 실제 업로드와 같은 private으로 쓴다. 이 점검이 public으로 성공하는데 실제
     // 업로드가 죽는(혹은 그 반대) 어긋남을 만들지 않기 위해서다.

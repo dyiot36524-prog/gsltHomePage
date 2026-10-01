@@ -13,6 +13,28 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'i.ytimg.com', pathname: '/vi/**' },
     ],
   },
+  // 같은 사이트가 Vercel 기본 주소(gslt-next.vercel.app)로도 200을 내고 있었다. 네이버 가이드는
+  // 같은 콘텐츠를 여러 주소로 내지 말고 대표 주소로 301 하라고 한다. 프로젝트 기본 주소는
+  // 정본으로 보낸다. 배포마다 생기는 미리보기 주소는 확인용이라 남기되, 아래에서 noindex를 붙인다.
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'gslt-next.vercel.app' }],
+        destination: 'https://www.gslt.kr/:path*',
+        statusCode: 301,
+      },
+    ];
+  },
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: '(?<deploy>.+)\\.vercel\\.app' }],
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex' }],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

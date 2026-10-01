@@ -5,7 +5,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import PageHead, { FilterBar } from '@/components/PageHead';
 import { RecordEmpty, RecordHead, RecordList, RecordRow } from '@/components/Record';
-import { getPosts, isHiddenCategory, mediaUrl, postDateLabel, type Post } from '@/lib/posts';
+import { getPosts, isHiddenCategory, mediaUrl, postDateLabel } from '@/lib/posts';
 import { SITE } from '@/lib/site';
 
 export const metadata: Metadata = {
@@ -34,13 +34,10 @@ export default async function PortfolioPage({
   if (await isHiddenCategory('portfolio')) notFound();
 
 
-  let posts: Post[] = [];
-  let failed = false;
-  try {
-    posts = await getPosts('portfolio');
-  } catch {
-    failed = true;
-  }
+  // 목록을 못 읽으면 던진다. 예전에는 '불러오지 못했습니다' 화면을 200으로 냈는데, 그 화면이
+  // 캐시돼 1분간 모두에게 나가고 검색엔진은 '내용이 빈 정상 페이지'로 수집한다(네이버 HTTP 규약
+  // 가이드: 서버 오류는 5xx). 던지면 ISR은 직전에 만든 정상 페이지를 계속 내보낸다.
+  const posts = await getPosts('portfolio');
 
   // 태그는 등록된 글에서만 뽑는다 — 비어 있는 필터를 만들지 않기 위해.
   const tagCounts = new Map<string, number>();
@@ -77,12 +74,7 @@ export default async function PortfolioPage({
           ) : null}
         </PageHead>
 
-        {failed ? (
-          <RecordEmpty
-            title="목록을 불러오지 못했습니다"
-            body="일시적인 문제일 수 있습니다. 잠시 후 새로고침해 주세요."
-          />
-        ) : shown.length === 0 ? (
+        {shown.length === 0 ? (
           <RecordEmpty
             columns={['일자', '현장']}
             title={posts.length === 0 ? '시공사례를 준비하고 있습니다' : '해당 태그의 기록이 없습니다'}

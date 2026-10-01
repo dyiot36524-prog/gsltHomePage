@@ -14,6 +14,8 @@ export const metadata: Metadata = pageSeo({
   description:
     "2023년 설립한 무선 IoT 구축 전문기업 지에스엘티. 대표·연혁·수상 이력과 시공 5단계 절차를 소개합니다.",
   path: '/about',
+  // 공유·검색 대표 이미지. 공용 로고 그림 대신 이 페이지를 대표하는 시상식 사진을 쓴다.
+  image: '/img/forbes-ceremony-2026.jpg',
 });
 
 /** 원본 <style>에 있던 페이지 전용 장식 — 타임라인 현재 지점 펄스와 아웃라인 워터마크. */

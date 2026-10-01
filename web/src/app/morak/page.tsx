@@ -14,6 +14,7 @@ export const metadata: Metadata = pageSeo({
   description:
     "원우회·동문회를 위한 모바일 커뮤니티 앱. 디지털 명함 QR 교환, 기수·직책 관리, 일정과 참석을 한곳에서.",
   path: '/morak',
+  image: '/img/morak-feature.png',
 });
 
 /** 원본 <head>의 JSON-LD */
