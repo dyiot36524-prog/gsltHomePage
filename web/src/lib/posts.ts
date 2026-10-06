@@ -267,7 +267,13 @@ export function postMirrors(p: Post): Mirror[] {
     .filter((m) => m.label && m.url);
 }
 
-/** 카테고리별 발행 글. 고정 글 우선, 이후 최신순. */
+/**
+ * 카테고리별 발행 글. 최신순.
+ *
+ * 뉴스는 회사의 일지라 **날짜 내림차순만** 따른다. '상단 고정'을 우선하면 4월 글이 9월 글
+ * 위에 서서 일지가 뒤섞였다. 고정은 자료실·포트폴리오에서만 순서를 바꾼다.
+ * 상세 페이지의 이전·다음 글도 이 순서를 쓰므로 목록과 어긋나지 않는다.
+ */
 export async function getPosts(category: Category): Promise<Post[]> {
   const posts = await runQuery({
     structuredQuery: {
@@ -283,8 +289,10 @@ export async function getPosts(category: Category): Promise<Post[]> {
       },
     },
   });
+  const pinFirst = category !== 'news';
   return withCodePosts(posts, category).sort(
-    (a, b) => Number(b.pinned === true) - Number(a.pinned === true) || postTime(b) - postTime(a),
+    (a, b) =>
+      (pinFirst ? Number(b.pinned === true) - Number(a.pinned === true) : 0) || postTime(b) - postTime(a),
   );
 }
 

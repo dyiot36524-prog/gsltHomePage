@@ -233,7 +233,8 @@
                 <input id="f-published" type="checkbox" checked class="w-4 h-4 accent-[#28b8c5]">
                 <span class="text-sm font-bold text-slate-700">게시 (끄면 비공개)</span>
               </label>
-              <label class="flex items-center gap-2.5 cursor-pointer select-none">
+              <!-- 뉴스는 날짜순 일지라 고정을 쓰지 않는다(posts.ts getPosts). 자료실·포트폴리오에서만 보인다. -->
+              <label id="pinned-wrap" class="flex items-center gap-2.5 cursor-pointer select-none">
                 <input id="f-pinned" type="checkbox" class="w-4 h-4 accent-[#28b8c5]">
                 <span class="text-sm font-bold text-slate-700">상단 고정</span>
               </label>
@@ -732,10 +733,14 @@
         listEl.innerHTML = `<p class="py-8 text-center text-rose-600 text-sm">목록을 불러오지 못했습니다: ${e.code || e.message}<br><span class="text-slate-400">관리자 계정으로 로그인했는지 확인하세요.</span></p>`;
         return;
       }
+      // 사이트와 같은 순서로 보인다 — 언론보도는 보도일, 그 밖은 작성일 기준 최신순.
+      // 뉴스는 고정 없이 날짜만, 자료실·포트폴리오는 고정 글이 먼저다.
+      const when = p => (p.type === 'press' && /^\d{4}-\d{2}-\d{2}$/.test(p.publishedAt || ''))
+        ? Date.parse(p.publishedAt + 'T00:00:00+09:00') : (p.createdAt?.seconds || 0) * 1000;
+      const pinFirst = currentTab !== 'news';
       cachedPosts = snap.docs.map(d => ({ id: d.id, ...d.data() }))
         .sort((a, b) =>
-          (b.pinned === true) - (a.pinned === true) ||
-          (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+          (pinFirst ? (b.pinned === true) - (a.pinned === true) : 0) || when(b) - when(a));
       renderList();
     }
 
@@ -849,6 +854,7 @@
 
       // 글 종류 선택은 뉴스 탭에서만 의미가 있다
       $('type-section').classList.toggle('hidden', currentTab !== 'news');
+      $('pinned-wrap').classList.toggle('hidden', currentTab === 'news');
       $('f-source-url').value = p.sourceUrl || '';
       $('f-outlet').value = p.outlet || '';
       $('f-reporter').value = p.reporter || '';

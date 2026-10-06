@@ -141,7 +141,7 @@ export default async function NewsPage({
         {counts.press > 0 && current !== 'press' ? (
           <p className="mt-14 flex items-center gap-2 text-sm text-slate-500">
             <ArrowUpRight className="w-4 h-4 text-gslt-600" />
-            언론보도는 원문 매체로 바로 연결됩니다.
+            언론보도는 기사 요약과 원문 링크를 함께 실었습니다.
           </p>
         ) : null}
       </main>
