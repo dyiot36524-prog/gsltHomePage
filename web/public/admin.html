@@ -1100,11 +1100,13 @@
         data.sourceUrl = ''; data.outlet = ''; data.reporter = ''; data.publishedAt = ''; data.mirrors = [];
       }
       try {
+        let savedId = editingId;
         if (editingId) {
           await updateDoc(doc(db, 'posts', editingId), data);
         } else {
-          await addDoc(collection(db, 'posts'), { ...data, createdAt: serverTimestamp() });
+          savedId = (await addDoc(collection(db, 'posts'), { ...data, createdAt: serverTimestamp() })).id;
         }
+        pingIndexNow([`/news/${savedId}`, LIST_PATH[editingCategory] || '/news']);
         status.textContent = '저장되었습니다.';
         status.className = 'text-sm text-center text-gslt-600 font-bold';
         setTimeout(() => switchTab(currentTab), 600);
@@ -1118,6 +1120,8 @@
       if (!editingId) return;
       if (!confirm('이 글을 삭제할까요? 되돌릴 수 없습니다.')) return;
       await deleteDoc(doc(db, 'posts', editingId));
+      // 지운 주소도 알린다 — 검색엔진이 404를 빨리 확인해 결과에서 내린다.
+      pingIndexNow([`/news/${editingId}`, LIST_PATH[editingCategory] || '/news']);
       switchTab(currentTab);
     });
 
@@ -1408,6 +1412,22 @@
 
     $('inq-unread-only').addEventListener('change', renderInquiries);
 
+    /* ══ IndexNow — 바뀐 주소를 네이버·Bing 등에 알린다 ══
+       저장이 끝난 뒤 서버(/api/indexnow)에 맡기고 기다리지 않는다. 서버가 그 페이지 캐시를 비우고
+       새로 만든 다음에 알린다. 실패해도 저장에는 영향이 없다 — 검색엔진은 sitemap으로도 결국 온다. */
+    const LIST_PATH = { news: '/news', downloads: '/downloads', portfolio: '/portfolio' };
+    async function pingIndexNow(paths) {
+      try {
+        if (!auth.currentUser) return;
+        const token = await auth.currentUser.getIdToken();
+        await fetch('/api/indexnow', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ paths }),
+        });
+      } catch (e) { console.warn('[indexnow]', e); }
+    }
+
     /* ══ 회사소개 영상 ══
        목록 전체가 settings/aboutVideos 문서 하나다. settings는 이미 "누구나 읽고 관리자만
        쓰는" 규칙이 있어 규칙을 다시 게시할 필요가 없고, 배열 순서가 곧 노출 순서다.
@@ -1641,6 +1661,7 @@
         vidItems = next.items;
         $('vid-enabled').checked = next.enabled;
         renderVideos();
+        pingIndexNow(['/about']);
         vidSay(statusEl, '저장했습니다. 회사소개에는 1분 안에 반영됩니다.', 'ok');
         return true;
       } catch (e) {

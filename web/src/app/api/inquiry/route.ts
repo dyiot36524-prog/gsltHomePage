@@ -1,4 +1,5 @@
 import { COMPANY } from '@/lib/site';
+import { sourceLabel } from '@/lib/traffic-source';
 import { after } from 'next/server';
 import { notifyAll, sendAutoReply, summarize, type Inquiry } from '@/lib/notify';
 import { markHandoff, SESSION_RE } from '@/lib/chat-log';
@@ -219,8 +220,9 @@ export async function POST(request: Request) {
   }
 
   // 2) 알림은 그 다음. 저장이 실패했다면 이 알림이 유일한 기록이라는 사실을 본문에 적는다.
+  // 첫 방문 출처는 알림에만 싣는다. 문의함(DB)은 정해진 칸만 받으므로 저장 데이터와 분리한다.
   const results = await notifyAll(
-    checked.data,
+    { ...checked.data, source: sourceLabel(fields.source) },
     saveError ? '문의함 저장에 실패했습니다. 이 알림이 유일한 기록입니다 — 즉시 회신해 주세요.' : '',
   );
   const summary = summarize(results);

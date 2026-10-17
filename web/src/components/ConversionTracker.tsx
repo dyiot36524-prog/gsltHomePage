@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { track } from '@vercel/analytics';
+import { recordFirstTouch } from '@/lib/traffic-source';
 
 /**
  * 전환 지점 계측.
@@ -19,6 +20,9 @@ import { track } from '@vercel/analytics';
  * lib/analytics의 이름 있는 함수로 직접 보고한다.
  */
 export default function ConversionTracker() {
+  // 세션의 첫 방문 출처(ChatGPT·네이버 등)를 적어 둔다. 문의 알림의 '유입' 칸이 이 값이다.
+  useEffect(() => recordFirstTouch(), []);
+
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
       const a = (e.target as Element | null)?.closest?.('a[href]');

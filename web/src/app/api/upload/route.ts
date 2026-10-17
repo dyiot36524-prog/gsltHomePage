@@ -1,5 +1,6 @@
 import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
 import { put, get } from '@vercel/blob';
+import { isAdminToken } from '@/lib/admin-auth';
 
 /**
  * 대용량 첨부 업로드 (Vercel Blob, 클라이언트 직접 업로드).
@@ -23,23 +24,7 @@ import { put, get } from '@vercel/blob';
 
 export const runtime = 'nodejs';
 
-const PROJECT_ID = 'gslthomepage';
-
-async function isAdminToken(idToken: string): Promise<boolean> {
-  if (!idToken) return false;
-  try {
-    const res = await fetch(
-      `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}` +
-        `/databases/(default)/documents/admins/_probe`,
-      { headers: { Authorization: `Bearer ${idToken}` }, cache: 'no-store' },
-    );
-    // 200 문서 있음 · 404 문서 없음 — 둘 다 "읽기 권한은 있다"는 뜻이라 관리자다.
-    // 401·403은 규칙이 거절한 것이므로 관리자가 아니다.
-    return res.status === 200 || res.status === 404;
-  } catch {
-    return false;
-  }
-}
+// 관리자 확인은 lib/admin-auth.ts 한 곳에 있다(IndexNow 알림도 같은 것을 쓴다).
 
 /**
  * 저장소 자가 점검.

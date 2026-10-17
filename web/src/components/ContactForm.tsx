@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { readFirstTouch } from '@/lib/traffic-source';
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { COMPANY } from '@/lib/site';
@@ -77,6 +78,7 @@ export default function ContactForm() {
           message: value('message'),
           website: value('website'),
           startedAt: startedAt.current,
+          source: readFirstTouch(),
         }),
       });
       const body: { message?: string } = await res.json().catch(() => ({}));

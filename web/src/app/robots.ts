@@ -22,9 +22,14 @@ export default function robots(): MetadataRoute.Robots {
       { userAgent: 'GPTBot', ...allowAll },
       { userAgent: 'OAI-SearchBot', ...allowAll },
       { userAgent: 'ChatGPT-User', ...allowAll },
+      // Anthropic은 셋을 쓴다 — 학습(ClaudeBot), 검색 색인(Claude-SearchBot), 사용자 요청 조회
+      // (Claude-User). 검색·사용자 쪽을 막으면 Claude의 웹 검색 답변에서 빠진다. Claude-Web은 폐기된 이름.
       { userAgent: 'ClaudeBot', ...allowAll },
-      { userAgent: 'Claude-Web', ...allowAll },
+      { userAgent: 'Claude-SearchBot', ...allowAll },
+      { userAgent: 'Claude-User', ...allowAll },
+      // Perplexity도 색인(PerplexityBot)과 사용자 요청 조회(Perplexity-User)가 따로다.
       { userAgent: 'PerplexityBot', ...allowAll },
+      { userAgent: 'Perplexity-User', ...allowAll },
       { userAgent: 'Google-Extended', ...allowAll },
       { userAgent: 'CCBot', ...allowAll },
       // 네이버

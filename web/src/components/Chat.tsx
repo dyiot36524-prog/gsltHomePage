@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { readFirstTouch } from '@/lib/traffic-source';
 import Link from 'next/link';
 import { ArrowRight } from '@/components/Icon';
 import { COMPANY } from '@/lib/site';
@@ -195,6 +196,7 @@ export default function Chat({
           website: String(fd.get('website') || ''),
           startedAt: formOpenedAt.current,
           session: session.current,
+          source: readFirstTouch(),
         }),
       });
       const data = (await res.json()) as { ok?: boolean; message?: string };

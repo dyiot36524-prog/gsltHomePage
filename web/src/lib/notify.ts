@@ -1,4 +1,5 @@
 import { COMPANY, SITE } from '@/lib/site';
+import { isAiSource } from './traffic-source';
 
 /**
  * 문의 접수 알림.
@@ -35,6 +36,8 @@ export type Inquiry = {
   email: string;
   phone: string;
   message: string;
+  /** 첫 방문 출처(ChatGPT·네이버·직접 방문 …). 알림에만 싣고 DB에는 쓰지 않는다. */
+  source?: string;
 };
 
 /** 채널 하나가 이보다 오래 걸리면 포기한다. Vercel 함수 기본 한도보다 넉넉히 작게. */
@@ -88,6 +91,7 @@ async function sendEmail(v: Inquiry, warning: string): Promise<NotifyResult> {
     ['이메일', v.email],
     ['연락처', v.phone],
     ['접수시각', seoulNow()],
+    ...(v.source ? ([['유입', v.source]] as Array<[string, string]>) : []),
   ];
 
   const html = `<div style="font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;max-width:640px;color:#0f172a">
@@ -122,7 +126,8 @@ ${rows
       from,
       to,
       reply_to: v.email,
-      subject: `[GSLT 상담신청] ${v.name} (${v.company})`,
+      // AI 답변 엔진에서 넘어온 문의는 제목에서 바로 보이게 한다 — GEO 작업의 성과 지표다.
+      subject: `[GSLT 상담신청]${v.source && isAiSource(v.source) ? `[${v.source}]` : ''} ${v.name} (${v.company})`,
       html,
       text,
     }),
@@ -157,7 +162,9 @@ async function sendTelegram(v: Inquiry, warning: string): Promise<NotifyResult> 
     `<b>회사</b> ${esc(v.company)}\n` +
     `<b>연락처</b> ${esc(v.phone)}\n` +
     `<b>이메일</b> ${esc(v.email)}\n` +
-    `<b>접수</b> ${esc(seoulNow())}\n\n` +
+    `<b>접수</b> ${esc(seoulNow())}\n` +
+    (v.source ? `<b>유입</b> ${esc(v.source)}\n` : '') +
+    `\n` +
     `${esc(brief)}\n\n` +
     `<a href="${ADMIN_URL}">관리자 페이지에서 보기</a>`;
 
