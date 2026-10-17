@@ -1,4 +1,4 @@
-import { SITE, COMPANY, FURNITURE, SOLUTIONS } from '@/lib/site';
+import { SITE, COMPANY, FURNITURE, KAKAO, SOLUTIONS } from '@/lib/site';
 import { FIELDS } from '@/lib/fields';
 import { SCENES } from '@/lib/scenes';
 import { getAllPosts, getMenuVisibility, isPress, postTime } from '@/lib/posts';
@@ -61,7 +61,7 @@ export async function GET() {
 - 설립: 2023년
 - 업종: 무선 IoT 구축 — 스마트오피스·스마트홈·스마트빌딩 시공 및 솔루션 개발
 - 주소: ${COMPANY.address}
-- 연락처: ${COMPANY.tel} · ${COMPANY.email}
+- 연락처: ${COMPANY.tel} · ${COMPANY.email} · 카카오톡 채널 ${KAKAO.name}(${KAKAO.channel})
 - 웹사이트: ${SITE.url}/
 - 가구 사업: ${FURNITURE.desc}는 같은 회사의 가구 사업인 ${FURNITURE.name}(${FURNITURE.url})가 맡는다.
   상호가 같지만 무선 IoT 구축 문의는 이 사이트, 가구 주문은 그 쇼핑몰이다.

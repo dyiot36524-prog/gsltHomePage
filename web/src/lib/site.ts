@@ -51,6 +51,20 @@ export const COMPANY = {
 } as const;
 
 /**
+ * 카카오톡 채널. 도입 문의·챗봇·바닥글의 '카카오톡으로 문의'가 이 주소 하나를 쓴다.
+ *
+ * chat은 SDK 없이 여는 1:1 채팅 주소다. 공식 문서는 채팅을 "SDK로만"이라고 적지만 카카오가
+ * 데브톡에서 이 주소를 직접 쓰라고 안내했고, SDK도 PC에서는 같은 주소를 연다. 문서 밖이라
+ * 언젠가 바뀌면 여기 한 줄을 채널 홈(channel)으로 돌린다. 쿼리(UTM)는 붙이지 않는다 —
+ * 지원 문서가 없고 붙였을 때 '인증실패'가 난 보고가 있다.
+ */
+export const KAKAO = {
+  name: '(주)지에스엘티',
+  channel: 'https://pf.kakao.com/_VkFBX',
+  chat: 'https://pf.kakao.com/_VkFBX/chat',
+} as const;
+
+/**
  * 헤더 솔루션 패널·푸터·모바일 행이 모두 이 목록 하나를 쓴다.
  *
  * `lead`와 `pillars`는 헤더 카드 패널에서만 쓰는 추가 설명이다. 시옷이 이 회사의

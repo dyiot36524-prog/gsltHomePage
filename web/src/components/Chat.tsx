@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { readFirstTouch } from '@/lib/traffic-source';
 import Link from 'next/link';
 import { ArrowRight } from '@/components/Icon';
+import KakaoChatLink from '@/components/KakaoChatLink';
 import { COMPANY } from '@/lib/site';
 import { conversions } from '@/lib/analytics';
 
@@ -330,14 +331,24 @@ export default function Chat({
               <p className="text-sm text-white/80 break-keep">
                 현장 조건은 담당자가 직접 보는 편이 정확합니다.
               </p>
-              <button
-                type="button"
-                onClick={openContact}
-                className="group inline-flex items-center gap-2 rounded-full bg-gslt-500 hover:bg-gslt-400 text-slate-900 px-5 py-2.5 text-sm font-bold transition-colors"
-              >
-                담당자 연결
-                <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5" />
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={openContact}
+                  className="group inline-flex min-h-11 items-center gap-2 rounded-full bg-gslt-500 hover:bg-gslt-400 text-slate-900 px-5 py-2.5 text-sm font-bold transition-colors"
+                >
+                  담당자 연결
+                  <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5" />
+                </button>
+                {/* 둘째 선택지. 담당자 연결은 지금 대화를 요약해 넘기지만 카카오톡은 아무것도 넘어가지
+                    않는다 — 그래서 보조 무게로 두고, 그 사실을 바로 아래에 적는다. */}
+                <KakaoChatLink place="chat" describedBy="chat-kakao-note">
+                  카카오톡으로 문의
+                </KakaoChatLink>
+              </div>
+              <p id="chat-kakao-note" className="w-full text-xs text-white/65 break-keep">
+                카카오톡으로 문의하면 지금 대화 내용은 넘어가지 않습니다 · 새 창에서 열립니다
+              </p>
             </div>
           ) : (
             <form onSubmit={submitContact} className="relative grid gap-2.5 sm:grid-cols-2">

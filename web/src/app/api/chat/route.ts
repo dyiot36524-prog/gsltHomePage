@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { after } from 'next/server';
-import { COMPANY, FURNITURE, SITE } from '@/lib/site';
+import { COMPANY, FURNITURE, KAKAO, SITE } from '@/lib/site';
 import { getKnowledge, knowledgeBlock } from '@/lib/knowledge';
 import { saveChatLog, SESSION_RE } from '@/lib/chat-log';
 
@@ -66,7 +66,7 @@ ${SITE.nameKo}는 무선 IoT 구축 전문기업입니다. 배선 공사 없이 
 ${knowledge || '(등록된 자료가 없습니다. 이 경우 어떤 사실도 지어내지 말고 문의를 안내하세요.)'}
 </자료>
 
-연락처: ${COMPANY.tel} · ${COMPANY.email}`;
+연락처: ${COMPANY.tel} · ${COMPANY.email} · 카카오톡 채널 ${KAKAO.name}(${KAKAO.channel})`;
 }
 
 /* ── 속도 제한 ──

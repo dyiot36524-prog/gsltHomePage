@@ -1,4 +1,4 @@
-import { SITE, COMPANY, FURNITURE, SOLUTIONS } from '@/lib/site';
+import { SITE, COMPANY, FURNITURE, KAKAO, SOLUTIONS } from '@/lib/site';
 import { FIELDS } from '@/lib/fields';
 import { SCENES } from '@/lib/scenes';
 import { FAQ_GROUPS } from '@/lib/faq';
@@ -33,7 +33,7 @@ export async function GET() {
 
 - 회사명: ${SITE.nameKo}(${SITE.name}) · 대표 ${COMPANY.ceo} · 사업자등록번호 ${COMPANY.bizNo}
 - 주소: ${COMPANY.address}
-- 연락처: ${COMPANY.tel} · ${COMPANY.email}
+- 연락처: ${COMPANY.tel} · ${COMPANY.email} · 카카오톡 채널 ${KAKAO.name}(${KAKAO.channel})
 - 상담 신청: ${SITE.url}/contact
 - 가구 사업: ${FURNITURE.desc}는 같은 회사의 가구 사업인 ${FURNITURE.name}(${FURNITURE.url})가 맡는다.
 `);

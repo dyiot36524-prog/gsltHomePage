@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { COMPANY, FURNITURE, SITE, SOLUTIONS } from '@/lib/site';
+import { COMPANY, FURNITURE, KAKAO, SITE, SOLUTIONS } from '@/lib/site';
 import { ArrowUpRight } from '@/components/Icon';
+import KakaoChatLink from '@/components/KakaoChatLink';
 import { getMenuVisibility, type MenuKey } from '@/lib/posts';
 
 /** 상단 메뉴와 같은 설정을 따른다 — 헤더에서 숨긴 항목이 푸터에만 남으면 앞뒤가 안 맞는다. */
@@ -83,6 +84,11 @@ export default async function Footer({ flush = false }: { flush?: boolean }) {
               <span className="text-slate-300 font-medium">Tel</span>&nbsp; {COMPANY.tel}
               &nbsp;|&nbsp; <span className="text-slate-300 font-medium">Email</span>&nbsp;
               <a href={`mailto:${COMPANY.email}`} className="hover:text-white transition-colors">{COMPANY.email}</a>
+              {/* 라벨까지 링크 안에 둔다 — 링크 목록에서 '(주)지에스엘티'만 들리면 회사 사이트로 오해한다. */}
+              &nbsp;|&nbsp;{' '}
+              <KakaoChatLink place="footer">
+                <span className="text-slate-300 font-medium">카카오톡 채널</span>&nbsp;{KAKAO.name}
+              </KakaoChatLink>
             </p>
             {/* 같은 법인의 가구 사업. 상호가 같아 검색에서 서로 섞이므로, 두 사이트가
                 같은 회사라는 것을 여기서 밝히고 서로 링크한다(site.ts FURNITURE). */}

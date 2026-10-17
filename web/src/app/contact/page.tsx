@@ -6,7 +6,8 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import PageHead from '@/components/PageHead';
 import ContactForm from '@/components/ContactForm';
-import { COMPANY } from '@/lib/site';
+import KakaoChatLink from '@/components/KakaoChatLink';
+import { COMPANY, KAKAO } from '@/lib/site';
 
 const DESCRIPTION =
   '전화·이메일로 바로 연결하거나 상담을 신청하세요. 현장 조건에 맞는 구성과 견적을 무료로 제안해 드립니다.';
@@ -74,6 +75,18 @@ export default function ContactPage() {
                 >
                   {COMPANY.tel}
                 </a>
+              </Line>
+              {/* 카카오톡 채널 1:1 채팅. 모바일은 카카오톡 앱이 바로 열리고, PC는 카카오 로그인을
+                  거쳐 카카오톡에서 이어진다 — 그 차이를 보조 문구가 미리 말한다. 채널 이름을 적어 두면
+                  링크가 막힌 인앱 브라우저에서도 카카오톡 검색으로 찾을 수 있다. */}
+              <Line label="카카오톡">
+                <KakaoChatLink place="contact" describedBy="contact-kakao-note">
+                  카카오톡으로 문의
+                </KakaoChatLink>
+                <p id="contact-kakao-note" className="mt-1 text-sm text-slate-500 leading-relaxed break-keep">
+                  카카오톡 채널 ‘{KAKAO.name}’ · 새 창에서 열립니다. PC에서는 카카오 로그인 후 카카오톡에서 대화가
+                  이어집니다.
+                </p>
               </Line>
               <Line label="이메일">
                 <a

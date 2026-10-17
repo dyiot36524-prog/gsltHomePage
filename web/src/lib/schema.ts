@@ -1,4 +1,4 @@
-import { SITE, COMPANY, FURNITURE, SOLUTIONS } from '@/lib/site';
+import { SITE, COMPANY, FURNITURE, KAKAO, SOLUTIONS } from '@/lib/site';
 
 /**
  * 구조화 데이터(JSON-LD).
@@ -37,6 +37,8 @@ export const organizationSchema = {
     addressRegion: '경기도',
     addressCountry: 'KR',
   },
+  // 이 회사 자신을 가리키는 다른 공식 주소. 아래 brand(가구 사업)와 달리 같은 주체다.
+  sameAs: [KAKAO.channel],
   contactPoint: {
     '@type': 'ContactPoint',
     telephone: `+82-${COMPANY.tel.replace(/^0/, '').replace(/-/g, '-')}`,
