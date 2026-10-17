@@ -28,6 +28,7 @@ const ROUTES = [
   '/news', '/downloads', '/faq', '/contact', '/support',
   '/solutions/smart-office', '/solutions/smart-home', '/solutions/smart-building',
   '/solutions/unmanned-automation', '/solutions/ai-building-bms', '/solutions/ai-office',
+  '/siot/meeting-room', '/siot/lounge', '/siot/restroom',
 ];
 
 let fail = 0;

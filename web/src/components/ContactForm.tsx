@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import { DEMO_MARK, SCENE_NAMES, type SceneSlug } from '@/lib/scene-names';
 import { readFirstTouch } from '@/lib/traffic-source';
-import { useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useRef, useState, type RefObject } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { COMPANY } from '@/lib/site';
 import { conversions } from '@/lib/analytics';
 import { ArrowRight } from '@/components/Icon';
@@ -36,6 +37,39 @@ function Required() {
   return <span className="text-gslt-700" aria-hidden="true"> *</span>;
 }
 
+function demoMessage(name: string) {
+  return `${DEMO_MARK} ${name} 장면을 성남 쇼룸에서 보고 싶습니다.\n희망 날짜·시간: \n방문 인원: \n우리 공간(층·실 수 등): `;
+}
+const DEMO_MESSAGES = new Set(Object.values(SCENE_NAMES).map(demoMessage));
+
+/**
+ * 장면 페이지(/siot/*)의 '쇼룸 시연 신청'으로 들어왔을 때의 안내와 미리 채움.
+ *
+ * 시연 신청을 따로 저장하지 않는다 — 문의함은 정해진 칸만 받는다(firestore.rules). 대신 문의 내용
+ * 맨 앞에 표식을 넣어 미리 채운다. 알림 메일이 이 표식으로 시연 신청을 알아보고 제목에 표시한다.
+ * 모르는 값이 오면 무시하고 일반 문의로 둔다.
+ *
+ * 주소를 useSearchParams로 읽는다. /contact?demo=… 에서 헤더의 '도입 문의'(/contact)를 누르면
+ * 페이지는 그대로 두고 주소만 바뀌는데, 그때도 안내를 걷고 미리 채운 글을 비워야 일반 문의가
+ * 시연 신청으로 잘못 집계되지 않는다. 방문자가 손댄 글은 건드리지 않는다.
+ */
+function DemoNotice({ messageRef }: { messageRef: RefObject<HTMLTextAreaElement | null> }) {
+  const slug = useSearchParams().get('demo') ?? '';
+  const name = Object.prototype.hasOwnProperty.call(SCENE_NAMES, slug) ? SCENE_NAMES[slug as SceneSlug] : '';
+
+  useEffect(() => {
+    const box = messageRef.current;
+    if (box && (!box.value || DEMO_MESSAGES.has(box.value))) box.value = name ? demoMessage(name) : '';
+  }, [name, messageRef]);
+
+  if (!name) return null;
+  return (
+    <p role="status" className="mb-6 border-l-4 border-gslt-600 bg-slate-50 px-4 py-3 text-sm text-slate-700 break-keep leading-relaxed">
+      <strong className="text-slate-900">쇼룸 시연 신청</strong> — {name}. 희망 날짜와 시간을 적어 주시면 담당자가 일정을 잡아 연락드립니다.
+    </p>
+  );
+}
+
 export default function ContactForm() {
   const [state, setState] = useState<State>('idle');
   const [error, setError] = useState('');
@@ -55,6 +89,7 @@ export default function ContactForm() {
    */
   const startedAt = useRef(Date.now());
   const router = useRouter();
+  const messageRef = useRef<HTMLTextAreaElement>(null);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -118,6 +153,10 @@ export default function ContactForm() {
         <input id="cf-website" name="website" type="text" tabIndex={-1} autoComplete="off" />
       </div>
 
+      {/* 주소에서 읽는 부분만 따로 감싼다 — 폼 자체는 서버에서 그려진 채 나간다. */}
+      <Suspense fallback={null}>
+        <DemoNotice messageRef={messageRef} />
+      </Suspense>
       <p className="text-sm text-slate-500 mb-8">
         <span className="text-gslt-700" aria-hidden="true">*</span> 표시는 필수 항목입니다.
       </p>
@@ -167,7 +206,7 @@ export default function ContactForm() {
           문의 내용<Required />
         </label>
         <textarea
-          id="cf-message" name="message" rows={6}
+          id="cf-message" name="message" rows={6} ref={messageRef}
           required aria-required="true" maxLength={5000}
           placeholder="도입을 검토 중인 솔루션이나 궁금하신 점을 자유롭게 적어주세요."
           className={`${FIELD} resize-y leading-relaxed`}

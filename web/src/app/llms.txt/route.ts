@@ -1,5 +1,6 @@
 import { SITE, COMPANY, FURNITURE, SOLUTIONS } from '@/lib/site';
 import { FIELDS } from '@/lib/fields';
+import { SCENES } from '@/lib/scenes';
 import { getAllPosts, getMenuVisibility, isPress, postTime } from '@/lib/posts';
 
 /**
@@ -48,6 +49,7 @@ export async function GET() {
   ).join('\n');
 
   const fields = FIELDS.map((f) => `- [${f.keyword}](${SITE.url}/solutions/${f.slug}): ${f.lead}`).join('\n');
+  const scenes = SCENES.map((s) => `- [${s.keyword}](${SITE.url}/siot/${s.slug}): ${s.description}`).join('\n');
 
   const body = `# ${SITE.nameKo} (${SITE.name})
 
@@ -100,6 +102,12 @@ ${solutions}
 적용 대상은 시간 단위로 배정되는 공간 전반이다 — 회의실, 테니스코트, 골프 타석, 볼링장, 당구장,
 스터디룸, 연습실, 공유 오피스. 성남 쇼룸에서 스크린골프 3사(카카오VX 프렌즈스크린·골프존파크·
 GDR 아카데미) 시스템과 함께 타석 단위 입·퇴실 자동화를 실증하고 있다.
+
+## 시옷 활용 장면
+
+시옷을 실제 공간에서 쓰는 장면별 안내. 현재 성남 쇼룸에서 시연한다.
+
+${scenes}
 
 ## 구축 분야
 

@@ -9,6 +9,7 @@ import { pageSeo } from '@/lib/seo';
 import { SITE } from '@/lib/site';
 import { jsonLd, breadcrumbSchema, ORG_ID } from '@/lib/schema';
 import { FIELDS, fieldBySlug } from '@/lib/fields';
+import { SCENES, SCENES_FOR_FIELD } from '@/lib/scenes';
 
 /**
  * 구축 분야 랜딩 — 검색어 하나에 한 장.
@@ -53,6 +54,7 @@ export default async function FieldPage({ params }: Props) {
 
   const url = `${SITE.url}/solutions/${f.slug}`;
   const others = FIELDS.filter((x) => x.slug !== f.slug);
+  const scenes = SCENES.filter((x) => (SCENES_FOR_FIELD[f.slug] ?? []).includes(x.slug));
 
   const service = {
     '@type': 'Service',
@@ -147,6 +149,30 @@ export default async function FieldPage({ params }: Props) {
               <ArrowRight className="w-5 h-5 shrink-0 text-slate-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-gslt-700" />
             </Link>
           </section>
+
+          {/* 이 분야에서 시옷이 실제로 쓰이는 장면. 회의실·휴게공간·화장실은 장면마다 한 장씩 있고,
+              끝에서 쇼룸 시연을 신청한다(/siot/*). 관련 없는 분야에는 그리지 않는다. */}
+          {scenes.length > 0 && (
+            <section aria-labelledby="f-scenes" className="border-t-2 border-slate-900 pt-8">
+              <SectionHead id="f-scenes">시옷 활용 장면</SectionHead>
+              <ul className="mt-6 border-t border-slate-200">
+                {scenes.map((sc) => (
+                  <li key={sc.slug} className="border-b border-slate-200">
+                    <Link
+                      href={`/siot/${sc.slug}`}
+                      className={`group flex items-baseline justify-between gap-6 py-4 -mx-4 px-4 transition-colors hover:bg-slate-50 ${FOCUS}`}
+                    >
+                      <span className="min-w-0">
+                        <span className="font-bold text-slate-900 group-hover:text-gslt-700 transition-colors">{sc.keyword}</span>
+                        <span className="mt-0.5 block text-sm text-slate-500 break-keep">{sc.description}</span>
+                      </span>
+                      <ArrowRight className="w-4 h-4 shrink-0 text-slate-400 group-hover:text-gslt-700 transition-colors" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           <section aria-labelledby="f-faq" className="border-t-2 border-slate-900 pt-8">
             <SectionHead id="f-faq">자주 묻는 질문</SectionHead>

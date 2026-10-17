@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { SITE } from '@/lib/site';
 import { FIELDS } from '@/lib/fields';
+import { SCENES } from '@/lib/scenes';
 import { getAllPosts, getMenuVisibility, hasBody, isPress, postTime } from '@/lib/posts';
 
 /**
@@ -41,6 +42,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // 구축 분야 랜딩. 검색어 하나에 한 장이라 솔루션 페이지 바로 아래 비중을 준다.
     ...FIELDS.map((f) => ({
       url: `${base}/solutions/${f.slug}`,
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    })),
+    // 시옷 활용 장면(회의실·휴게공간·화장실). 장면마다 검색어가 달라 한 장씩이다.
+    ...SCENES.map((s) => ({
+      url: `${base}/siot/${s.slug}`,
       changeFrequency: 'monthly' as const,
       priority: 0.8,
     })),

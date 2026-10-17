@@ -9,6 +9,7 @@ import Footer from '@/components/Footer';
 import Reveal from '@/components/Reveal';
 import AmbientVideo from '@/components/AmbientVideo';
 import { SITE } from '@/lib/site';
+import { SCENES } from '@/lib/scenes';
 import NodeCanvas from './NodeCanvas';
 import CountUp from './CountUp';
 import styles from './siot.module.css';
@@ -551,6 +552,32 @@ export default function SiotPage() {
                     className="rounded-full border border-slate-300 px-4 py-2 text-sm font-bold text-slate-700"
                   >
                     {t}
+                  </li>
+                ))}
+              </ul>
+            </Reveal>
+
+            {/* 활용 장면 — 회의실·휴게공간·화장실을 장면마다 한 장씩 따로 설명한다(/siot/*).
+                장면마다 사람들이 검색하는 말이 달라서다. 각 장면 끝에서 쇼룸 시연을 신청한다. */}
+            <Reveal>
+              <h2 className="text-3xl md:text-4xl font-black break-keep leading-tight mb-5">
+                이런 장면에서 씁니다
+              </h2>
+              <p className="max-w-[68ch] text-slate-500 leading-[1.85] break-keep mb-8">
+                회의실·휴게공간·화장실을 따로 두지 않고 하나의 시옷 관제 화면에서 함께 봅니다.
+                장면마다 동작과 관리자 화면을 정리했습니다. 성남 쇼룸에서 직접 보실 수 있습니다.
+              </p>
+              <ul className="grid gap-3 md:grid-cols-3">
+                {SCENES.map((sc) => (
+                  <li key={sc.slug}>
+                    <Link
+                      href={`/siot/${sc.slug}`}
+                      className="group flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors hover:border-siot-500/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-siot-700"
+                    >
+                      <span className="font-black text-slate-900 break-keep group-hover:text-siot-700 transition-colors">{sc.keyword}</span>
+                      <span className="mt-2 text-sm text-slate-500 leading-relaxed break-keep">{sc.description}</span>
+                      <span className="mt-4 text-sm font-bold text-siot-700">자세히 보기</span>
+                    </Link>
                   </li>
                 ))}
               </ul>

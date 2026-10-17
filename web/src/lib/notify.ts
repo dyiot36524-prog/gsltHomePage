@@ -1,4 +1,5 @@
 import { COMPANY, SITE } from '@/lib/site';
+import { DEMO_MARK } from './scene-names';
 import { isAiSource } from './traffic-source';
 
 /**
@@ -39,6 +40,11 @@ export type Inquiry = {
   /** 첫 방문 출처(ChatGPT·네이버·직접 방문 …). 알림에만 싣고 DB에는 쓰지 않는다. */
   source?: string;
 };
+
+/** 장면 페이지의 '쇼룸 시연 신청'으로 온 문의인가(문의 내용 맨 앞 표식으로 안다). */
+function isDemo(v: Inquiry): boolean {
+  return v.message.trimStart().startsWith(DEMO_MARK);
+}
 
 /** 채널 하나가 이보다 오래 걸리면 포기한다. Vercel 함수 기본 한도보다 넉넉히 작게. */
 const CHANNEL_TIMEOUT_MS = 8000;
@@ -127,7 +133,8 @@ ${rows
       to,
       reply_to: v.email,
       // AI 답변 엔진에서 넘어온 문의는 제목에서 바로 보이게 한다 — GEO 작업의 성과 지표다.
-      subject: `[GSLT 상담신청]${v.source && isAiSource(v.source) ? `[${v.source}]` : ''} ${v.name} (${v.company})`,
+      // 장면 페이지에서 온 쇼룸 시연 신청은 제목에서 바로 구별되게 한다 — 이번 홍보의 성과 지표다.
+      subject: `[GSLT 상담신청]${isDemo(v) ? '[쇼룸 시연]' : ''}${v.source && isAiSource(v.source) ? `[${v.source}]` : ''} ${v.name} (${v.company})`,
       html,
       text,
     }),
@@ -157,7 +164,7 @@ async function sendTelegram(v: Inquiry, warning: string): Promise<NotifyResult> 
   const brief = v.message.length > 200 ? `${v.message.slice(0, 200)}…` : v.message;
   const text =
     (warning ? `⚠️ ${warning}\n\n` : '') +
-    `📩 <b>새 상담 신청</b>\n\n` +
+    `📩 <b>${isDemo(v) ? '쇼룸 시연 신청' : '새 상담 신청'}</b>\n\n` +
     `<b>이름</b> ${esc(v.name)}\n` +
     `<b>회사</b> ${esc(v.company)}\n` +
     `<b>연락처</b> ${esc(v.phone)}\n` +

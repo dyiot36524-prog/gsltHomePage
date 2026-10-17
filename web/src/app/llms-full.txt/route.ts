@@ -1,5 +1,6 @@
 import { SITE, COMPANY, FURNITURE, SOLUTIONS } from '@/lib/site';
 import { FIELDS } from '@/lib/fields';
+import { SCENES } from '@/lib/scenes';
 import { FAQ_GROUPS } from '@/lib/faq';
 import { getKnowledge } from '@/lib/knowledge';
 import { getAllPosts, getMenuVisibility, hasBody, isPress, postDateLabel, postTime } from '@/lib/posts';
@@ -59,6 +60,24 @@ export async function GET() {
       '자주 묻는 질문',
       FAQ_GROUPS.map(
         (g) => `### ${g.title}\n\n` + g.items.map((f) => `**Q. ${f.q}**\nA. ${f.a}`).join('\n\n'),
+      ).join('\n\n'),
+    ),
+  );
+
+  parts.push(
+    section(
+      '시옷 활용 장면',
+      SCENES.map((s) =>
+        [
+          `### ${s.keyword} — ${SITE.url}/siot/${s.slug}`,
+          s.lead,
+          `이런 일이 생긴다: ${s.problem}`,
+          '동작:\n' + s.how.map(([name, desc]) => `- ${name}: ${desc}`).join('\n'),
+          '관리자 화면에서 보는 것: ' + s.admin.join(', '),
+          '붙는 장비: ' + s.devices.join(', '),
+          s.faq.map((q) => `**Q. ${q.q}**\nA. ${q.a}`).join('\n\n'),
+          '현재 성남 쇼룸에서 시연한다 — 시연 신청: ' + `${SITE.url}/contact?demo=${s.slug}`,
+        ].join('\n\n'),
       ).join('\n\n'),
     ),
   );

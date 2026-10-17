@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useId, useRef, useState } from 'react';
+import { SCENE_NAMES } from '@/lib/scene-names';
 import Link from 'next/link';
 import { SOLUTIONS } from '@/lib/site';
 import { ChevronDown, ArrowUpRight } from '@/components/Icon';
@@ -127,6 +128,21 @@ export default function SolutionsMenu({ overlay = false }: { overlay?: boolean }
               </span>
             </span>
           </Link>
+
+          {/* 시옷 활용 장면. 대표 카드 자체가 링크라 그 안에 링크를 넣을 수 없어 바로 아래 한 줄로 둔다. */}
+          <div className="mt-2 flex flex-wrap items-center gap-1.5 px-1">
+            <span className="mr-1 text-xs font-bold text-slate-500">활용 장면</span>
+            {Object.entries(SCENE_NAMES).map(([slug, name]) => (
+              <Link
+                key={slug}
+                href={`/siot/${slug}`}
+                onClick={() => close()}
+                className={`rounded-full border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 transition-colors hover:border-siot-500/60 hover:text-siot-700 ${cardFocus}`}
+              >
+                {name}
+              </Link>
+            ))}
+          </div>
 
           <div className="mt-3 grid grid-cols-2 gap-3">
             {REST.map((s) => (
