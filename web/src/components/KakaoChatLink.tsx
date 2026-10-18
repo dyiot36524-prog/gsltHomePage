@@ -21,9 +21,9 @@ type Place = 'contact' | 'chat' | 'footer';
 
 /** 자리마다 놓이는 면이 정해져 있어 모양도 자리로 정한다. */
 const SHAPE: Record<Place, string> = {
-  // 도입 문의(기록 면) — 직각, 굵은 글자 링크. 전화·이메일 줄과 같은 문법.
+  // 도입 문의 ① — 그 갈래의 주 행동이라 사이트 주 버튼(청록 면·먹 글자·직각). ②의 '상담 신청 보내기'와 같은 크기.
   contact:
-    'gap-1 min-h-11 text-base font-bold text-slate-900 hover:text-gslt-700 ' +
+    'w-full justify-center gap-2 bg-gslt-500 px-6 py-4 text-base font-bold text-slate-900 hover:bg-gslt-400 ' +
     'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gslt-700',
   // 챗봇(어두운 무대) — 알약. 대화를 넘겨 주는 '담당자 연결'이 주 선택지라 테두리만 둔 보조 무게.
   chat:

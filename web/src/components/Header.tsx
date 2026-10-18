@@ -58,8 +58,10 @@ export default async function Header({
             ))}
           </div>
 
+          {/* 휴대폰에서도 보인다 — 아래 가로 스크롤 줄에는 문의가 없어서, 이게 숨으면 휴대폰에서는
+              도입 문의로 가는 길이 없었다. 로고 맞은편 자리라 폭은 충분하다. */}
           <Link href="/contact"
-            className="hidden lg:flex items-center gap-2 bg-gslt-500 hover:bg-gslt-400 text-slate-900 px-5 py-2.5 rounded-full text-sm font-semibold hover:scale-[1.02] active:scale-[0.98] transition-all duration-500 z-10">
+            className="flex items-center gap-2 bg-gslt-500 hover:bg-gslt-400 text-slate-900 px-4 py-2 lg:px-5 lg:py-2.5 rounded-full text-sm font-semibold hover:scale-[1.02] active:scale-[0.98] transition-all duration-500 z-10">
             도입 문의
           </Link>
         </div>

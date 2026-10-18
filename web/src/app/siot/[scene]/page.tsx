@@ -204,7 +204,7 @@ export default async function ScenePage({ params }: Props) {
             {s.name} 장면이 실제로 동작하는 모습을 쇼룸에서 보여 드립니다. 원하는 날짜를 남겨 주시면 담당자가 일정을 잡아 연락드립니다.
           </p>
           <Link
-            href={`/contact?demo=${s.slug}`}
+            href={`/contact?demo=${s.slug}#contact-email`}
             className="mt-6 inline-flex items-center gap-2 bg-gslt-500 hover:bg-gslt-400 text-slate-900 px-6 py-3 text-sm font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
           >
             쇼룸 시연 신청
