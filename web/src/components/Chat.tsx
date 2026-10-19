@@ -341,8 +341,8 @@ export default function Chat({
                   담당자 연결
                   <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5" />
                 </button>
-                {/* 둘째 선택지. 담당자 연결은 지금 대화를 요약해 넘기지만 카카오톡은 아무것도 넘어가지
-                    않는다 — 그래서 보조 무게로 두고, 그 사실을 바로 아래에 적는다. */}
+                {/* 둘째 선택지(카카오톡 노랑). 담당자 연결은 지금 대화를 요약해 넘기지만 카카오톡은
+                    아무것도 넘어가지 않는다 — 그 사실을 바로 아래에 적는다. */}
                 <KakaoChatLink place="chat" describedBy="chat-kakao-note">
                   카카오톡으로 문의
                 </KakaoChatLink>
