@@ -128,7 +128,7 @@ export default function Chat({
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: next, session: session.current }),
+        body: JSON.stringify({ messages: next }),
       });
       const data = (await res.json()) as {
         ok?: boolean;
@@ -163,7 +163,7 @@ export default function Chat({
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode: 'summary', messages, session: session.current }),
+        body: JSON.stringify({ mode: 'summary', messages }),
       });
       const data = (await res.json().catch(() => ({}))) as { summary?: string };
       if (data.summary) setDraft((cur) => (cur.trim() ? cur : data.summary!));
@@ -196,7 +196,8 @@ export default function Chat({
           ),
           website: String(fd.get('website') || ''),
           startedAt: formOpenedAt.current,
-          session: session.current,
+          // 대화 기록은 방문자가 '함께 보냅니다'를 켜 둔 상담 신청에서만 남긴다(lib/chat-log.ts).
+          ...(withLog ? { session: session.current, turns: messages } : {}),
           source: readFirstTouch(),
         }),
       });

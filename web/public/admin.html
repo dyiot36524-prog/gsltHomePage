@@ -96,12 +96,13 @@
           <p id="stat-unread" class="mt-1 text-2xl font-black tabular-nums">—</p>
         </div>
         <div class="bg-white rounded-2xl border border-slate-200 px-5 py-4">
-          <p class="text-xs font-bold text-slate-500">최근 7일 챗봇 대화</p>
+          <p class="text-xs font-bold text-slate-500">최근 7일 챗봇 상담 신청</p>
           <p id="stat-chat" class="mt-1 text-2xl font-black tabular-nums">—</p>
         </div>
         <div class="bg-white rounded-2xl border border-slate-200 px-5 py-4">
-          <p class="text-xs font-bold text-slate-500">챗봇 → 상담 신청</p>
-          <p id="stat-handoff" class="mt-1 text-2xl font-black tabular-nums">—</p>
+          <!-- 처리방침이 약속한 보유 기간(상담 완료 후 1년)을 지키는 칸. 자동 삭제가 없어 관리자가 지운다. -->
+          <p class="text-xs font-bold text-slate-500">1년 지난 기록 (삭제 대상)</p>
+          <p id="stat-old" class="mt-1 text-2xl font-black tabular-nums">—</p>
         </div>
       </div>
       <p id="stats-note" class="hidden -mt-3 mb-6 text-xs text-amber-700"></p>
@@ -262,7 +263,7 @@
       </div>
 
       <!-- ── 챗봇 대화 ──
-           방문자가 챗봇에 무엇을 묻는지. 자주 나오는데 지식베이스에 없는 질문이 다음에 쓸 콘텐츠다.
+           상담 신청으로 이어진 대화가 무엇을 물었는지. 자주 나오는데 지식베이스에 없는 질문이 다음에 쓸 콘텐츠다.
            연락처는 서버가 저장 전에 가린다 — 여기엔 [연락처]·[이메일]로만 보인다. -->
       <div id="chats-panel" class="hidden">
         <div class="flex items-center justify-between mb-2">
@@ -272,7 +273,7 @@
             상담으로 이어진 대화만
           </label>
         </div>
-        <p class="text-sm text-slate-500 mb-5">최근 200건. 자주 나오는데 답이 약한 질문은 지식베이스에 자료로 보태 주세요.</p>
+        <p class="text-sm text-slate-500 mb-5">최근 200건. 방문자가 상담 신청과 함께 보낸 대화만 기록됩니다. 자주 나오는데 답이 약한 질문은 지식베이스에 자료로 보태 주세요. 1년이 지난 기록은 지워 주세요(개인정보 처리방침).</p>
         <div id="chat-list" class="space-y-3"></div>
         <p id="chat-empty" class="hidden py-16 text-center text-slate-400 text-sm">기록된 대화가 없습니다.</p>
       </div>
@@ -1254,22 +1255,27 @@
     /* ══ 이번 주 한 줄 ══
        문의는 inquiries, 챗봇은 chatLogs에서 직접 센다. Vercel 커스텀 이벤트는 유료 플랜에서만
        집계되므로, 핵심 수치는 우리 DB가 원본이다. chatLogs 규칙이 아직 게시되지 않았으면
-       그 두 칸만 비워 두고 이유를 적는다 — 0으로 보이면 '대화가 없다'로 잘못 읽힌다. */
+       챗봇 칸만 비워 두고 이유를 적는다 — 0으로 보이면 '대화가 없다'로 잘못 읽힌다.
+       챗봇 대화는 상담 신청과 함께 보낸 것만 남으므로(lib/chat-log.ts) '대화 → 신청' 비율은 셀 수 없다.
+       대신 처리방침의 보유 기간(1년)이 지난 문의·대화 수를 보여 준다 — 관리자가 직접 지우는 약속이다. */
     async function loadStats() {
       const weekAgo = Date.now() / 1000 - 7 * 24 * 3600;
+      const yearAgo = Date.now() / 1000 - 365 * 24 * 3600;
       const secs = t => t?.seconds || 0;
+      let oldCount = 0;
       try {
         const snap = await getDocs(collection(db, 'inquiries'));
         const all = snap.docs.map(d => d.data());
         $('stat-inq').textContent = all.filter(q => secs(q.createdAt) >= weekAgo).length;
         $('stat-unread').textContent = all.filter(q => q.read !== true).length;
+        oldCount += all.filter(q => secs(q.createdAt) && secs(q.createdAt) < yearAgo).length;
       } catch { /* 문의 탭이 자체 오류를 보여 준다 */ }
       try {
         const snap = await getDocs(query(collection(db, 'chatLogs'), orderBy('updatedAt', 'desc'), limit(200)));
         const week = snap.docs.map(d => d.data()).filter(c => secs(c.updatedAt) >= weekAgo);
-        $('stat-chat').textContent = week.length;
-        const handed = week.filter(c => c.handoff === true).length;
-        $('stat-handoff').textContent = week.length ? `${handed} (${Math.round(handed / week.length * 100)}%)` : '0';
+        $('stat-chat').textContent = week.filter(c => c.handoff === true).length;
+        const old = await getDocs(query(collection(db, 'chatLogs'), where('updatedAt', '<', new Date(yearAgo * 1000))));
+        oldCount += old.size;
       } catch (e) {
         const note = $('stats-note');
         note.textContent = e.code === 'permission-denied'
@@ -1277,6 +1283,8 @@
           : `챗봇 대화를 불러오지 못했습니다: ${e.code || e.message}`;
         note.classList.remove('hidden');
       }
+      $('stat-old').textContent = oldCount;
+      $('stat-old').classList.toggle('text-amber-700', oldCount > 0);
     }
 
     /* ══ 챗봇 대화 ══ */

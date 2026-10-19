@@ -1,19 +1,15 @@
 /**
- * 챗봇 대화 기록.
+ * 챗봇 대화 기록 — 상담 신청으로 이어진 대화만.
  *
- * 지금까지 챗봇이 무슨 질문을 받는지 아무도 몰랐다. 대화는 브라우저 메모리에만 있다가
- * 탭을 닫으면 사라졌다. 그런데 **자주 묻는데 지식베이스에 없는 질문이 곧 다음 콘텐츠**다 —
- * "볼링장도 되나요"가 열 번 들어오면 볼링장 페이지를 써야 한다. 그 신호를 버리고 있었다.
+ * 방문자가 챗봇의 '담당자 연결' 폼을 보내면서 "지금까지의 대화 내용을 함께 보냅니다"를 켜 두었을
+ * 때만 그 대화를 남긴다. 그냥 묻고 떠난 대화는 남기지 않는다 — 상담(계약 체결 준비)에 필요한 것만
+ * 보관해야 국외 보관의 근거가 서고(개인정보 보호법 제28조의8제1항제3호), 방문자가 끈 선택도 지켜진다.
+ * 관리자 화면은 이 기록으로 '상담으로 이어진 대화가 무엇을 물었는지'를 본다.
  *
- * 대화 하나가 문서 하나다(id = 세션). 턴마다 문서를 통째로 다시 쓴다 — 관리자 화면에서
- * 한 줄이 한 대화가 되고, 마지막 상태만 보면 된다.
- *
- * 연락처는 저장 전에 가린다. 방문자가 채팅창에 전화번호를 적어도 이 기록에는 남지 않는다.
- * 연락처가 남는 곳은 방문자가 직접 폼으로 확정한 inquiries뿐이어야 한다.
+ * 연락처는 저장 전에 가린다. 연락처가 남는 곳은 방문자가 직접 폼으로 확정한 inquiries뿐이어야 한다.
  *
  * 저장은 공개 키 + firestore.rules(정해진 키·크기만 허용)로 한다. inquiries와 같은 방식이다.
- * 실패해도 던지지 않는다 — 기록은 부산물이고 답변이 본업이다. 규칙이 아직 게시되지 않았다면
- * 403이 로그에 남을 뿐 챗봇은 그대로 돈다.
+ * 실패해도 던지지 않는다 — 기록은 부산물이고 상담 접수가 본업이다.
  */
 
 const PROJECT_ID = 'gslthomepage';
@@ -59,8 +55,24 @@ async function commit(write: unknown): Promise<void> {
   if (!res.ok) throw new Error(`${res.status} ${(await res.text()).slice(0, 200)}`);
 }
 
-export async function saveChatLog(session: string, turns: Turn[]): Promise<void> {
-  if (!SESSION_RE.test(session) || turns.length === 0) return;
+/** 클라이언트가 보낸 대화를 기록용으로 고른다. 형식이 어긋난 줄은 버린다. */
+function parseTurns(raw: unknown): Turn[] {
+  if (!Array.isArray(raw)) return [];
+  const turns: Turn[] = [];
+  for (const m of raw.slice(-LOG_LIMIT.turns)) {
+    const role = (m as { role?: unknown })?.role;
+    const content = (m as { content?: unknown })?.content;
+    if ((role === 'user' || role === 'assistant') && typeof content === 'string' && content.trim()) {
+      turns.push({ role, content: content.trim().slice(0, LOG_LIMIT.lastUser) });
+    }
+  }
+  return turns;
+}
+
+/** 상담 신청과 함께 보낸 대화를 남긴다. /api/inquiry가 접수를 확정한 뒤에 부른다. */
+export async function saveHandoffLog(session: string, rawTurns: unknown): Promise<void> {
+  const turns = parseTurns(rawTurns);
+  if (!SESSION_RE.test(session) || !turns.some((t) => t.role === 'user')) return;
   const lastUser = [...turns].reverse().find((t) => t.role === 'user');
   try {
     await commit({
@@ -68,30 +80,14 @@ export async function saveChatLog(session: string, turns: Turn[]): Promise<void>
         name: docName(session),
         fields: {
           transcript: { stringValue: transcript(turns) },
-          turnCount: { integerValue: String(Math.min(turns.length, LOG_LIMIT.turns)) },
+          turnCount: { integerValue: String(turns.length) },
           lastUser: { stringValue: maskContacts(lastUser?.content ?? '').slice(0, LOG_LIMIT.lastUser) },
+          handoff: { booleanValue: true },
         },
       },
-      // 마스크를 걸어 handoff 필드를 덮지 않는다 — 상담 연결 뒤에 대화가 이어져도 표시가 남는다.
-      updateMask: { fieldPaths: ['transcript', 'turnCount', 'lastUser'] },
       updateTransforms: [{ fieldPath: 'updatedAt', setToServerValue: 'REQUEST_TIME' }],
     });
   } catch (e) {
     console.error('[chat-log] 저장 실패:', e);
-  }
-}
-
-/** 이 대화가 상담 신청으로 이어졌다고 표시한다. /api/inquiry가 부른다. */
-export async function markHandoff(session: string): Promise<void> {
-  if (!SESSION_RE.test(session)) return;
-  try {
-    await commit({
-      update: { name: docName(session), fields: { handoff: { booleanValue: true } } },
-      updateMask: { fieldPaths: ['handoff'] },
-      updateTransforms: [{ fieldPath: 'updatedAt', setToServerValue: 'REQUEST_TIME' }],
-      currentDocument: { exists: true },
-    });
-  } catch (e) {
-    console.error('[chat-log] handoff 표시 실패:', e);
   }
 }

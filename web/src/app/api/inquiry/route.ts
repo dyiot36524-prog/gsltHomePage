@@ -2,7 +2,7 @@ import { COMPANY } from '@/lib/site';
 import { sourceLabel } from '@/lib/traffic-source';
 import { after } from 'next/server';
 import { notifyAll, sendAutoReply, summarize, type Inquiry } from '@/lib/notify';
-import { markHandoff, SESSION_RE } from '@/lib/chat-log';
+import { saveHandoffLog, SESSION_RE } from '@/lib/chat-log';
 import { adminPatch, isAdminAvailable } from '@/lib/firestore-admin';
 
 /**
@@ -237,11 +237,12 @@ export async function POST(request: Request) {
 
   // 응답을 보낸 뒤에 한다. 둘 다 방문자가 기다릴 이유가 없는 일이다.
   // 위의 502 판정보다 **뒤에** 둔다 — 우리가 문의를 잡지 못했는데 '잘 받았습니다'를 보내면 거짓말이다.
-  //  - 챗봇에서 넘어온 신청이면 그 대화에 '상담으로 이어짐'을 표시한다.
+  //  - 챗봇에서 넘어온 신청이고 방문자가 '대화 내용을 함께 보냅니다'를 켜 두었으면 그 대화를 남긴다
+  //    (그때만 클라이언트가 session·turns를 보낸다).
   //  - 문의자에게 접수 확인 메일(도메인 인증 전에는 조용히 건너뛴다).
   const session = typeof fields.session === 'string' && SESSION_RE.test(fields.session) ? fields.session : '';
   after(async () => {
-    if (session) await markHandoff(session);
+    if (session) await saveHandoffLog(session, fields.turns);
     const reply = await sendAutoReply(checked.data);
     if (!reply.ok && !reply.skipped) console.error('[inquiry] auto-reply failed:', reply.error);
   });

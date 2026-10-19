@@ -1,8 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { after } from 'next/server';
 import { COMPANY, FURNITURE, KAKAO, SITE } from '@/lib/site';
 import { getKnowledge, knowledgeBlock } from '@/lib/knowledge';
-import { saveChatLog, SESSION_RE } from '@/lib/chat-log';
 
 /**
  * 상담 챗봇 응답.
@@ -17,8 +15,7 @@ import { saveChatLog, SESSION_RE } from '@/lib/chat-log';
  * 연락처 저장은 이 라우트가 하지 않는다. 방문자가 폼을 눌러 확정할 때 기존
  * /api/inquiry 로 간다 — 문의 수신함이 둘로 갈라지지 않게 하기 위해서다.
  *
- * 대화는 lib/chat-log.ts로 남긴다(연락처는 가린 채). 응답을 보낸 **뒤에** after()로
- * 쓰므로 방문자가 기다리는 시간에 더해지지 않는다.
+ * 이 라우트는 대화를 남기지 않는다. 상담 신청으로 이어진 대화만 /api/inquiry가 남긴다(lib/chat-log.ts).
  *
  * `mode: 'summary'`는 담당자 연결 폼의 '문의 내용' 칸을 미리 채울 요약을 만든다.
  * 같은 모델·같은 무도구 원칙이고, 대화는 <대화> 안의 자료로만 다룬다.
@@ -224,8 +221,7 @@ export async function POST(request: Request) {
   } catch {
     return fail('요청을 읽지 못했습니다. 다시 시도해 주세요.', 400);
   }
-  const body = raw as { mode?: unknown; session?: unknown };
-  const session = typeof body?.session === 'string' && SESSION_RE.test(body.session) ? body.session : '';
+  const body = raw as { mode?: unknown };
 
   if (body?.mode === 'summary') return summarize(raw);
 
@@ -254,8 +250,6 @@ export async function POST(request: Request) {
     if (!text) return fail(FALLBACK_TO_FORM, 502);
 
     const reply = scrubContacts(text);
-    // 응답을 보낸 뒤에 남긴다. 기록이 느려도 방문자는 기다리지 않는다.
-    if (session) after(() => saveChatLog(session, [...checked.turns, { role: 'assistant', content: reply }]));
 
     return Response.json({
       ok: true,
