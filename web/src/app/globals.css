@@ -401,6 +401,47 @@ html:not(.js-hero) .hero-gate { display: none; }
   pointer-events: none;
 }
 
+/* 설명이 블록에서 flex 항목으로 바뀌는 순간(아래 '상담판은 무대 안에서만 자란다') 설명 아래 여백과
+   상담판 위 여백은 더는 겹치지(collapse) 않고 더해진다. 그대로 두면 첫 메시지를 보내는 순간
+   상담판이 그만큼(높이 844에서 27px) 아래로 튀었다가 올라간다. 설명의 아래 여백만 전환 없이
+   바로 0으로 보내면, 그 순간의 합이 예전에 겹친 값(상담판 위 여백)과 같아 아무것도 튀지 않는다. */
+.hero-chatting .hero-desc { transition-property: opacity, transform, filter, max-height; }
+
+/* ── 상담판은 무대 안에서만 자란다 ──
+   예전에는 대화 중 .hero-body를 justify-content: center로 두어 넘친 만큼을 위·아래로 나눴다.
+   대화가 세 번쯤 오가고 담당자 연결 카드가 붙으면 상담판이 무대보다 길어져, 위로 넘친
+   '대화 닫기'는 고정 헤더(lg 미만 105px) 밑에 깔리고 아래로 넘친 입력창·보내기 버튼은 무대 밖으로
+   나가 눌리지 않았다(실측: 320x568에서 3번째 대화 뒤 닫기 버튼 -64~-26px, 보내기 578~626px로
+   무대 바닥 568px 밖). 390x844도 카드가 붙으면 닫기 버튼이 44~82px로 헤더(105px) 밑에 깔렸다.
+
+   이제는 넘치지 않게 한다. 본문 → 상담판 → 대화 영역까지 세로 flex로 잇고 각 단에
+   min-height: 0을 주면, 내용이 무대 안쪽(위·아래 여백을 뺀 자리)보다 길 때 줄어드는 건 대화 목록
+   하나뿐이다. 머리 줄(대화 닫기)·안내·담당자 연결 카드·입력창은 제 키를 지킨다.
+   내용이 무대에 들어갈 때는 아무것도 줄지 않아 가운데 정렬(Hero.tsx의 my-auto)이 예전 그대로다 —
+   높은 휴대폰·데스크톱에서 대화가 짧을 때의 모양은 바뀌지 않는다. */
+.hero-chatting .hero-inner,
+.hero-chatting .hero-chat,
+.hero-chatting .hero-chat-panel,
+.hero-chatting .hero-chat-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.hero-chatting .hero-chat-panel > *,
+.hero-chatting .hero-chat-body > * { flex-shrink: 0; }
+
+.hero-chatting .hero-chat-panel > .hero-chat-body,
+.hero-chatting .hero-chat-body > .hero-chat-log {
+  flex-shrink: 1;
+  min-height: 0;
+}
+
+/* 목록이 0까지 줄어도 모자라는 경우(높은 화면에서 담당자 연결 폼을 펼쳤을 때)의 안전망.
+   그때만 대화 영역이 통째로 굴러간다. 넘치지 않으면 스크롤할 것이 없어 모양은 그대로다.
+   overscroll-behavior는 일부러 주지 않는다 — 굴릴 것이 없는 평소에 휠을 붙잡으면 안 된다. */
+.hero-chatting .hero-chat-body { overflow-y: auto; }
+
 /* 상담판: 반 박자 늦게 위로 차오르며 폭을 넓힌다 */
 .hero-chat {
   transition: margin .65s cubic-bezier(.32, .72, 0, 1) .18s;
@@ -422,6 +463,54 @@ html:not(.js-hero) .hero-gate { display: none; }
 
 .hero-chatting .hero-chat-log { max-height: 52vh; }
 
+/* ── 낮은 화면: 대화 목록과 카드를 한 스크롤로 ──
+   조건은 아래 '낮은 화면의 히어로 압축'과 같다. 여기서는 목록만 줄여서는 모자란다. 320x568에서
+   무대 안쪽은 384px인데 머리 줄·입력창(118px)과 담당자 연결 카드(242px + 여백 20px)를 빼면
+   목록에 4px가 남는다 — 목록이 사라진다.
+   그래서 목록과 그 아래 안내·카드를 한 스크롤 영역(.hero-chat-body)으로 묶는다. 머리 줄과
+   입력창만 제자리에 있고, 나머지는 그 사이에서 함께 굴러간다.
+   목록 자신은 스크롤을 내려놓는다. 스크롤 영역이 둘로 겹치면 목록을 굴리던 손가락이 카드에
+   닿지 못한다(목록의 overscroll-behavior: contain이 바깥으로 넘기지 않는다). 위·아래 페이드도
+   바깥 영역으로 옮긴다. 이 페이드(마스크) 안에서는 카드의 backdrop-blur가 뒤 영상을 보지 못해
+   카드 바탕이 흐림 없이 옅게만 깔린다 — 이미 85% 눌린 영상 위라 차이는 거의 없다. */
+@media (max-width: 1023px) and (max-height: 700px) {
+  .hero-chatting .hero-chat-body {
+    display: block;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+    /* 끝까지 내렸을 때 마지막 줄이 아래 페이드(1.25rem)에 먹히지 않게 그만큼 비워 둔다.
+       목록 아래 여백(mb-5)이 입력창과 띄우던 20px를 이 여백이 대신한다. */
+    padding-bottom: 1.25rem;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 1.75rem, #000 calc(100% - 1.25rem), transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0, #000 1.75rem, #000 calc(100% - 1.25rem), transparent 100%);
+  }
+
+  .hero-chatting .hero-chat-body::-webkit-scrollbar { display: none; }
+  .hero-chatting .hero-chat-body > :last-child { margin-bottom: 0; }
+
+  .hero-chatting .hero-chat-log {
+    max-height: none;
+    overflow: visible;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  /* 모션 최소화(.hero-static)에서는 무대 높이가 auto라 위 flex 사슬이 붙잡을 높이가 없다.
+     목록에 있던 상한(52vh)을 이 영역이 이어받는다 — 없으면 대화가 페이지를 따라 길어지고,
+     목록 끝으로 굴리는 scrollIntoView가 페이지를 내려 '대화 닫기'가 고정 헤더 밑으로 들어간다. */
+  .hero-static .hero-chatting .hero-chat-body { max-height: 52vh; }
+}
+
+/* 대화 중에는 무대 아래 여백을 7rem → 4.5rem으로 줄여 대화 영역에 40px를 돌려준다(md 미만).
+   이 여백이 지키던 것 중 스크롤 안내(#hero-cue)는 대화 전에 이미 사라졌고, '맨 위로' 버튼은
+   무대가 붙어 있는 동안 숨는다(ScrollTop). 4.5rem은 무대가 걷혀 올라가기 시작해 그 버튼이 다시
+   뜨는 순간에도 보내기 버튼(입력창 아래 끝에서 6px 위)이 버튼의 윗변(화면 아래에서 72px)에
+   닿지 않는 거리다. 여백이 바뀌면 가운데 자리가 20px 움직이므로 상담판과 같은 박자로 옮긴다. */
+@media (max-width: 767px) and (max-height: 700px) {
+  .hero-body { transition: padding-bottom .65s cubic-bezier(.32, .72, 0, 1) .18s; }
+  .hero-chatting .hero-body { padding-bottom: 4.5rem; }
+}
+
 /* 대화 항목이 하나씩 아래에서 떠오른다 */
 @keyframes chat-msg-in {
   from { opacity: 0; transform: translate3d(0, 14px, 0); filter: blur(6px); }
@@ -436,6 +525,7 @@ html:not(.js-hero) .hero-gate { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .hero-stage .hero-title,
   .hero-stage .hero-desc,
+  .hero-body,
   .hero-chat,
   .hero-chat-log { transition: none; }
   .hero-chat-log > * { animation: none; }
@@ -498,6 +588,34 @@ html:not(.js-hero) .hero-gate { display: none; }
 
 .hero-row { padding-block: clamp(.5rem, 1.8vh, 1.4rem); }
 .hero-row-name { font-size: clamp(1rem, min(2vw, 3vh), 1.75rem); }
+
+/* ── 낮은 화면의 히어로 압축 ──
+   lg 미만은 헤더가 두 단(105px)이다. 헤드라인·설명·질문 카드 세 장·입력창을 쌓으면 약 495px라,
+   높이 553~667 화면(iPhone SE·8, 14/15 사파리)에서는 위·아래 여백(7rem씩)을 빼고 남는 자리에
+   들어가지 않았다. 높이를 먹는 것들을 여기서 줄인다.
+   lg 이상은 헤더가 한 줄(64px)이라 1280x609 같은 낮은 노트북 창에서도 넘치지 않는다 — 건드리지 않는다. */
+@media (max-width: 1023px) and (max-height: 700px) {
+  /* vh 항은 가로로 눕힌 화면에서만 실제로 듣는다. 세로 휴대폰은 5.4vw가 먼저 하한(1.9rem)에 걸린다. */
+  .hero-title { font-size: clamp(1.9rem, min(5.4vw, 6.5vh), 4.75rem); }
+  .hero-desc { margin-bottom: clamp(.5rem, 1.6vh, 1rem); }
+  /* Hero.tsx·Chat.tsx의 mt-8·mb-6(유틸리티 층)보다 이 규칙(층 밖)이 앞선다.
+     대화 중의 .hero-chatting .hero-chat { margin-top: 0 }은 더 구체적이라 그대로 이긴다. */
+  .hero-chat { margin-top: 1rem; }
+  .hero-chat-chips { margin-bottom: 1rem; }
+}
+
+/* 질문 카드가 세로로 쌓이는 폭(sm 미만)에서는 첫 장만 남긴다. 한 장이 약 65px라 두 장을 덜면
+   130px가 돌아온다. sm 이상은 세 장이 한 줄이라 덜어도 얻는 높이가 적고, 한 장만 남기면
+   왼쪽 1/3 칸에 외따로 선다. 덜어 낸 질문은 입력창에 바로 쓰면 된다. */
+@media (max-width: 639px) and (max-height: 700px) {
+  .hero-chat-chips li:nth-child(n + 2) { display: none; }
+}
+
+/* 가로로 눕힌 휴대폰(높이 480 이하)은 헤더를 빼면 300px도 남지 않는다. 카드를 모두 덜어
+   입력창이 무대 안에 남게 한다. */
+@media (max-width: 1023px) and (max-height: 480px) {
+  .hero-chat-chips { display: none; }
+}
 
 /* 밝은 영상 프레임 위에서도 가독성 확보 */
 .hero-shadow {
@@ -564,6 +682,9 @@ html:not(.js-hero) .hero-gate { display: none; }
   font-weight: 800;
   letter-spacing: -0.025em;
   line-height: 1.35;
+  /* 두 줄로 넘는 제목의 마지막 줄에 어절 하나만 남지 않게 줄 길이를 고른다(법적 고지 제목들).
+     지원하지 않는 브라우저(iOS 17.5 미만)는 그냥 무시하고 예전처럼 줄을 바꾼다. */
+  text-wrap: balance;
 }
 
 .post-body h2 { font-size: 1.6rem; margin-top: 2.6em; margin-bottom: 0.7em; }

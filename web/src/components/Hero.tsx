@@ -443,6 +443,44 @@ export default function Hero() {
     };
   }, []);
 
+  // ─── 히어로가 끝났음을 문서에 알린다 ───
+  // 홈 헤더는 영상 위에 겹쳐 뜨느라 바탕이 투명하다(Header의 overlay). 무대가 걷힌 뒤에도 그대로면
+  // 구축 분야 판·푸터의 글자가 헤더 글자와 겹친다. 무대가 풀리는 순간 <html>에 .hero-ended를 걸면
+  // 헤더가 그걸 보고 어두운 바탕을 깐다. 헤더는 서버 컴포넌트라 스스로 스크롤을 볼 수 없어,
+  // 무대를 쥔 이쪽이 신호를 낸다(.hero-static과 같은 자리).
+  // 스크럽 루프(위 effect)와 따로 두는 건 모션 최소화에서도 돌아야 해서다 — 그쪽은 일찍 돌아간다.
+  useEffect(() => {
+    const track = trackRef.current;
+    const stage = stageRef.current;
+    if (!track || !stage) return;
+    const root = document.documentElement;
+
+    const sync = () => {
+      const t = track.getBoundingClientRect();
+      const s = stage.getBoundingClientRect();
+      // '맨 위로' 버튼(ScrollTop)과 같은 판정이다. 트랙 바닥이 무대 바닥보다 아래면 무대가 아직
+      // 붙어 있다. 둘이 같은 순간에 바뀌어야 버튼만 뜨고 헤더는 투명한 틈이 생기지 않는다.
+      const pinned = t.bottom - s.bottom > 1;
+      // 모션 최소화(.hero-static)에서는 무대가 sticky가 아니라 위 판정이 처음부터 '풀림'이다.
+      // 그대로 쓰면 첫 화면부터 헤더가 바탕을 깐다. 그때는 무대가 위로 밀려나기 시작한 뒤부터 끝으로 본다 —
+      // 무대가 붙지 않으니 그때부터 헤드라인·상담판 글자가 헤더 밑으로 들어간다. '맨 위로' 버튼은 이 모드에서
+      // 600px부터 뜨므로 헤더가 먼저 바뀐다.
+      const sticky = getComputedStyle(stage).position === 'sticky';
+      root.classList.toggle('hero-ended', !pinned && (sticky || s.top < 0));
+    };
+
+    sync();
+    window.addEventListener('scroll', sync, { passive: true });
+    // 회전·주소창으로 화면 높이가 바뀌면 트랙 길이와 무대 높이도 바뀐다
+    window.addEventListener('resize', sync);
+    return () => {
+      window.removeEventListener('scroll', sync);
+      window.removeEventListener('resize', sync);
+      // 다른 페이지로 가면 신호를 거둔다. 그쪽 헤더는 흰 헤더라 상관없지만 남겨 둘 이유가 없다.
+      root.classList.remove('hero-ended');
+    };
+  }, []);
+
   return (
     <section id="hero" className="relative bg-[#05070c]">
       <noscript>
@@ -453,6 +491,9 @@ export default function Hero() {
           /* 겹쳐 두는 건 스크롤 인계가 있을 때만 뜻이 있다. JS가 없으면 세로로 쌓는다. */
           /* JS가 없으면 리빌이 돌지 않는다. 상담판을 처음부터 보이게 둔다. */
           .hero-fade { opacity: 1 !important; transform: none !important; }
+          /* JS가 없으면 '히어로 끝' 신호(.hero-ended)도 오지 않는다. 겹친 헤더가 아래 본문·푸터 글자와
+             겹치지 않게 처음부터 그 신호 뒤의 모습(어두운 바탕 + 헤어라인)으로 둔다. */
+          header > nav { background-color: rgb(5 7 12 / .9); box-shadow: 0 1px 0 rgb(255 255 255 / .1); }
         `}</style>
       </noscript>
 
@@ -515,14 +556,29 @@ export default function Hero() {
           {/* 화면 정중앙에 h1 → 문단 → 목록을 쌓는 대신 아래쪽에 앉힌다. 위를 비워
               빌딩 컷이 숨 쉬고, 글은 어두워진 바닥에 놓인다 — 스크롤로 재생되는 필름의
               자막판에 가까운 구조다. */}
-          {/* 모바일 하단 여백이 넉넉해야 마지막 행이 떠 있는 '맨 위로' 버튼(bottom-6, 48px)에
-              가리지 않는다. 아래로 붙이는 구성이라 이 여백이 곧 안전 거리다. */}
-          <div className="relative z-10 h-full flex flex-col justify-center px-4 sm:px-6 lg:px-8 pt-24 pb-24 md:pb-14">
+          {/* 위 여백은 고정 헤더 높이를 넘어야 한다. lg 미만은 헤더가 로고 줄 + 메뉴 줄 두 단
+              (105px)이라 7rem, lg부터는 한 줄(64px)이라 6rem. 예전에는 모바일도 6rem이라
+              짧은 화면에서 헤드라인이 헤더 밑으로 들어갔다(320x568에서 77px).
+              md 미만은 아래 여백도 7rem으로 위와 맞춘다. 내용이 무대에 들어가는 보통 화면(높이 844)
+              에서는 가운데 자리가 예전(위·아래 6rem)과 같아 아무것도 움직이지 않는다. 이 여백은
+              '맨 위로' 버튼(bottom-6, 48px)과의 안전 거리이기도 하다 — 버튼은 무대가 붙어 있는
+              동안 숨고(ScrollTop), 무대가 걷혀 올라가는 동안은 이 거리가 입력창을 지킨다.
+              대화 중 낮은 휴대폰에서는 globals.css가 아래 여백을 4.5rem으로 줄인다 — 그 거리로도
+              보내기 버튼이 '맨 위로' 버튼에 닿지 않는다. */}
+          {/* 가운데 정렬은 justify-center가 아니라 자식의 my-auto가 한다. justify-center는
+              내용이 무대보다 길면 넘친 만큼을 위·아래로 나눠 헤드라인을 헤더 밑으로 밀어 올렸다.
+              자동 여백은 남는 공간이 있을 때만 가운데로 모으고, 모자라면 0이 되어 위 여백부터
+              아래로만 흐른다(justify-center-safe와 같은 동작). safe 키워드를 쓰지 않는 건 그걸
+              모르는 구형 사파리가 선언을 통째로 버려 내용이 위로 붙기 때문이다.
+              대화 중에는 아예 넘치지 않는다. hero-inner부터 상담판 안쪽까지 세로 flex로 이어, 무대
+              안쪽보다 길어지면 머리 줄과 입력창 사이만 줄어든다(globals.css '상담판은 무대 안에서만 자란다').
+              예전처럼 위·아래로 나눠 넘기면 '대화 닫기'가 헤더 밑에, 입력창이 무대 밖에 걸렸다. */}
+          <div className="hero-body relative z-10 h-full flex flex-col px-4 sm:px-6 lg:px-8 pt-28 pb-28 md:pb-14 lg:pt-24">
             {/* 헤드라인과 상담판은 같은 자리를 나눠 쓴다. 스크롤이 필름을 다 지나면
                 헤드라인이 위로 물러나고 그 자리에 상담판이 들어온다 — 영상은 바닥에
                 그대로 남아 톤이 끊기지 않는다. 둘을 grid로 겹쳐 두면 전환 중에
                 무대 높이가 흔들리지 않는다. */}
-            <div className="max-w-6xl mx-auto w-full hero-shadow text-center">
+            <div className="hero-inner max-w-6xl mx-auto my-auto w-full hero-shadow text-center">
               <h1 className="hero-title font-black break-keep text-white">
                 <span className="hero-line hero-line-setup">
                   <span className="hero-line-inner hero-title-setup text-white/75" ref={kickerRef}>

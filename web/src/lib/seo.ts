@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { SITE } from '@/lib/site';
+import { ogImage } from '@/lib/og';
 // 배포본 검사(scripts/seo-check.mjs)도 이 파일을 읽는다. 상한이 두 곳에 따로 있으면 한쪽만 고쳐진다.
 import LIMITS from './seo-limits.json';
 
@@ -38,7 +39,10 @@ type PageSeoInput = {
   description: string;
   /** '/siot' 처럼 앞에 슬래시가 붙은 경로. */
   path: string;
-  /** 지정하지 않으면 공용 OG 이미지. */
+  /**
+   * 공유 이미지. 지정하지 않으면 이 페이지 제목이 들어간 그림(/og<path>, lib/og.ts)을 쓴다.
+   * 제목 그림보다 설득력이 큰 사진이 있는 페이지만 지정한다(회사소개의 시상식 사진 등).
+   */
   image?: string;
 };
 
@@ -74,7 +78,9 @@ export function pageSeo({ title, description, path, image }: PageSeoInput): Meta
       locale: 'ko_KR',
       url,
       description,
-      images: [image || '/img/og-image.png'],
+      // 사진도 대체 글을 단다. 그림을 못 받았을 때, 카드를 읽어 주는 스크린리더에 남는 것이 이 글이다.
+      // 사진은 크기가 페이지마다 달라 적지 않는다 — 틀린 크기는 카톡이 자리를 잘못 잡게 한다.
+      images: [image ? { url: image, alt: title } : ogImage(path, title)],
     },
     twitter: { card: 'summary_large_image', description },
   };

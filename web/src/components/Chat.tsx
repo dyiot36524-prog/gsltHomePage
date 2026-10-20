@@ -24,6 +24,11 @@ import { conversions } from '@/lib/analytics';
  *
  * 대화 목록은 자기 안에서 스크롤한다(overscroll-behavior: contain). 무대가 sticky라
  * 목록에서 굴린 휠이 페이지로 새면 대화 도중에 히어로가 걷혀 버린다.
+ *
+ * 대화 중에는 상담판이 무대보다 길어지지 않는다(globals.css '상담판은 무대 안에서만 자란다').
+ * 머리 줄과 입력창은 제자리에 두고 그 사이(.hero-chat-body)만 줄어든다. 높이가 낮은 휴대폰에서는
+ * 목록 대신 이 사이 영역 전체가 한 덩어리로 스크롤한다 — 담당자 연결 카드까지 함께 굴러야
+ * 입력창이 무대 밖으로 밀려나지 않는다.
  */
 
 type Msg = { role: 'user' | 'assistant'; content: string };
@@ -94,6 +99,13 @@ export default function Chat({
   const [draft, setDraft] = useState('');
   const [summarizing, setSummarizing] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  /** 목록·안내·담당자 연결을 묶는 사이 영역. 낮은 화면에서는 이것이 스크롤한다. */
+  const bodyRef = useRef<HTMLDivElement>(null);
+  /** 가장 최근 메시지(방문자 것이든 AI 것이든). 낮은 화면에서 새 메시지의 첫 줄을 붙잡는 기준이다. */
+  const lastMsgRef = useRef<HTMLDivElement>(null);
+  const handoffRef = useRef<HTMLDivElement>(null);
+  /** 직전에 굴릴 때의 메시지 수. 늘었을 때만 새 메시지를 기준으로 굴린다. */
+  const shownRef = useRef(0);
   const session = useRef('');
   /** 담당자 연결 폼이 열린 시각. /contact 폼과 같은 봇 판별(3초 미만 제출)에 쓴다. */
   const formOpenedAt = useRef(0);
@@ -106,7 +118,46 @@ export default function Chat({
   const started = messages.length > 0;
 
   useEffect(() => {
-    if (started) endRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    // 새 메시지가 붙은 렌더인지. 바쁨 표시만 바뀐 렌더(오류, 담당자 연결 폼 제출)와 가른다.
+    const grew = messages.length > shownRef.current;
+    shownRef.current = messages.length;
+    if (!started) return;
+    endRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    // 낮은 화면에서는 목록이 아니라 사이 영역이 스크롤한다. 끝까지 내려야 새 답과 함께
+    // 그 아래 담당자 연결 카드가 보인다. 넘치지 않으면(높은 화면 대부분) 굴릴 것이 없어 건너뛴다.
+    // scrollIntoView를 하나 더 부르지 않고 이 요소만 굴리는 건, 그 함수가 무대(overflow: hidden)와
+    // 페이지까지 함께 굴릴 수 있어서다.
+    const body = bodyRef.current;
+    if (body && body.scrollHeight > body.clientHeight) {
+      const end = body.scrollHeight - body.clientHeight;
+      let top = end;
+      // 다만 끝까지 내리다 새 메시지를 지나치지는 않는다. 세 번째 질문부터(견적·일정 같은 말이 나오면 그 전에도)
+      // 담당자 연결 카드(320px 폭에서 242px)가 대화 아래 붙는데, 끝까지 내리면 그 카드만 남고 방금 온 답은
+      // 위로 통째로 밀려났다(320x568에서 방금 온 답이 0px, 375x553·360x600에서 13·8px만 보였다). 카드가
+      // 처음 붙는 순간(답을 기다리는 동안)에는 방금 보낸 질문과 '생각중' 표시도 같은 식으로 밀려났다.
+      // 새 메시지(보낸 질문, 이어서 온 답)의 첫 줄이 위 페이드(globals.css의 1.75rem) 바로 아래에 오는
+      // 자리까지만 내린다. 카드는 그 아래로 굴리면 나온다. 메시지와 카드가 함께 들어가면 끝까지 내리는
+      // 것과 같아 예전 그대로다.
+      // 목록이 스스로 스크롤하는 화면(높은 화면)에서는 메시지의 위치가 목록 안의 스크롤에 따라 달라져
+      // 이 계산이 맞지 않는다. 낮은 화면은 목록이 스크롤을 내려놓아(overflow: visible) 그럴 일이 없다.
+      const last = lastMsgRef.current;
+      const log = last?.parentElement;
+      if (grew && last && log && getComputedStyle(log).overflowY === 'visible') {
+        const fade = 1.75 * parseFloat(getComputedStyle(document.documentElement).fontSize);
+        // offsetTop은 사이 영역(relative) 기준이고 스크롤과 등장 애니메이션의 transform에 흔들리지 않는다
+        const anchor = Math.max(0, last.offsetTop - fade);
+        top = Math.min(end, anchor);
+        // 답이 창을 거의 채우는 가장 낮은 화면(320x568 등)에서는 카드가 아래 페이드 속에 9px만 남아
+        // 있는지조차 몰랐다. 답의 첫머리를 한 줄(24px)까지만 양보해 카드 윗부분 40px가 보이게 한다 —
+        // 더 아래로 이어진다는 표시다. 그 이상 양보해야 하면 답을 우선한다.
+        const card = handoffRef.current;
+        if (card) {
+          const peek = card.offsetTop + 40 + fade - body.clientHeight;
+          top = Math.min(end, Math.max(anchor, Math.min(anchor + 24, peek)));
+        }
+      }
+      body.scrollTo({ top, behavior: 'smooth' });
+    }
   }, [messages, busy, started]);
 
   async function send(text: string) {
@@ -216,7 +267,7 @@ export default function Chat({
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto text-center" aria-labelledby="chat-heading">
+    <div className="hero-chat-panel w-full max-w-2xl mx-auto text-center" aria-labelledby="chat-heading">
       {/* ── 머리. 대화가 시작되면 자리를 대화에 내준다 ── */}
       {!started ? (
         /* 히어로 헤드라인이 이미 이 회사가 무엇을 하는지 말했다. 여기서 큰 제목을
@@ -258,9 +309,10 @@ export default function Chat({
         </div>
       )}
 
-      {/* ── 첫 질문 ── */}
+      {/* ── 첫 질문 ──
+          hero-chat-chips: 높이가 낮은 휴대폰에서는 globals.css가 카드를 덜어 낸다(좁으면 첫 장만, 가로로 눕히면 모두). */}
       {!started && (
-        <ul className="grid gap-2.5 sm:grid-cols-3 mb-6">
+        <ul className="hero-chat-chips grid gap-2.5 sm:grid-cols-3 mb-6">
           {SUGGESTIONS.map((s) => (
             <li key={s}>
               <button
@@ -278,156 +330,162 @@ export default function Chat({
         </ul>
       )}
 
-      {/* ── 대화 ── */}
-      {started && (
-        <div
-          className="hero-chat-log mb-5 overflow-y-auto overscroll-contain space-y-5 text-left"
-          aria-live="polite"
-        >
-          {messages.map((m, i) =>
-            m.role === 'user' ? (
-              <div key={i} className="flex justify-end">
-                <p className="max-w-[85%] rounded-3xl rounded-br-lg bg-white/10 px-4 py-3 text-[0.9375rem] md:text-base text-white/90 leading-relaxed break-keep [overflow-wrap:anywhere] whitespace-pre-wrap">
-                  {m.content}
+      {/* ── 사이 영역: 대화 목록 · 안내 · 담당자 연결 ──
+          대화 중에 줄어들고 낮은 화면에서 통째로 스크롤하는 까닭은 파일 머리 주석에 있다.
+          대화 전에는 비어 있어 높이가 0이다.
+          relative는 메시지의 offsetTop을 이 영역 기준으로 재려고 둔다(위 스크롤 effect). */}
+      <div ref={bodyRef} className="hero-chat-body relative">
+        {/* ── 대화 ── */}
+        {started && (
+          <div
+            className="hero-chat-log mb-5 overflow-y-auto overscroll-contain space-y-5 text-left"
+            aria-live="polite"
+          >
+            {messages.map((m, i) =>
+              m.role === 'user' ? (
+                <div key={i} ref={i === messages.length - 1 ? lastMsgRef : undefined} className="flex justify-end">
+                  <p className="max-w-[85%] rounded-3xl rounded-br-lg bg-white/10 px-4 py-3 text-[0.9375rem] md:text-base text-white/90 leading-relaxed break-keep [overflow-wrap:anywhere] whitespace-pre-wrap">
+                    {m.content}
+                  </p>
+                </div>
+              ) : (
+                <div key={i} ref={i === messages.length - 1 ? lastMsgRef : undefined} className="flex gap-3">
+                  <Sparkle className="w-5 h-5 shrink-0 mt-0.5" />
+                  <p className="min-w-0 text-[0.9375rem] md:text-base text-white/85 leading-[1.8] break-keep [overflow-wrap:anywhere] whitespace-pre-wrap">
+                    {m.content}
+                  </p>
+                </div>
+              ),
+            )}
+            {busy && !contactOpen && (
+              <div className="flex gap-3 items-center">
+                <Sparkle className="w-5 h-5 shrink-0 animate-pulse" />
+                <span className="text-sm text-white/65">고객님을 위한 솔루션 생각중..</span>
+              </div>
+            )}
+            <div ref={endRef} />
+          </div>
+        )}
+
+        {notice && (
+          <p className="mb-4 rounded-2xl bg-amber-400/10 border border-amber-300/20 px-4 py-3 text-sm text-amber-200">
+            {notice}
+          </p>
+        )}
+        {error && (
+          <p
+            className="mb-4 rounded-2xl bg-rose-400/10 border border-rose-300/25 px-4 py-3 text-sm text-rose-200"
+            role="alert"
+          >
+            {error}
+          </p>
+        )}
+
+        {/* ── 담당자 연결 ── */}
+        {started && wantsHandoff(messages) && !sent && (
+          <div ref={handoffRef} className="mb-5 rounded-3xl border border-white/12 bg-white/[0.05] backdrop-blur-sm p-5 text-left">
+            {!contactOpen ? (
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <p className="text-sm text-white/80 break-keep">
+                  현장 조건은 담당자가 직접 보는 편이 정확합니다.
+                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={openContact}
+                    className="group inline-flex min-h-11 items-center gap-2 rounded-full bg-gslt-500 hover:bg-gslt-400 text-slate-900 px-5 py-2.5 text-sm font-bold transition-colors"
+                  >
+                    담당자 연결
+                    <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5" />
+                  </button>
+                  {/* 둘째 선택지(카카오톡 노랑). 담당자 연결은 지금 대화를 요약해 넘기지만 카카오톡은
+                      아무것도 넘어가지 않는다 — 그 사실을 바로 아래에 적는다. */}
+                  <KakaoChatLink place="chat" describedBy="chat-kakao-note">
+                    카카오톡으로 문의
+                  </KakaoChatLink>
+                </div>
+                <p id="chat-kakao-note" className="w-full text-xs text-white/65 break-keep">
+                  카카오톡으로 문의하면 지금 대화 내용은 넘어가지 않습니다 · 새 창에서 열립니다
                 </p>
               </div>
             ) : (
-              <div key={i} className="flex gap-3">
-                <Sparkle className="w-5 h-5 shrink-0 mt-0.5" />
-                <p className="min-w-0 text-[0.9375rem] md:text-base text-white/85 leading-[1.8] break-keep [overflow-wrap:anywhere] whitespace-pre-wrap">
-                  {m.content}
-                </p>
-              </div>
-            ),
-          )}
-          {busy && !contactOpen && (
-            <div className="flex gap-3 items-center">
-              <Sparkle className="w-5 h-5 shrink-0 animate-pulse" />
-              <span className="text-sm text-white/65">고객님을 위한 솔루션 생각중..</span>
-            </div>
-          )}
-          <div ref={endRef} />
-        </div>
-      )}
-
-      {notice && (
-        <p className="mb-4 rounded-2xl bg-amber-400/10 border border-amber-300/20 px-4 py-3 text-sm text-amber-200">
-          {notice}
-        </p>
-      )}
-      {error && (
-        <p
-          className="mb-4 rounded-2xl bg-rose-400/10 border border-rose-300/25 px-4 py-3 text-sm text-rose-200"
-          role="alert"
-        >
-          {error}
-        </p>
-      )}
-
-      {/* ── 담당자 연결 ── */}
-      {started && wantsHandoff(messages) && !sent && (
-        <div className="mb-5 rounded-3xl border border-white/12 bg-white/[0.05] backdrop-blur-sm p-5 text-left">
-          {!contactOpen ? (
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <p className="text-sm text-white/80 break-keep">
-                현장 조건은 담당자가 직접 보는 편이 정확합니다.
-              </p>
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={openContact}
-                  className="group inline-flex min-h-11 items-center gap-2 rounded-full bg-gslt-500 hover:bg-gslt-400 text-slate-900 px-5 py-2.5 text-sm font-bold transition-colors"
-                >
-                  담당자 연결
-                  <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5" />
-                </button>
-                {/* 둘째 선택지(카카오톡 노랑). 담당자 연결은 지금 대화를 요약해 넘기지만 카카오톡은
-                    아무것도 넘어가지 않는다 — 그 사실을 바로 아래에 적는다. */}
-                <KakaoChatLink place="chat" describedBy="chat-kakao-note">
-                  카카오톡으로 문의
-                </KakaoChatLink>
-              </div>
-              <p id="chat-kakao-note" className="w-full text-xs text-white/65 break-keep">
-                카카오톡으로 문의하면 지금 대화 내용은 넘어가지 않습니다 · 새 창에서 열립니다
-              </p>
-            </div>
-          ) : (
-            <form onSubmit={submitContact} className="relative grid gap-2.5 sm:grid-cols-2">
-              {/* 허니팟 — /contact 폼과 같은 봇 차단. 사람에게는 없는 칸이다. */}
-              <div aria-hidden="true" className="absolute -left-[9999px] top-0 h-0 w-0 overflow-hidden">
-                <label htmlFor="chat-website">이 칸은 비워 두세요</label>
-                <input id="chat-website" name="website" type="text" tabIndex={-1} autoComplete="off" />
-              </div>
-              <Field name="name" label="이름" required autoComplete="name" />
-              <Field name="company" label="회사명" autoComplete="organization" />
-              <Field name="email" label="이메일" type="email" required autoComplete="email" />
-              <Field name="phone" label="연락처" type="tel" autoComplete="tel" />
-              <label className="block sm:col-span-2">
-                <span className="flex items-baseline justify-between gap-3 text-xs font-bold text-white/65 mb-1.5">
-                  문의 내용
-                  <span className="font-medium text-white/55" aria-live="polite">
-                    {summarizing ? '대화를 정리하는 중…' : draft ? '대화에서 정리했습니다. 고쳐 쓰셔도 됩니다.' : ''}
+              <form onSubmit={submitContact} className="relative grid gap-2.5 sm:grid-cols-2">
+                {/* 허니팟 — /contact 폼과 같은 봇 차단. 사람에게는 없는 칸이다. */}
+                <div aria-hidden="true" className="absolute -left-[9999px] top-0 h-0 w-0 overflow-hidden">
+                  <label htmlFor="chat-website">이 칸은 비워 두세요</label>
+                  <input id="chat-website" name="website" type="text" tabIndex={-1} autoComplete="off" />
+                </div>
+                <Field name="name" label="이름" required autoComplete="name" />
+                <Field name="company" label="회사명" autoComplete="organization" />
+                <Field name="email" label="이메일" type="email" required autoComplete="email" />
+                <Field name="phone" label="연락처" type="tel" autoComplete="tel" />
+                <label className="block sm:col-span-2">
+                  <span className="flex items-baseline justify-between gap-3 text-xs font-bold text-white/65 mb-1.5">
+                    문의 내용
+                    <span className="font-medium text-white/55" aria-live="polite">
+                      {summarizing ? '대화를 정리하는 중…' : draft ? '대화에서 정리했습니다. 고쳐 쓰셔도 됩니다.' : ''}
+                    </span>
                   </span>
-                </span>
-                <textarea
-                  name="message"
-                  rows={4}
-                  maxLength={3000}
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  placeholder="어떤 공간에 무엇을 하고 싶으신지 적어 주세요."
-                  className="w-full resize-y rounded-xl bg-white/[0.07] border border-white/15 focus:border-gslt-400 focus:outline-none focus:ring-4 focus:ring-gslt-400/20 px-3.5 py-2.5 text-sm text-white placeholder:text-white/45 leading-relaxed transition-colors"
-                />
-              </label>
-              <label className="sm:col-span-2 flex items-center gap-2.5 text-sm text-white/80 py-1">
-                <input
-                  type="checkbox"
-                  name="withLog"
-                  defaultChecked
-                  className="w-4 h-4 accent-gslt-500"
-                />
-                지금까지의 대화 내용을 함께 보냅니다
-              </label>
-              {/* 이름·연락처를 받는 모든 폼은 동의를 받아야 한다. 전에는 이 폼만 빠져 있었다. */}
-              <div className="sm:col-span-2 flex items-start gap-2.5 text-sm text-white/80 py-1">
-                <input
-                  id="chat-privacy"
-                  type="checkbox"
-                  name="privacy"
-                  required
-                  aria-required="true"
-                  className="mt-0.5 w-4 h-4 shrink-0 accent-gslt-500"
-                />
-                <p className="break-keep">
-                  <label htmlFor="chat-privacy" className="cursor-pointer">
-                    개인정보 수집·이용에 동의합니다.<span className="text-gslt-400"> *</span>
-                  </label>{' '}
-                  <Link
-                    href="/legal/privacy"
-                    target="_blank"
-                    className="font-medium text-gslt-300 underline underline-offset-4 decoration-gslt-400/40 hover:decoration-gslt-300"
-                  >
-                    처리방침 보기
-                  </Link>
-                </p>
-              </div>
-              <button
-                type="submit"
-                disabled={busy}
-                className="sm:col-span-2 rounded-full bg-gslt-500 hover:bg-gslt-400 text-slate-900 px-6 py-3 text-sm font-bold transition-colors disabled:opacity-60"
-              >
-                {busy ? '보내는 중…' : '문의 남기기'}
-              </button>
-            </form>
-          )}
-        </div>
-      )}
+                  <textarea
+                    name="message"
+                    rows={4}
+                    maxLength={3000}
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    placeholder="어떤 공간에 무엇을 하고 싶으신지 적어 주세요."
+                    className="w-full resize-y rounded-xl bg-white/[0.07] border border-white/15 focus:border-gslt-400 focus:outline-none focus:ring-4 focus:ring-gslt-400/20 px-3.5 py-2.5 text-sm text-white placeholder:text-white/45 leading-relaxed transition-colors"
+                  />
+                </label>
+                <label className="sm:col-span-2 flex items-center gap-2.5 text-sm text-white/80 py-1">
+                  <input
+                    type="checkbox"
+                    name="withLog"
+                    defaultChecked
+                    className="w-4 h-4 accent-gslt-500"
+                  />
+                  지금까지의 대화 내용을 함께 보냅니다
+                </label>
+                {/* 이름·연락처를 받는 모든 폼은 동의를 받아야 한다. 전에는 이 폼만 빠져 있었다. */}
+                <div className="sm:col-span-2 flex items-start gap-2.5 text-sm text-white/80 py-1">
+                  <input
+                    id="chat-privacy"
+                    type="checkbox"
+                    name="privacy"
+                    required
+                    aria-required="true"
+                    className="mt-0.5 w-4 h-4 shrink-0 accent-gslt-500"
+                  />
+                  <p className="break-keep">
+                    <label htmlFor="chat-privacy" className="cursor-pointer">
+                      개인정보 수집·이용에 동의합니다.<span className="text-gslt-400"> *</span>
+                    </label>{' '}
+                    <Link
+                      href="/legal/privacy"
+                      target="_blank"
+                      className="font-medium text-gslt-300 underline underline-offset-4 decoration-gslt-400/40 hover:decoration-gslt-300"
+                    >
+                      처리방침 보기
+                    </Link>
+                  </p>
+                </div>
+                <button
+                  type="submit"
+                  disabled={busy}
+                  className="sm:col-span-2 rounded-full bg-gslt-500 hover:bg-gslt-400 text-slate-900 px-6 py-3 text-sm font-bold transition-colors disabled:opacity-60"
+                >
+                  {busy ? '보내는 중…' : '문의 남기기'}
+                </button>
+              </form>
+            )}
+          </div>
+        )}
 
-      {sent && (
-        <p className="mb-5 rounded-3xl bg-gslt-500/15 border border-gslt-400/30 px-5 py-4 text-sm font-bold text-gslt-200">
-          접수되었습니다. 담당자가 곧 연락드리겠습니다.
-        </p>
-      )}
+        {sent && (
+          <p className="mb-5 rounded-3xl bg-gslt-500/15 border border-gslt-400/30 px-5 py-4 text-sm font-bold text-gslt-200">
+            접수되었습니다. 담당자가 곧 연락드리겠습니다.
+          </p>
+        )}
+      </div>
 
       {/* ── 입력창 ── */}
       <form
@@ -440,6 +498,11 @@ export default function Chat({
         <label htmlFor="chat-input" className="sr-only">
           궁금한 점을 입력하세요
         </label>
+        {/* 안내 문구는 320px 폭에서 한 줄에 들어가야 한다. 좌우 여백(보내기 버튼 자리 포함 88px)을
+            빼면 글자 자리가 198px인데, 예전 문구('배선 공사 없이 가능한지 물어보세요', 223px)는
+            두 줄로 넘쳐 아랫줄이 잘렸다. 지금 문구는 178px다. 그보다 좁은 화면(280px 폴드 등)도
+            두 줄로 넘기지 않고 한 줄 끝에서 자른다(placeholder:truncate — 크롬은 textarea
+            안내 문구에 말줄임표를 그리지 않아 글자 중간에서 잘린다. 반쯤 보이는 둘째 줄보다 낫다). */}
         <textarea
           id="chat-input"
           rows={1}
@@ -453,8 +516,8 @@ export default function Chat({
               send(input);
             }
           }}
-          placeholder="배선 공사 없이 가능한지 물어보세요"
-          className="block w-full resize-none rounded-[1.6rem] bg-white/[0.07] border border-white/10 focus:border-transparent focus:bg-white/[0.11] focus:outline-none focus:ring-4 focus:ring-gslt-400/20 backdrop-blur-sm py-4 pl-6 pr-16 text-base text-white placeholder:text-white/60 text-left leading-relaxed transition-colors"
+          placeholder="배선 없이 되는지 물어보세요"
+          className="block w-full resize-none rounded-[1.6rem] bg-white/[0.07] border border-white/10 focus:border-transparent focus:bg-white/[0.11] focus:outline-none focus:ring-4 focus:ring-gslt-400/20 backdrop-blur-sm py-4 pl-6 pr-16 text-base text-white placeholder:text-white/60 placeholder:truncate text-left leading-relaxed transition-colors"
         />
         <button
           type="submit"

@@ -7,6 +7,7 @@ import Footer from '@/components/Footer';
 import PageHead from '@/components/PageHead';
 import ContactForm from '@/components/ContactForm';
 import KakaoChatLink from '@/components/KakaoChatLink';
+import { NoBreak } from '@/lib/nobreak';
 import { COMPANY, KAKAO } from '@/lib/site';
 
 const DESCRIPTION =
@@ -21,6 +22,9 @@ export const metadata: Metadata = pageSeo({
 
 /** 시공 5단계. PRODUCT.md가 정의한 실제 진행 순서이고, 신청 이후에 무엇이 일어나는지를 알린다. */
 const STEPS = ['상담·요구분석', '현장실측', '설계·견적', '시공·설치', '검수·유지보수'];
+
+/** 이메일 주소는 @ 뒤에서만 줄을 바꾼다(<wbr/>). break-all은 320px에서 'gs707810 / 3107@…'처럼 잘랐다. */
+const [EMAIL_USER, EMAIL_DOMAIN] = COMPANY.email.split('@');
 
 /**
  * 두 열의 머리. 기록부의 표머리(RecordHead)와 같은 역할이라 같은 라벨 문법을 쓰되,
@@ -93,21 +97,23 @@ export default function ContactPage() {
             </p>
             {/* 모바일은 카카오톡 앱이 바로 열리고, PC는 카카오 로그인을 거쳐 카카오톡에서 이어진다 —
                 그 차이를 보조 문구가 미리 말한다. 채널 이름을 적어 두면 링크가 막힌 인앱 브라우저에서도
-                카카오톡 검색으로 찾을 수 있다. */}
+                카카오톡 검색으로 찾을 수 있다. 보조 문구는 NoBreak로 그려 가운뎃점이 줄 첫머리에 오지 않게 한다. */}
             <div className="mt-6">
               <KakaoChatLink place="contact" describedBy="contact-kakao-note">
                 카카오톡으로 문의하기
               </KakaoChatLink>
               <p id="contact-kakao-note" className="mt-3 text-sm text-slate-500 leading-relaxed break-keep">
-                카카오톡 채널 ‘{KAKAO.name}’ · 새 창에서 열립니다. PC에서는 카카오 로그인 후 카카오톡에서 대화가
-                이어집니다.
+                <NoBreak>
+                  {`카카오톡 채널 ‘${KAKAO.name}’ · 새 창에서 열립니다. PC에서는 카카오 로그인 후 카카오톡에서 대화가 이어집니다.`}
+                </NoBreak>
               </p>
             </div>
+            {/* 전화번호는 하이픈에서 끊기지 않게 통째로 넘긴다. */}
             <p className="mt-8 border-t border-slate-200 pt-5 text-sm text-slate-600 break-keep">
               전화가 편하시면{' '}
               <a
                 href={`tel:${COMPANY.tel.replace(/-/g, '')}`}
-                className="text-lg font-black tracking-tight tabular-nums text-slate-900 transition-colors hover:text-gslt-700"
+                className="whitespace-nowrap text-lg font-black tracking-tight tabular-nums text-slate-900 transition-colors hover:text-gslt-700"
               >
                 {COMPANY.tel}
               </a>
@@ -124,9 +130,9 @@ export default function ContactPage() {
               프로그램이 편하시면{' '}
               <a
                 href={`mailto:${COMPANY.email}`}
-                className="font-bold text-slate-900 break-all underline underline-offset-4 decoration-slate-300 transition-colors hover:text-gslt-700"
+                className="font-bold text-slate-900 underline underline-offset-4 decoration-slate-300 transition-colors hover:text-gslt-700"
               >
-                {COMPANY.email}
+                {EMAIL_USER}@<wbr />{EMAIL_DOMAIN}
               </a>
               로 보내셔도 됩니다.
             </p>
@@ -138,8 +144,11 @@ export default function ContactPage() {
         <section aria-labelledby="contact-more" className="mt-20">
           <ColumnHead id="contact-more">찾아오시는 곳 · 진행 순서</ColumnHead>
           <dl className="grid md:grid-cols-2 md:gap-x-16 border-b border-slate-200">
+            {/* 주소 끝 '3차 501호'는 한 덩어리로 넘긴다 — '3차 / 501호'로 갈라지지 않게. */}
             <Line label="주소">
-              <p className="text-sm text-slate-600 leading-relaxed break-keep">{COMPANY.address}</p>
+              <p className="text-sm text-slate-600 leading-relaxed break-keep">
+                <NoBreak>{COMPANY.address}</NoBreak>
+              </p>
             </Line>
             <Line label="이후 절차">
               <ol className="text-sm text-slate-600 tabular-nums">

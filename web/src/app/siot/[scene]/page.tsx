@@ -9,6 +9,7 @@ import { pageSeo } from '@/lib/seo';
 import { SITE } from '@/lib/site';
 import { jsonLd, breadcrumbSchema, ORG_ID } from '@/lib/schema';
 import { SCENES, sceneBySlug } from '@/lib/scenes';
+import { NoBreak } from '@/lib/nobreak';
 
 /**
  * 시옷 활용 장면 — 회의실 예약·제어 / 휴게공간 예약·재실 현황판 / 화장실 재실 표시.
@@ -18,6 +19,9 @@ import { SCENES, sceneBySlug } from '@/lib/scenes';
  *
  * 구축 분야 페이지(/solutions/*)와 같은 기록 면(흰 지면·괘선·radius 0)을 쓴다. 읽는 페이지다.
  * 내용은 lib/scenes.ts 한 곳에 있고, 지금은 쇼룸 시연 수준이라 고객 사례·수치를 쓰지 않는다.
+ *
+ * 본문 문장은 NoBreak로 그린다 — 320px에서 'Wi-/Fi'로 끊기고 '·'가 줄 첫머리에 오던 것을 막는다.
+ * 원문은 구조화 데이터에도 쓰이므로 보이지 않는 문자는 화면에만 넣는다.
  */
 
 export const dynamicParams = false;
@@ -98,7 +102,7 @@ export default async function ScenePage({ params }: Props) {
           <section aria-labelledby="s-problem" className="border-t-2 border-slate-900 pt-8">
             <SectionHead id="s-problem">이런 일이 생깁니다</SectionHead>
             <p className="mt-5 max-w-[68ch] text-base md:text-lg text-slate-600 leading-relaxed break-keep">
-              {s.problem}
+              <NoBreak>{s.problem}</NoBreak>
             </p>
           </section>
 
@@ -112,7 +116,7 @@ export default async function ScenePage({ params }: Props) {
                 >
                   <dt className="font-bold text-slate-900 break-keep">{k}</dt>
                   <dd className="max-w-[68ch] text-[15px] md:text-base text-slate-600 leading-relaxed break-keep">
-                    {v}
+                    <NoBreak>{v}</NoBreak>
                   </dd>
                 </div>
               ))}
@@ -122,12 +126,12 @@ export default async function ScenePage({ params }: Props) {
           <section aria-labelledby="s-admin" className="border-t-2 border-slate-900 pt-8">
             <SectionHead id="s-admin">관리자 화면에서 보는 것</SectionHead>
             <p className="mt-3 text-sm text-slate-500 break-keep">
-              회의실·휴게공간·화장실을 따로 두지 않고 하나의 시옷 관제 화면에서 함께 봅니다.
+              <NoBreak>회의실·휴게공간·화장실을 따로 두지 않고 하나의 시옷 관제 화면에서 함께 봅니다.</NoBreak>
             </p>
             <ul className="mt-6 grid sm:grid-cols-2 border-t border-slate-200">
               {s.admin.map((x) => (
                 <li key={x} className="border-b border-slate-200 py-4 pr-4 text-[15px] font-bold text-slate-900 break-keep">
-                  {x}
+                  <NoBreak>{x}</NoBreak>
                 </li>
               ))}
             </ul>
@@ -136,12 +140,14 @@ export default async function ScenePage({ params }: Props) {
           <section aria-labelledby="s-devices" className="border-t-2 border-slate-900 pt-8">
             <SectionHead id="s-devices">붙는 장비</SectionHead>
             <p className="mt-3 text-sm text-slate-500 break-keep">
-              배선 공사 없이 무선으로 얹고, 제조사가 달라도 Wi-Fi·블루투스·ZigBee·Z-Wave를 함께 지원하는 개방형 구조로 묶습니다.
+              <NoBreak>
+                배선 공사 없이 무선으로 얹고, 제조사가 달라도 Wi-Fi·블루투스·ZigBee·Z-Wave를 함께 지원하는 개방형 구조로 묶습니다.
+              </NoBreak>
             </p>
             <ul className="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 border-t border-slate-200">
               {s.devices.map((x) => (
                 <li key={x} className="border-b border-slate-200 py-4 pr-4 text-[15px] font-bold text-slate-900 break-keep">
-                  {x}
+                  <NoBreak>{x}</NoBreak>
                 </li>
               ))}
             </ul>
@@ -152,9 +158,12 @@ export default async function ScenePage({ params }: Props) {
             <dl className="mt-2">
               {s.faq.map((x) => (
                 <div key={x.q} className="border-b border-slate-200 py-7">
-                  <dt className="text-lg md:text-xl font-black text-slate-900 break-keep leading-snug">{x.q}</dt>
+                  {/* 두 줄 질문의 끝에 한 어절만 남지 않게 줄 길이를 고른다. */}
+                  <dt className="text-lg md:text-xl font-black text-slate-900 break-keep text-balance leading-snug">
+                    <NoBreak>{x.q}</NoBreak>
+                  </dt>
                   <dd className="mt-3 max-w-[68ch] text-[15px] md:text-base text-slate-600 break-keep leading-relaxed">
-                    {x.a}
+                    <NoBreak>{x.a}</NoBreak>
                   </dd>
                 </div>
               ))}
@@ -174,7 +183,9 @@ export default async function ScenePage({ params }: Props) {
                   >
                     <span className="min-w-0">
                       <span className="font-bold text-slate-900 group-hover:text-gslt-700 transition-colors">{o.keyword}</span>
-                      <span className="mt-0.5 block text-sm text-slate-500 break-keep">{o.description}</span>
+                      <span className="mt-0.5 block text-sm text-slate-500 break-keep">
+                        <NoBreak>{o.description}</NoBreak>
+                      </span>
                     </span>
                     <ArrowRight className="w-4 h-4 shrink-0 text-slate-400 group-hover:text-gslt-700 transition-colors" />
                   </Link>
@@ -187,7 +198,9 @@ export default async function ScenePage({ params }: Props) {
                 >
                   <span className="min-w-0">
                     <span className="font-bold text-slate-900 group-hover:text-gslt-700 transition-colors">시옷(SIOT) 전체 보기</span>
-                    <span className="mt-0.5 block text-sm text-slate-500 break-keep">통합 관제·공간 예약·출입 연동·자동화·에너지를 한 시스템에서.</span>
+                    <span className="mt-0.5 block text-sm text-slate-500 break-keep">
+                      <NoBreak>통합 관제·공간 예약·출입 연동·자동화·에너지를 한 시스템에서.</NoBreak>
+                    </span>
                   </span>
                   <ArrowRight className="w-4 h-4 shrink-0 text-slate-400 group-hover:text-gslt-700 transition-colors" />
                 </Link>

@@ -212,10 +212,21 @@ export function postDateLabel(p: Post): string {
   return formatDate(p.createdAt);
 }
 
+/**
+ * 서울 날짜로 적는다. 서버(Vercel)는 UTC라 getDate()를 쓰면 한국 시각 0~9시에 쓴 글이 하루 전
+ * 날짜로 찍혔다. 사이트의 날짜는 모두 한국 날짜다.
+ */
+const SEOUL_DATE = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'Asia/Seoul',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+
 export function formatDate(d?: Date | null): string {
   if (!(d instanceof Date) || Number.isNaN(d.getTime())) return '';
-  const p = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}. ${p(d.getMonth() + 1)}. ${p(d.getDate())}`;
+  const [y, m, day] = SEOUL_DATE.format(d).split('-');
+  return `${y}. ${m}. ${day}`;
 }
 
 /**

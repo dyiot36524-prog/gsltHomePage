@@ -10,6 +10,7 @@ import { SITE } from '@/lib/site';
 import { jsonLd, breadcrumbSchema, ORG_ID } from '@/lib/schema';
 import { FIELDS, fieldBySlug } from '@/lib/fields';
 import { SCENES, SCENES_FOR_FIELD } from '@/lib/scenes';
+import { NoBreak } from '@/lib/nobreak';
 
 /**
  * 구축 분야 랜딩 — 검색어 하나에 한 장.
@@ -20,6 +21,9 @@ import { SCENES, SCENES_FOR_FIELD } from '@/lib/scenes';
  *
  * 기록 면의 문법(흰 지면·괘선·radius 0)을 쓴다. 읽는 페이지라 /faq·/contact와 같은 세계다.
  * 내용은 lib/fields.ts 한 곳에 있고, 모든 문장이 이미 공개된 사실에서 왔다.
+ *
+ * 본문 문장은 NoBreak로 그린다 — 'Wi-Fi'·'Z-Wave'가 하이픈에서, '·'가 줄 첫머리에서 끊기지
+ * 않게. 원문은 구조화 데이터에도 쓰이므로 보이지 않는 문자는 화면에만 넣는다.
  */
 
 export const dynamicParams = false;
@@ -99,7 +103,7 @@ export default async function FieldPage({ params }: Props) {
           <section aria-labelledby="f-problem" className="border-t-2 border-slate-900 pt-8">
             <SectionHead id="f-problem">이 공간에서 생기는 일</SectionHead>
             <p className="mt-5 max-w-[68ch] text-base md:text-lg text-slate-600 leading-relaxed break-keep">
-              {f.problem}
+              <NoBreak>{f.problem}</NoBreak>
             </p>
           </section>
 
@@ -113,7 +117,7 @@ export default async function FieldPage({ params }: Props) {
                 >
                   <dt className="font-bold text-slate-900 break-keep">{k}</dt>
                   <dd className="max-w-[68ch] text-[15px] md:text-base text-slate-600 leading-relaxed break-keep">
-                    {v}
+                    <NoBreak>{v}</NoBreak>
                   </dd>
                 </div>
               ))}
@@ -123,12 +127,12 @@ export default async function FieldPage({ params }: Props) {
           <section aria-labelledby="f-features" className="border-t-2 border-slate-900 pt-8">
             <SectionHead id="f-features">붙는 것</SectionHead>
             <p className="mt-3 text-sm text-slate-500 break-keep">
-              제조사가 달라도 Wi-Fi·블루투스·ZigBee·Z-Wave를 함께 지원하는 개방형 구조로 하나의 화면에 묶습니다.
+              <NoBreak>{f.featuresLead}</NoBreak>
             </p>
             <ul className="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 border-t border-slate-200">
               {f.features.map((x) => (
                 <li key={x} className="border-b border-slate-200 py-4 pr-4 text-[15px] font-bold text-slate-900 break-keep">
-                  {x}
+                  <NoBreak>{x}</NoBreak>
                 </li>
               ))}
             </ul>
@@ -136,18 +140,24 @@ export default async function FieldPage({ params }: Props) {
 
           <section aria-labelledby="f-product" className="border-t-2 border-slate-900 pt-8">
             <SectionHead id="f-product">받치는 제품</SectionHead>
-            <Link
-              href={f.product.href}
-              className={`group mt-6 flex items-baseline justify-between gap-6 border-y border-slate-200 py-6 transition-colors hover:bg-slate-50 -mx-4 px-4 ${FOCUS}`}
-            >
-              <span className="min-w-0">
-                <span className="block text-lg font-black text-slate-900 group-hover:text-gslt-700 transition-colors">
-                  {f.product.name}
+            {/* 괘선은 감싸는 div가 긋고, 링크는 hover 바탕만 -mx-4로 넓힌다. 둘이 한 요소에 있으면
+                괘선도 함께 넓어져 휴대폰에서 화면 끝까지 나간다. 아래 목록들과 같은 짜임이다. */}
+            <div className="mt-6 border-y border-slate-200">
+              <Link
+                href={f.product.href}
+                className={`group flex items-baseline justify-between gap-6 py-6 -mx-4 px-4 transition-colors hover:bg-slate-50 ${FOCUS}`}
+              >
+                <span className="min-w-0">
+                  <span className="block text-lg font-black text-slate-900 group-hover:text-gslt-700 transition-colors">
+                    {f.product.name}
+                  </span>
+                  <span className="mt-1 block text-[15px] text-slate-600 leading-relaxed break-keep">
+                    <NoBreak>{f.product.why}</NoBreak>
+                  </span>
                 </span>
-                <span className="mt-1 block text-[15px] text-slate-600 leading-relaxed break-keep">{f.product.why}</span>
-              </span>
-              <ArrowRight className="w-5 h-5 shrink-0 text-slate-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-gslt-700" />
-            </Link>
+                <ArrowRight className="w-5 h-5 shrink-0 text-slate-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-gslt-700" />
+              </Link>
+            </div>
           </section>
 
           {/* 이 분야에서 시옷이 실제로 쓰이는 장면. 회의실·휴게공간·화장실은 장면마다 한 장씩 있고,
@@ -164,7 +174,9 @@ export default async function FieldPage({ params }: Props) {
                     >
                       <span className="min-w-0">
                         <span className="font-bold text-slate-900 group-hover:text-gslt-700 transition-colors">{sc.keyword}</span>
-                        <span className="mt-0.5 block text-sm text-slate-500 break-keep">{sc.description}</span>
+                        <span className="mt-0.5 block text-sm text-slate-500 break-keep">
+                          <NoBreak>{sc.description}</NoBreak>
+                        </span>
                       </span>
                       <ArrowRight className="w-4 h-4 shrink-0 text-slate-400 group-hover:text-gslt-700 transition-colors" />
                     </Link>
@@ -179,9 +191,12 @@ export default async function FieldPage({ params }: Props) {
             <dl className="mt-2">
               {f.faq.map((x) => (
                 <div key={x.q} className="border-b border-slate-200 py-7">
-                  <dt className="text-lg md:text-xl font-black text-slate-900 break-keep leading-snug">{x.q}</dt>
+                  {/* 두 줄 질문의 끝에 '하나요?'·'있나요?'만 남지 않게 줄 길이를 고른다. */}
+                  <dt className="text-lg md:text-xl font-black text-slate-900 break-keep text-balance leading-snug">
+                    <NoBreak>{x.q}</NoBreak>
+                  </dt>
                   <dd className="mt-3 max-w-[68ch] text-[15px] md:text-base text-slate-600 break-keep leading-relaxed">
-                    {x.a}
+                    <NoBreak>{x.a}</NoBreak>
                   </dd>
                 </div>
               ))}
@@ -201,7 +216,9 @@ export default async function FieldPage({ params }: Props) {
                   >
                     <span className="min-w-0">
                       <span className="font-bold text-slate-900 group-hover:text-gslt-700 transition-colors">{o.keyword}</span>
-                      <span className="mt-0.5 block text-sm text-slate-500 break-keep">{o.lead}</span>
+                      <span className="mt-0.5 block text-sm text-slate-500 break-keep">
+                        <NoBreak>{o.lead}</NoBreak>
+                      </span>
                     </span>
                     <ArrowRight className="w-4 h-4 shrink-0 text-slate-400 group-hover:text-gslt-700 transition-colors" />
                   </Link>

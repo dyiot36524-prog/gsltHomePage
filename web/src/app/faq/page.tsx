@@ -7,6 +7,7 @@ import PageHead from '@/components/PageHead';
 import { SITE } from '@/lib/site';
 import { jsonLd, breadcrumbSchema } from '@/lib/schema';
 import { FAQ_ALL, FAQ_GROUPS } from '@/lib/faq';
+import { NoBreak } from '@/lib/nobreak';
 
 /**
  * 자주 묻는 질문.
@@ -17,6 +18,9 @@ import { FAQ_ALL, FAQ_GROUPS } from '@/lib/faq';
  *
  * 접었다 펴는 아코디언을 쓰지 않는다. 답이 처음부터 보여야 사람도 훑어 읽고, 검색엔진과
  * AI도 본문으로 읽는다. 대신 주제별 제목(h2)으로 묶어 길이를 견딘다.
+ *
+ * 화면에 그릴 때만 NoBreak로 전화번호·'Wi-Fi'가 하이픈에서, '·'가 줄 첫머리에서 끊기지 않게
+ * 한다. 원문(lib/faq.ts)은 구조화 데이터와 llms에도 쓰여 보이지 않는 문자를 넣지 않는다.
  */
 
 const TITLE = '자주 묻는 질문';
@@ -72,11 +76,12 @@ export default function FaqPage() {
             <dl className="border-t-2 border-slate-900">
               {g.items.map((f) => (
                 <div key={f.q} className="border-b border-slate-200 py-7">
-                  <dt className="text-lg md:text-xl font-black text-slate-900 break-keep leading-snug">
-                    {f.q}
+                  {/* 질문이 두 줄이 되면 '하나요?'만 다음 줄에 남지 않게 줄 길이를 고른다. */}
+                  <dt className="text-lg md:text-xl font-black text-slate-900 break-keep text-balance leading-snug">
+                    <NoBreak>{f.q}</NoBreak>
                   </dt>
                   <dd className="mt-3 max-w-[68ch] text-[15px] md:text-base text-slate-600 break-keep leading-relaxed">
-                    {f.a}
+                    <NoBreak>{f.a}</NoBreak>
                   </dd>
                 </div>
               ))}

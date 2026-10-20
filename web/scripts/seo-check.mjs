@@ -45,12 +45,29 @@ function pick(html, re) {
   return m ? m[1] : '';
 }
 
+/** React가 속성·<title>에 넣는 이스케이프를 푼다. 보도 제목의 따옴표가 &#x27;로 나온다. */
+function unescapeHtml(s) {
+  return s
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(Number(d)))
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&');
+}
+
+/** 제목 틀 ' | 지에스엘티'. 공유 그림 속 제목은 틀을 뺀 값이다(lib/og.ts). */
+const TITLE_SUFFIX = ` | ${BRAND_QUERY}`;
+
 /* ── 1. 페이지별 핵심 태그 ── */
 console.log('\n══ 핵심 태그 ══');
 const seenDesc = new Map();
+/** 페이지 HTML. 공유 이미지 검사(6)가 다시 받지 않고 쓴다. */
+const pages = new Map();
 for (const route of ROUTES) {
   const { status, body } = await text(BASE + route);
   if (status !== 200) { bad(`${route} HTTP ${status}`); continue; }
+  pages.set(route, body);
 
   const title = pick(body, /<title>([^<]*)<\/title>/);
   const desc = pick(body, /<meta name="description" content="([^"]*)"/);
@@ -168,6 +185,82 @@ for (const [path, wantType] of [
   else if (!(res.headers.get('content-type') || '').includes(wantType)) {
     bad(`${path} content-type이 ${res.headers.get('content-type')}`);
   } else ok(`${path}`);
+}
+
+/* ── 6. 공유 이미지(og:image) ──
+   카톡에 링크를 올리면 뜨는 그림. 페이지마다 제목이 들어간 그림(/og/<경로>)을 쓰고, 사진이 더 나은
+   페이지(회사소개 등)만 사진을 쓴다. 그림 주소가 죽어도 페이지는 멀쩡히 열려서 화면만 봐서는 모른다.
+
+   /og 그림은 응답의 x-og-title(그림에 찍은 제목)이 페이지 <title>에서 틀을 뺀 값과 같아야 한다.
+   제목은 lib/og.ts가 페이지와 따로 들고 있어, 페이지 제목만 고치면 그림에 예전 제목이 남는다.
+   홈은 그림 제목이 상호가 아니라 '무선 IoT 구축 전문기업'이라 대조하지 않는다.
+
+   그림 주소의 h(제목 지문)는 응답의 x-og-hash와 같아야 한다. 다르면 제목을 고쳐도 주소가 그대로라
+   카카오가 예전 썸네일을 계속 내고, 라우트도 그 주소를 1년 캐시하지 않는다(짧은 캐시로 매번 그린다). */
+console.log('\n══ 공유 이미지 ══');
+{
+  // 약관·처리방침도 본다. 1(핵심 태그)의 검사 대상이 아니어서 제목·설명 길이 규칙은 걸지 않는다.
+  // 그래도 링크는 카톡에 올라가므로 그림은 다른 페이지와 같은 기준으로 확인한다.
+  for (const route of ['/legal/privacy', '/legal/terms']) {
+    const { status, body } = await text(BASE + route);
+    if (status === 200) pages.set(route, body);
+    else bad(`${route} HTTP ${status}`);
+  }
+
+  // 뉴스 글도 몇 건 본다. 대표 사진이 없는 글이 제목 그림으로 가는지 여기서만 확인된다.
+  const { body: rss } = await text(`${BASE}/rss.xml`);
+  const posts = [...rss.matchAll(/<link>https?:\/\/[^<]*?(\/news\/[^<]+)<\/link>/g)].map((m) => m[1]).slice(0, 3);
+  for (const route of posts) {
+    const { status, body } = await text(BASE + route);
+    if (status === 200) pages.set(route, body);
+    else bad(`${route} HTTP ${status}`);
+  }
+
+  for (const [route, html] of pages) {
+    const content = unescapeHtml(pick(html, /<meta property="og:image" content="([^"]*)"/));
+    if (!content) { bad(`${route} og:image 없음`); continue; }
+    const alt = pick(html, /<meta property="og:image:alt" content="([^"]*)"/);
+    // og:image는 metadataBase(정본 주소)로 나간다. 미리보기·로컬 배포를 검사할 때도 그 배포의
+    // 그림을 받아야 하므로 자사 주소는 BASE로 바꿔 받는다. 외부(Cloudinary) 사진은 그대로.
+    const u = new URL(content);
+    const own = /(^|\.)gslt\.kr$/.test(u.hostname);
+    const target = own ? BASE + u.pathname + u.search : content;
+    const res = await fetch(target, { redirect: 'follow' });
+    const type = res.headers.get('content-type') || '';
+    await res.arrayBuffer();
+
+    const notes = [];
+    if (res.status !== 200) notes.push(`HTTP ${res.status}`);
+    else if (!type.startsWith('image/')) notes.push(`content-type이 ${type}`);
+    if (!alt) notes.push('og:image:alt 없음');
+
+    if (own && u.pathname.startsWith('/og')) {
+      const width = pick(html, /<meta property="og:image:width" content="([^"]*)"/);
+      const height = pick(html, /<meta property="og:image:height" content="([^"]*)"/);
+      if (width !== '1200' || height !== '630') notes.push(`크기 ${width || '?'}×${height || '?'}(1200×630이어야)`);
+      const drawn = decodeURIComponent(res.headers.get('x-og-title') || '');
+      // 그림을 못 그리면 라우트가 예전 고정 그림으로 넘긴다(307). 200 PNG라도 제목이 없다.
+      if (!drawn) notes.push('그림에 제목 없음(x-og-title 없음 — 기본 그림이 나갔다)');
+      else if (route !== '/') {
+        const title = unescapeHtml(pick(html, /<title>([^<]*)<\/title>/));
+        const want = title.endsWith(TITLE_SUFFIX) ? title.slice(0, -TITLE_SUFFIX.length) : title;
+        if (drawn !== want) notes.push(`그림 제목 '${drawn}' ≠ 페이지 제목 '${want}'`);
+      }
+      if (drawn) {
+        const h = u.searchParams.get('h');
+        const served = res.headers.get('x-og-hash');
+        if (!h) notes.push('주소에 h(제목 지문) 없음 — 제목을 고쳐도 카톡이 예전 그림을 낸다');
+        else if (h !== served) notes.push(`주소의 h=${h} ≠ 그림 제목의 지문 ${served || '(x-og-hash 없음)'}`);
+        // 같은 주소는 CDN이 한 번 그린 것을 계속 낸다. 짧으면 요청마다 함수가 그린다.
+        if (!/max-age=31536000/.test(res.headers.get('cache-control') || '')) {
+          notes.push(`cache-control이 ${res.headers.get('cache-control')}`);
+        }
+      }
+    }
+
+    if (notes.length) bad(`${route} og:image ${u.pathname}${u.search} — ${notes.join(' · ')}`);
+    else ok(`${route}  ${u.pathname}${u.search}`);
+  }
 }
 
 console.log(fail === 0 ? '\n✓ 전부 통과' : `\n✗ 문제 ${fail}건`);

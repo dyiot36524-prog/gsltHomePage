@@ -98,9 +98,15 @@ const STEPS = [
       { name: '진행률 추적', desc: '프로젝트별 진척도를 숫자로 확인' },
     ],
     punch: '모든 프로젝트, 한 화면.',
+    // 두 장이 같은 프로젝트 화면이고 차이는 카드 하나 아래 펼친 견적 이력뿐이다. 휴대폰 폭에서는
+    // 그 차이가 읽히지 않아 같은 그림이 두 번 나온 것으로 보인다 — 휴대폰에서는 첫 장만 둔다(대표님 결정).
     shots: [
       { src: '/img/bizmoa3.JPG', alt: '비즈모아 프로젝트 카드 화면 — 현장별 진행 상태와 금액이 카드로 정리된 대시보드' },
-      { src: '/img/bizmoa4.JPG', alt: '비즈모아 견적 이력 화면 — 견적 수정 버전이 시간순으로 남은 목록' },
+      {
+        src: '/img/bizmoa4.JPG',
+        alt: '비즈모아 견적 이력 화면 — 견적 수정 버전이 시간순으로 남은 목록',
+        hideOnPhone: true,
+      },
     ],
   },
   {
@@ -139,11 +145,12 @@ export default function BizmoaPage() {
           className={`${styles.blueprint} relative min-h-[92vh] flex items-center overflow-hidden py-20 px-4 sm:px-6 lg:px-8`}
         >
           <div className={`${styles.scanline} pointer-events-none`} />
-          {/* 도면 위 장비 마커 */}
+          {/* 도면 위 장비 마커. 휴대폰 폭에서는 글자가 히어로를 거의 다 덮어 마커가 제목·문단 위에
+              겹쳐 깜빡인다. 글자와 떨어져 앉을 자리가 생기는 sm부터 보인다. */}
           {HERO_MARKERS.map((m) => (
             <div
               key={`${m.top}-${m.left}`}
-              className={styles.marker}
+              className={`${styles.marker} hidden sm:block`}
               style={{ top: m.top, left: m.left, animationDelay: m.delay }}
             />
           ))}
@@ -197,14 +204,16 @@ export default function BizmoaPage() {
                 홈에서 살펴보기
               </Link>
             </div>
+            {/* 연결선은 단계 사이의 독립 span이라 휴대폰 폭에서 줄이 바뀌면 줄 끝에 홀로 매달린다.
+                휴대폰에서는 선을 숨기고 단계 사이를 조금 더 벌려 묶음을 나눈다. */}
             <div
-              className={`${styles.fadeUp} flex flex-wrap items-center gap-3 text-[11px] font-bold uppercase tracking-[0.2em]`}
+              className={`${styles.fadeUp} flex flex-wrap items-center gap-x-5 gap-y-2 sm:gap-3 text-[11px] font-bold uppercase tracking-[0.2em]`}
               style={d('1.1s')}
             >
-              <span className="text-bizmoa-400">01 배치</span><span className="w-8 h-px bg-white/20" />
-              <span className="text-white/55">02 견적</span><span className="w-8 h-px bg-white/20" />
-              <span className="text-white/55">03 계약</span><span className="w-8 h-px bg-white/20" />
-              <span className="text-white/55">04 관리</span><span className="w-8 h-px bg-white/20" />
+              <span className="text-bizmoa-400">01 배치</span><span className="hidden sm:block w-8 h-px bg-white/20" />
+              <span className="text-white/55">02 견적</span><span className="hidden sm:block w-8 h-px bg-white/20" />
+              <span className="text-white/55">03 계약</span><span className="hidden sm:block w-8 h-px bg-white/20" />
+              <span className="text-white/55">04 관리</span><span className="hidden sm:block w-8 h-px bg-white/20" />
               <span className="text-white/55">05 운영</span>
             </div>
           </div>
@@ -255,7 +264,8 @@ export default function BizmoaPage() {
                     <span className="text-4xl md:text-5xl font-black tabular-nums text-bizmoa-500 leading-none">
                       {s.no}
                     </span>
-                    <h3 className="text-2xl md:text-4xl font-black text-slate-900 break-keep leading-tight">
+                    {/* 휴대폰에서 '자동/생성', '배치'처럼 마지막 줄에 한 단어만 남아 줄 길이를 고르게 나눈다 */}
+                    <h3 className="text-2xl md:text-4xl font-black text-slate-900 break-keep text-balance leading-tight">
                       {s.title}
                     </h3>
                   </div>
@@ -275,11 +285,14 @@ export default function BizmoaPage() {
                   </p>
                 </div>
 
-                <div className={`space-y-4 min-w-0 ${i % 2 === 1 ? 'lg:order-1' : ''}`}>
+                {/* space-y는 display:none인 마지막 항목 앞에도 여백을 남긴다. gap은 숨긴 항목을 건너뛴다. */}
+                <div className={`flex flex-col gap-4 min-w-0 ${i % 2 === 1 ? 'lg:order-1' : ''}`}>
                   {s.shots.map((shot) => (
                     <figure
                       key={shot.src}
-                      className="rounded-2xl overflow-hidden border border-slate-200/70 shadow-xl bg-white"
+                      className={`rounded-2xl overflow-hidden border border-slate-200/70 shadow-xl bg-white ${
+                        'hideOnPhone' in shot ? 'hidden sm:block' : ''
+                      }`}
                     >
                       <Image
                         src={shot.src}

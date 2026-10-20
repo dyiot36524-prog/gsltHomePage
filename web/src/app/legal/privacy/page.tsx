@@ -3,6 +3,8 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import PageHead from '@/components/PageHead';
 import { COMPANY, KAKAO, SITE } from '@/lib/site';
+import { NoBreak } from '@/lib/nobreak';
+import { ogImage } from '@/lib/og';
 
 export const metadata: Metadata = {
   title: '개인정보 처리방침',
@@ -15,7 +17,7 @@ export const metadata: Metadata = {
     locale: 'ko_KR',
     url: '/legal/privacy',
     description: '지에스엘티(GSLT)가 개인정보를 어떻게 수집·이용·보관하는지 안내합니다.',
-    images: ['/img/og-image.png'],
+    images: [ogImage('/legal/privacy', '개인정보 처리방침')],
   },
 };
 
@@ -62,6 +64,28 @@ const TRANSFERS = [
     keep: '발송 기록 30일',
   },
 ];
+
+/**
+ * 국외 이전 받는 곳의 연락처(이메일 또는 주소). 'https://policies.google.com/privacy'는 끊을 자리가
+ * 없어 280px에서 칸보다 넓었고 페이지가 19px 옆으로 밀렸다. inline-block으로 묶어 들어가는 폭에서는
+ * 통째로 다음 줄로 넘기고, 그래도 넓을 때만 마지막 '/' 뒤(<wbr/>)에서 꺾는다.
+ */
+function TransferContact({ value }: { value: string }) {
+  const cut = value.lastIndexOf('/') + 1;
+  return (
+    <span className="inline-block">
+      {cut ? (
+        <>
+          {value.slice(0, cut)}
+          <wbr />
+          {value.slice(cut)}
+        </>
+      ) : (
+        value
+      )}
+    </span>
+  );
+}
 
 export default function PrivacyPage() {
   return (
@@ -199,7 +223,9 @@ export default function PrivacyPage() {
                   {t.to} ({t.country})
                 </h3>
                 <ul>
-                  <li>연락처: {t.contact}</li>
+                  <li>
+                    연락처: <TransferContact value={t.contact} />
+                  </li>
                   <li>이전 시기·방법: {t.when}</li>
                   <li>이전 항목: {t.items}</li>
                   <li>이용 목적: {t.purpose}</li>
@@ -208,7 +234,8 @@ export default function PrivacyPage() {
               </div>
             ))}
             <p>
-              국외 이전을 원하지 않으시면 문의 양식과 AI 상담 대신 전화({COMPANY.tel})나 카카오톡 채널(국내)로
+              국외 이전을 원하지 않으시면 문의 양식과 AI 상담 대신
+              전화(<span className="whitespace-nowrap">{COMPANY.tel}</span>)나 카카오톡 채널(국내)로
               문의하실 수 있습니다. 문의 양식과 AI 상담은 위 이전 없이는 이용할 수 없습니다. 이미 이전된 정보의
               삭제는 아래 보호책임자에게 요청하시면 처리합니다.
             </p>
@@ -235,12 +262,16 @@ export default function PrivacyPage() {
 
             {/* 회사소개 페이지의 유튜브 영상·구글 지도. 유튜브는 누르기 전까지 연결하지 않도록
                 만들었지만(VideoShowcase), 누른 뒤에는 Google이 처리하므로 그 사실을 적는다.
-                지도는 전부터 있었는데 여기 빠져 있었다. */}
-            <h2>9. 외부 서비스 연결(동영상·지도·카카오톡 채널·글꼴·이미지)</h2>
+                지도는 전부터 있었는데 여기 빠져 있었다.
+                '·'가 든 제목은 NoBreak로 그린다 — 360~430px에서 '·카카오톡'이 줄 첫머리에 왔다(10절도 같은 처리).
+                도메인은 한 덩어리로 묶는다 — 360·375px에서 하이픈 뒤가 꺾여 'youtube-/nocookie.com)'으로 갈렸다. */}
+            <h2>
+              <NoBreak>9. 외부 서비스 연결(동영상·지도·카카오톡 채널·글꼴·이미지)</NoBreak>
+            </h2>
             <p>
               회사소개 페이지에는 Google LLC가 제공하는 YouTube 동영상과 Google 지도가 포함되어 있습니다.
               동영상은 이용자가 재생 버튼을 누르기 전까지 YouTube에 연결하지 않으며, 누르면 YouTube 개인정보
-              보호 강화 모드(youtube-nocookie.com) 플레이어가 열립니다. 지도는 해당 부분이 화면에 표시될 때
+              보호 강화 모드<span className="whitespace-nowrap">(youtube-nocookie.com)</span> 플레이어가 열립니다. 지도는 해당 부분이 화면에 표시될 때
               Google 지도에서 불러옵니다.
             </p>
             <p>
@@ -269,7 +300,9 @@ export default function PrivacyPage() {
               이용자의 IP 주소와 브라우저 정보가 해당 서비스에 전달될 수 있으며, 회사는 이 정보를 받지 않습니다.
             </p>
 
-            <h2>10. 자동 수집 장치의 설치·운영 및 거부</h2>
+            <h2>
+              <NoBreak>10. 자동 수집 장치의 설치·운영 및 거부</NoBreak>
+            </h2>
             <ul>
               <li>회사는 쿠키를 쓰지 않습니다.</li>
               <li>
@@ -303,13 +336,18 @@ export default function PrivacyPage() {
                 이메일: <a href={`mailto:${COMPANY.email}`}>{COMPANY.email}</a>
               </li>
               <li>
-                전화: <a href={`tel:${COMPANY.tel}`}>{COMPANY.tel}</a>
+                {/* 번호가 하이픈에서 두 줄로 갈리지 않게 한 덩어리로 둔다. */}
+                전화:{' '}
+                <a href={`tel:${COMPANY.tel}`} className="whitespace-nowrap">
+                  {COMPANY.tel}
+                </a>
               </li>
             </ul>
           </div>
 
-          <p className="mt-14 pt-6 border-t border-slate-200 text-xs text-slate-500 tabular-nums">
-            본 방침은 2026년 10월 19일부터 시행됩니다. (처리 위탁·국외 이전·AI 상담 항목 추가)
+          {/* 본문(.post-body)과 달리 이 줄은 바깥이라 break-keep을 따로 준다. 없으면 '국/외'로 끊긴다. */}
+          <p className="mt-14 pt-6 border-t border-slate-200 text-xs text-slate-500 tabular-nums break-keep">
+            <NoBreak>본 방침은 2026년 10월 19일부터 시행됩니다. (처리 위탁·국외 이전·AI 상담 항목 추가)</NoBreak>
           </p>
         </article>
       </main>

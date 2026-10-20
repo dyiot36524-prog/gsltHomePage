@@ -8,6 +8,7 @@ import Footer from '@/components/Footer';
 import PageHead, { FilterBar } from '@/components/PageHead';
 import { RecordEmpty, RecordHead, RecordList, RecordRow } from '@/components/Record';
 import { ArrowUpRight } from '@/components/Icon';
+import { bindLastWords } from '@/lib/nobreak';
 import { getPosts, isHiddenCategory, isPress, mediaUrl, postDateLabel, postHref, postMirrors, type Post } from '@/lib/posts';
 
 export const metadata: Metadata = pageSeo({
@@ -112,7 +113,10 @@ export default async function NewsPage({
                     date={postDateLabel(p)}
                     mark={press ? p.outlet || '언론보도' : '자사 소식'}
                     markTone={press ? 'press' : 'default'}
-                    title={p.title}
+                    // 휴대폰 폭(280~375px)에서 제목 마지막 줄에 '출원'·'소개'·'획득' 한 단어만 남았다.
+                    // 마지막 두 어절을 이어 함께 넘긴다.
+                    // 이 목록 화면에만 쓴다 — 상세의 메타·JSON-LD와 RSS는 원래 제목을 따로 읽는다.
+                    title={bindLastWords(p.title)}
                     excerpt={p.excerpt}
                     thumbnail={mediaUrl(p.thumbnail) || undefined}
                     action="read"
@@ -138,10 +142,12 @@ export default async function NewsPage({
           </>
         )}
 
+        {/* break-keep이 없어 좁은 폭에서 '실었습/니다'로 끊겼다. 문장은 span 하나로 감싸 줄어들 수
+            있는 flex 항목으로 두고, 아이콘은 줄지 않게 한다. */}
         {counts.press > 0 && current !== 'press' ? (
-          <p className="mt-14 flex items-center gap-2 text-sm text-slate-500">
-            <ArrowUpRight className="w-4 h-4 text-gslt-600" />
-            언론보도는 기사 요약과 원문 링크를 함께 실었습니다.
+          <p className="mt-14 flex items-center gap-2 text-sm text-slate-500 break-keep">
+            <ArrowUpRight className="w-4 h-4 shrink-0 text-gslt-600" />
+            <span className="min-w-0">언론보도는 기사 요약과 원문 링크를 함께 실었습니다.</span>
           </p>
         ) : null}
       </main>

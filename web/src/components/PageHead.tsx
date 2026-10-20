@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { NoBreak } from '@/lib/nobreak';
 
 /**
  * 목록 페이지 머리.
@@ -23,8 +24,11 @@ export default function PageHead({
   return (
     <div className="pt-16 md:pt-24 pb-10 md:pb-14">
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5 mb-6">
-        <h1 className="text-4xl md:text-5xl font-black tracking-tight break-keep text-slate-900">
-          {title}
+        {/* text-balance: 두 줄로 넘어갈 때 마지막 줄에 어절 하나만 남지 않게 줄 길이를 고르게 맞춘다
+            ('휴게실 예약 · 재실 / 현황판' → '휴게실 예약 · / 재실 현황판'). 제목도 NoBreak로 그린다 —
+            balance만 주면 '휴게실 예약 / · 재실 현황판'처럼 '·'가 줄 첫머리로 내려갔다. */}
+        <h1 className="text-4xl md:text-5xl font-black tracking-tight break-keep text-balance text-slate-900">
+          <NoBreak>{title}</NoBreak>
         </h1>
         {typeof count === 'number' ? (
           <p className="shrink-0 text-sm text-slate-500 tabular-nums sm:pb-2">
@@ -33,7 +37,10 @@ export default function PageHead({
           </p>
         ) : null}
       </div>
-      <p className="text-slate-500 leading-relaxed break-keep max-w-[62ch]">{lead}</p>
+      {/* 리드도 NoBreak로 그린다 — '·'가 줄 첫머리에 오거나 전화번호가 하이픈 뒤에서 갈리지 않게. */}
+      <p className="text-slate-500 leading-relaxed break-keep max-w-[62ch]">
+        <NoBreak>{lead}</NoBreak>
+      </p>
       {children ? <div className="mt-10">{children}</div> : null}
     </div>
   );

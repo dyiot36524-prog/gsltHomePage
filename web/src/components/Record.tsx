@@ -115,6 +115,8 @@ export function RecordRow({
         {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
         // 내려받기 행은 전환 지점이다. ConversionTracker가 이 속성을 보고 센다.
         {...(action === 'download' ? { 'data-track': 'download', 'data-track-label': title } : {})}
+        // 내려받기 주소(/api/file)는 페이지가 아니라 미리 받으면 400이 콘솔에 남는다.
+        prefetch={action === 'download' ? false : undefined}
         className={`group grid grid-cols-[4.5rem_1fr] ${
           mark ? 'md:grid-cols-[7.5rem_9rem_1fr_auto]' : 'md:grid-cols-[7.5rem_1fr_auto]'
         } gap-x-5 md:gap-x-6 gap-y-3 md:gap-y-0 py-7 md:py-8 items-start transition-colors duration-300 hover:bg-slate-50/80 -mx-4 px-4 md:-mx-6 md:px-6`}
@@ -133,7 +135,7 @@ export function RecordRow({
         <div className={`col-start-2 row-start-2 ${mark ? 'md:col-start-3' : 'md:col-start-2'} md:row-start-1 min-w-0`}>
           {/* 목록 페이지의 h1(제목) 바로 다음 단계다. h3로 두면 h1 → h3로 한 칸 건너뛰어
               스크린리더의 제목 목록에 빈 층이 생긴다. 크기는 클래스가 정하므로 위계만 바로잡는다. */}
-          <h2 className="text-lg md:text-xl font-bold text-slate-900 leading-snug break-keep transition-colors duration-300 group-hover:text-gslt-700">
+          <h2 className="text-lg md:text-xl font-bold text-slate-900 leading-snug break-keep text-balance transition-colors duration-300 group-hover:text-gslt-700">
             {title}
           </h2>
           {excerpt ? (

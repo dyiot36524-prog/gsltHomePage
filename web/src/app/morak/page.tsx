@@ -7,6 +7,7 @@ import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Reveal from '@/components/Reveal';
+import { NoBreak } from '@/lib/nobreak';
 import styles from './morak.module.css';
 
 export const metadata: Metadata = pageSeo({
@@ -129,8 +130,9 @@ export default function MorakPage() {
       <Header active="" />
 
       <main className={`${styles.page} bg-slate-50 text-slate-900`}>
-        {/* 히어로 */}
-        <section className="relative min-h-[88vh] flex items-center overflow-hidden pb-20 px-4 sm:px-6 lg:px-8 bg-white">
+        {/* 히어로. 휴대폰에서는 내용이 88vh보다 길어 가운데 정렬이 듣지 않고 첫 줄이 헤더 바로 밑에
+            붙었다. 시옷 히어로와 같은 윗여백을 둔다. */}
+        <section className="relative min-h-[88vh] flex items-center overflow-hidden pt-16 pb-20 md:pt-20 px-4 sm:px-6 lg:px-8 bg-white">
           <div className="absolute -top-32 -right-32 w-[34rem] h-[34rem] bg-morak-50 rounded-full blur-[130px] pointer-events-none" />
           <div className="absolute -bottom-40 -left-24 w-[28rem] h-[28rem] bg-morak-100/60 rounded-full blur-[120px] pointer-events-none" />
 
@@ -159,12 +161,15 @@ export default function MorakPage() {
                   <span className={`${styles.heroLineInner} text-morak-600`} style={d('.45s')}>한곳에서.</span>
                 </span>
               </h1>
+              {/* 390px에서 '원우회 / ·동문회'로 가운뎃점이 줄 첫머리에 왔다. 렌더할 때만 붙여 둔다(NoBreak). */}
               <p
                 className={`${styles.fadeUp} max-w-xl text-base md:text-lg text-slate-500 leading-relaxed break-keep mb-12`}
                 style={d('.7s')}
               >
-                흩어진 단톡방, 엑셀 명부, 종이 명함으로 돌아가던 원우회·동문회.
-                모락은 디지털 명함과 기수 관리로 모임 운영을 하나로 모읍니다.
+                <NoBreak>
+                  흩어진 단톡방, 엑셀 명부, 종이 명함으로 돌아가던 원우회·동문회.
+                  모락은 디지털 명함과 기수 관리로 모임 운영을 하나로 모읍니다.
+                </NoBreak>
               </p>
               <div className={`${styles.fadeUp} flex flex-wrap items-center gap-4`} style={d('.9s')}>
                 <a
@@ -247,7 +252,8 @@ export default function MorakPage() {
         <section className="py-24 md:py-32 px-4 sm:px-6 lg:px-8">
           <div className="max-w-6xl mx-auto">
             <Reveal className="text-center max-w-2xl mx-auto mb-14">
-              <h2 className="text-3xl md:text-5xl font-black break-keep leading-tight mb-4">모임 운영에 필요한 전부</h2>
+              {/* text-balance: 280px에서 '전부' 한 단어만 둘째 줄에 남았다. */}
+              <h2 className="text-3xl md:text-5xl font-black break-keep text-balance leading-tight mb-4">모임 운영에 필요한 전부</h2>
               <p className="text-slate-500 break-keep">명함 교환부터 명부 관리까지, 운영진과 회원 모두를 위한 기능.</p>
             </Reveal>
             <Reveal className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -293,7 +299,8 @@ export default function MorakPage() {
                   </div>
                 </figure>
                 <div className={i % 2 === 1 ? 'md:order-1' : ''}>
-                  <h3 className="text-2xl md:text-3xl font-black text-slate-900 break-keep leading-tight mb-4">
+                  {/* text-balance: 280~320px에서 '보입니다'·'정리됩니다'·'생깁니다'·'관리' 한 단어만 마지막 줄에 남았다. */}
+                  <h3 className="text-2xl md:text-3xl font-black text-slate-900 break-keep text-balance leading-tight mb-4">
                     {s.title}
                   </h3>
                   <p className="text-slate-600 break-keep leading-relaxed max-w-[60ch]">{s.desc}</p>
@@ -310,14 +317,18 @@ export default function MorakPage() {
               <h2 className="text-2xl md:text-3xl font-black break-keep">화면 미리보기</h2>
               <p className="text-sm text-slate-500 hidden sm:block shrink-0">좌우로 넘겨보세요</p>
             </Reveal>
-            <Reveal className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory [scrollbar-width:thin]">
+            {/* 휴대폰에서는 넘기는 줄이 바깥 16px 여백에서 잘려 다음 장이 벽에 막힌 것처럼 보였다.
+                여백만큼 바깥으로 내밀어 화면 끝까지 흐르게 하고, 첫 장과 넘겨 멈추는 자리는 여백에 맞춘다.
+                sm부터는 지면 여백 안에 둔다. */}
+            <Reveal className="-mx-4 px-4 scroll-px-4 sm:mx-0 sm:px-0 sm:scroll-px-0 flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory [scrollbar-width:thin]">
               {SHOTS.map((s) => (
+                // 원본 캡처 맨 아래 10px에 어두운 띠가 찍혀 있어 카드 밑에 검은 줄로 보였다. 잘라 냈다(640×1148 → 640×1138).
                 <Image
                   key={s.src}
                   src={s.src}
                   alt={s.alt}
                   width={640}
-                  height={1125}
+                  height={1138}
                   loading="lazy"
                   sizes="(max-width: 768px) 240px, 280px"
                   className="w-[240px] md:w-[280px] h-auto shrink-0 snap-start rounded-2xl border border-slate-200/70 shadow-lg"

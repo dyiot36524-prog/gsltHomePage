@@ -3,6 +3,8 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import PageHead from '@/components/PageHead';
 import { COMPANY, SITE } from '@/lib/site';
+import { NoBreak } from '@/lib/nobreak';
+import { ogImage } from '@/lib/og';
 
 export const metadata: Metadata = {
   title: '서비스 이용약관',
@@ -15,7 +17,7 @@ export const metadata: Metadata = {
     locale: 'ko_KR',
     url: '/legal/terms',
     description: '지에스엘티(GSLT)가 제공하는 서비스의 이용 조건과 절차를 정한 약관입니다.',
-    images: ['/img/og-image.png'],
+    images: [ogImage('/legal/terms', '서비스 이용약관')],
   },
 };
 
@@ -82,22 +84,27 @@ export default function TermsPage() {
             </p>
           </div>
 
-          {/* 원본의 회색(2.56:1) 대신 slate-500(4.76:1) — 연락처는 장식이 아니라 조문의 일부다. */}
-          <p className="mt-14 pt-6 border-t border-slate-200 text-xs text-slate-500 tabular-nums">
+          {/* 원본의 회색(2.56:1) 대신 slate-500(4.76:1) — 연락처는 장식이 아니라 조문의 일부다.
+              휴대폰 폭에서 '·'가 줄 첫머리에 오지 않고, 'Tel.'과 번호는 한 덩어리라 번호가
+              하이픈에서 갈리거나 'Tel.'만 줄 끝에 남지 않는다. */}
+          <p className="mt-14 pt-6 border-t border-slate-200 text-xs text-slate-500 tabular-nums break-keep">
             문의:{' '}
             <a
               href={`mailto:${COMPANY.email}`}
               className="underline underline-offset-2 decoration-slate-300 hover:text-gslt-700 transition-colors"
             >
               {COMPANY.email}
-            </a>{' '}
-            · Tel.{' '}
-            <a
-              href={`tel:${COMPANY.tel}`}
-              className="underline underline-offset-2 decoration-slate-300 hover:text-gslt-700 transition-colors"
-            >
-              {COMPANY.tel}
             </a>
+            <NoBreak>{' · '}</NoBreak>
+            <span className="whitespace-nowrap">
+              Tel.{' '}
+              <a
+                href={`tel:${COMPANY.tel}`}
+                className="underline underline-offset-2 decoration-slate-300 hover:text-gslt-700 transition-colors"
+              >
+                {COMPANY.tel}
+              </a>
+            </span>
           </p>
         </article>
       </main>

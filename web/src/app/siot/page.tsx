@@ -10,6 +10,7 @@ import Reveal from '@/components/Reveal';
 import AmbientVideo from '@/components/AmbientVideo';
 import { SITE } from '@/lib/site';
 import { SCENES } from '@/lib/scenes';
+import { NoBreak } from '@/lib/nobreak';
 import NodeCanvas from './NodeCanvas';
 import CountUp from './CountUp';
 import styles from './siot.module.css';
@@ -49,6 +50,9 @@ const ld = {
 const d = (value: string) => ({ '--d': value }) as CSSProperties;
 /** 계단식 지연의 순번. 불빛이 지나가는 순서와 카드가 들어오는 순서를 CSS에 넘긴다. */
 const i = (n: number) => ({ '--i': n }) as CSSProperties;
+/** 1막(제안서)·2막(실제 화면) 제목. 360px 미만에서 28px로 내리는 까닭은 1막 주석에 있다. */
+const ACT_TITLE =
+  'text-[1.75rem] min-[360px]:text-[2rem] md:text-[2.75rem] font-black tracking-tight leading-[1.15] break-keep text-balance text-white';
 
 const CDN = 'https://res.cloudinary.com/r9pnckwj/image/upload/f_auto,q_auto';
 
@@ -121,7 +125,10 @@ const SECTIONS: readonly Section[] = [
       '노트북에 통합 대시보드가, 휴대폰에 예약 QR 출입권이 떠 있고 통합 관제·공간 예약·출입 연동·자동화·에너지 다섯 항목이 표시된다.',
   },
   {
-    title: (<>공간 예약부터<br />공조 · 조명 · 출입제어까지 한 번에</>),
+    // text-balance는 <br /> 뒤 덩어리를 나누지 않는다(1막 제목 주석). 320~390px에서 '한/번에'로 갈라져
+    // '번에'만, '한 번에'만 묶으면 280·360~430px에서 '한 번에'만 마지막 줄에 남았다. 그래서
+    // '출입제어까지 한 번에' 셋을 한 덩어리로 묶는다('공조 · 조명 · / 출입제어까지 한 번에').
+    title: (<>공간 예약부터<br />공조 · 조명 · 출입제어까지&nbsp;한&nbsp;번에</>),
     lead:
       '예약 시스템을 개발한 노하우로, 예약부터 디바이스 제어와 출입통제까지 ' +
       '스케줄 데이터와 물리 설비를 잇습니다.',
@@ -300,8 +307,9 @@ export default function SiotPage() {
                 </span>
               </span>
               <span className={styles.heroLine}>
+                {/* text-balance: 280~320px에서 '도와주는' 한 단어만 둘째 줄에 남았다. 고르게 나누면 '지능형 공간 / 운영을 도와주는'이 된다. */}
                 <span
-                  className={`${styles.heroLineInner} block text-[1.75rem] sm:text-4xl lg:text-[3.25rem] leading-[1.2] mt-1`}
+                  className={`${styles.heroLineInner} block text-[1.75rem] sm:text-4xl lg:text-[3.25rem] leading-[1.2] mt-1 text-balance`}
                   style={d('.45s')}
                 >
                   지능형 공간 운영을 도와주는
@@ -324,7 +332,8 @@ export default function SiotPage() {
               하나의 플랫폼 위에 올립니다. 배선 공사 없이 지금 쓰는 공간 그대로 얹습니다.
             </p>
             <div className={`${styles.fadeUp} flex flex-wrap items-center gap-4 mb-16`} style={d('1s')}>
-              <Link href="/contact" className="px-8 py-4 rounded-full bg-siot-500 hover:bg-siot-400 text-slate-900 font-bold transition-all">도입 문의하기</Link>
+              {/* 히어로 전체에 걸린 어두운 text-shadow가 밝은 주황 버튼 위 먹색 글자에는 번짐으로 보여 끈다(비즈모아와 같다) */}
+              <Link href="/contact" className="px-8 py-4 rounded-full bg-siot-500 hover:bg-siot-400 text-slate-900 font-bold transition-all [text-shadow:none]">도입 문의하기</Link>
               {/* 포트폴리오는 올릴 사례가 쌓일 때까지 메뉴에서 숨긴 상태다. 숨긴 곳으로
                   보내지 않고, 구축 과정을 실제로 설명하는 회사소개로 보낸다. */}
               <Link href="/about" className="px-8 py-4 rounded-full border-2 border-white/15 text-white/80 font-bold hover:border-siot-500 hover:text-siot-400 transition-all">구축 과정 보기</Link>
@@ -355,18 +364,24 @@ export default function SiotPage() {
           {SECTIONS.map((s, n) => (
             <Reveal key={s.alt} className={`${styles.feature} max-w-7xl mx-auto`}>
               {/* 사양표가 있으면 [제목+리드 | 사양], 없으면 [제목 | 리드]로 두 기둥을 채운다.
-                  없는 쪽을 비워 두면 오른쪽에 큰 구멍이 남는다. */}
+                  없는 쪽을 비워 두면 오른쪽에 큰 구멍이 남는다.
+
+                  제목은 360px 미만에서 28px로 내린다. 32px에서는 <br /> 뒤 '빌딩 전체를 관제합니다'·
+                  '실시간으로 제어합니다'가 280~300px 폭의 칸(248~268px)보다 넓어 '관제합니다'·'제어합니다' 한 단어만
+                  마지막 줄에 남았다. 28px이면 한 줄에 든다. text-balance는 Chrome 실측에서 <br /> 앞 덩어리만
+                  고르게 나눈다 — 280px에서 '예약과 출입, 조명과 / 공조,'로 '공조,'만 한 줄이던 것이
+                  '예약과 출입, / 조명과 공조,'가 된다. <br /> 뒤 덩어리는 그대로라 위 '한 번에'처럼 묶는다. */}
               <div className={styles.head}>
                 {s.specs ? (
                   <div>
-                    <h2 className="text-[2rem] md:text-[2.75rem] font-black tracking-tight leading-[1.15] break-keep text-white">
+                    <h2 className={ACT_TITLE}>
                       {s.title}
                     </h2>
                     <p className="mt-6 text-lg md:text-xl text-white/70 leading-[1.75] break-keep">{s.lead}</p>
                   </div>
                 ) : (
                   <>
-                    <h2 className="text-[2rem] md:text-[2.75rem] font-black tracking-tight leading-[1.15] break-keep text-white">
+                    <h2 className={ACT_TITLE}>
                       {s.title}
                     </h2>
                     <p className="text-lg md:text-xl text-white/70 leading-[1.75] break-keep lg:pb-2">{s.lead}</p>
@@ -441,13 +456,17 @@ export default function SiotPage() {
             "이만큼이 실제로 돌고 있다"를 한눈에 보는 자리다. */}
         <section className="bg-[#0a0a0f] px-4 sm:px-6 lg:px-8 pb-28 md:pb-36 overflow-x-clip">
           <Reveal className="max-w-7xl mx-auto">
-            <h2 className="text-[2rem] md:text-[2.75rem] font-black tracking-tight leading-[1.15] break-keep text-white">
+            {/* 1막 제목과 같은 크기 규칙이다. 280px에서 '화면' 한 단어만 둘째 줄에 남았다. */}
+            <h2 className={ACT_TITLE}>
               실제로 돌고 있는 화면
             </h2>
+            {/* 가운뎃점이 줄 첫머리로 내려가지 않게 렌더할 때만 붙여 둔다(NoBreak). */}
             <p className="mt-6 max-w-[62ch] text-lg md:text-xl text-white/70 leading-[1.75] break-keep">
-              성남 쇼룸에서 운영 중인 관리자 화면입니다. 스크린골프 3사(카카오VX
-              프렌즈스크린 · 골프존파크 · GDR 아카데미) 시스템과 함께 타석 단위
-              입·퇴실 자동화를 실증하고 있습니다.
+              <NoBreak>
+                성남 쇼룸에서 운영 중인 관리자 화면입니다. 스크린골프 3사(카카오VX
+                프렌즈스크린 · 골프존파크 · GDR 아카데미) 시스템과 함께 타석 단위
+                입·퇴실 자동화를 실증하고 있습니다.
+              </NoBreak>
             </p>
           </Reveal>
 
@@ -467,7 +486,7 @@ export default function SiotPage() {
                 </span>
                 <figcaption className="mt-4">
                   <span className="block font-bold text-white break-keep">{s.cap}</span>
-                  <span className="block mt-1 text-sm text-white/55 leading-relaxed break-keep">{s.desc}</span>
+                  <span className="block mt-1 text-sm text-white/55 leading-relaxed break-keep text-pretty">{s.desc}</span>
                 </figcaption>
               </figure>
             ))}
@@ -499,7 +518,7 @@ export default function SiotPage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/55 to-transparent" />
                 <figcaption className="absolute bottom-0 left-0 right-0 p-6 z-10">
                   <p className="text-lg font-bold text-white mb-1.5 break-keep">{v.title}</p>
-                  <p className="text-slate-300 text-sm break-keep leading-relaxed">{v.desc}</p>
+                  <p className="text-slate-300 text-sm break-keep text-pretty leading-relaxed">{v.desc}</p>
                 </figcaption>
               </figure>
             ))}
@@ -590,7 +609,9 @@ export default function SiotPage() {
           <Reveal className="max-w-6xl mx-auto">
             <div className="flex flex-col md:flex-row items-center justify-between gap-8">
               <div>
-                <h2 className="text-2xl md:text-3xl font-black break-keep mb-2">상담부터 유지보수까지, 5단계로 끝납니다</h2>
+                {/* text-balance: 360~412px에서 '끝납니다'만 둘째 줄에 남았다. 줄 길이를 고르게 맞추면
+                    쉼표 뒤에서 '상담부터 유지보수까지, / 5단계로 끝납니다'로 나뉜다. */}
+                <h2 className="text-2xl md:text-3xl font-black break-keep text-balance mb-2">상담부터 유지보수까지, 5단계로 끝납니다</h2>
                 <p className="text-slate-500 break-keep">상담 · 실측 → 설계 · 견적 → 시공 · 설치 → 검수 → 유지보수</p>
               </div>
               <Link href="/about" className="shrink-0 px-7 py-3.5 rounded-full border-2 border-slate-200 font-bold text-sm text-slate-600 hover:border-siot-500 hover:text-siot-700 transition-all">구축 프로세스 보기</Link>

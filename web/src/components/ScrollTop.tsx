@@ -2,15 +2,35 @@
 
 import { useEffect, useState } from 'react';
 
-/** 600px 넘게 내려가면 나타나는 맨 위로 버튼. 전 페이지 공통. */
+/** 600px 넘게 내려가면 나타나는 맨 위로 버튼. 전 페이지 공통. 홈에서는 히어로 무대가 걷힌 뒤부터. */
 export default function ScrollTop() {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setShow(window.scrollY > 600);
+    const onScroll = () => {
+      // 홈 히어로 무대가 화면에 붙어 있는 동안은 띄우지 않는다. 무대는 #hero-track 안에
+      // sticky로 고정된 채 스크롤이 600px를 훌쩍 넘기 때문에, 예전에는 이 버튼이 무대 아래쪽
+      // 상담 입력창 위에 떴다. 높이 553~622 화면에서는 보내기 버튼을 덮어, 보내려고 누르면
+      // 맨 위로 올라갔다.
+      // sticky는 트랙 바닥이 무대 바닥까지 올라온 순간 풀린다. 그 전까지는 트랙 바닥이 더 아래다.
+      // innerHeight와 비교하지 않는 건 iOS에서 주소창이 접히면 innerHeight가 무대 높이(100svh)
+      // 보다 커져, 무대가 아직 붙어 있는데도 풀린 것으로 읽히기 때문이다.
+      // 레이아웃의 이 버튼은 페이지를 오가도 남아 있으므로 요소는 매번 새로 찾는다.
+      const track = document.getElementById('hero-track');
+      const stage = track?.querySelector('.hero-stage');
+      const pinned =
+        !!track && !!stage &&
+        track.getBoundingClientRect().bottom - stage.getBoundingClientRect().bottom > 1;
+      setShow(window.scrollY > 600 && !pinned);
+    };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    // 화면 높이가 바뀌면(회전·주소창) 무대 높이와 트랙 길이도 바뀌어, 붙어 있는지가 달라질 수 있다
+    window.addEventListener('resize', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
   }, []);
 
   return (

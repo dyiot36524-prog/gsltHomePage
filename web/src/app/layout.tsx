@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { SITE } from '@/lib/site';
 import { TITLE_TEMPLATE } from '@/lib/seo';
+import { HOME_OG_TITLE, ogImage } from '@/lib/og';
 import {
   jsonLd,
   localBusinessSchema,
@@ -42,7 +43,10 @@ export const metadata: Metadata = {
     siteName: SITE.siteName,
     locale: 'ko_KR',
     url: SITE.url,
-    images: ['/img/og-image.png'],
+    // 홈 그림의 제목은 '무선 IoT 구축 전문기업'이고 상호는 그림 아래 줄에 있다(lib/og.ts).
+    // 하위 페이지는 pageSeo가 자기 제목 그림으로 덮는다. 직접 metadata를 쓰는 페이지가
+    // openGraph를 빠뜨리면 이 홈 그림을 물려받는다.
+    images: [ogImage('/', `${SITE.siteName} — ${HOME_OG_TITLE}`)],
   },
   twitter: { card: 'summary_large_image' },
   // 검색엔진이 이 사이트를 어떻게 다뤄야 하는지. max-image-preview:large 가 있어야

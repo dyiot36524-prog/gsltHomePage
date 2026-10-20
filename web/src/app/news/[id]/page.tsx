@@ -6,11 +6,13 @@ import Footer from '@/components/Footer';
 import { Tag } from '@/components/Record';
 import { ArrowLeft, ArrowRight, ArrowUpRight, Download } from '@/components/Icon';
 import { renderMarkdown } from '@/lib/markdown';
+import { bindLastWords, NoBreak, noBreakHtml } from '@/lib/nobreak';
 import {
   CATEGORY_LABEL, getPost, getPosts, hasBody, isHiddenCategory, isPress, mediaUrl, postDateLabel,
   postMirrors, postTime, safeHttpUrl, type Post,
 } from '@/lib/posts';
 import { SITE } from '@/lib/site';
+import { ogImage } from '@/lib/og';
 import { jsonLd, breadcrumbSchema } from '@/lib/schema';
 
 type Params = { params: Promise<{ id: string }> };
@@ -24,6 +26,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     return { title: '글을 찾을 수 없습니다', robots: { index: false, follow: true }, alternates: { canonical: null } };
   const url = `/news/${id}`;
   const description = describe(post);
+  const thumbnail = mediaUrl(post.thumbnail);
   return {
     // 글 제목에 이미 상호가 있으면 틀(' | 지에스엘티')을 붙이지 않는다 — 같은 말을 두 번 쓰지
     // 말라는 것이 네이버 콘텐츠 마크업 가이드다. 보도 제목은 대개 '지에스엘티, …'로 시작한다.
@@ -39,7 +42,9 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
       locale: 'ko_KR',
       url,
       description,
-      images: [mediaUrl(post.thumbnail) || '/img/og-image.png'],
+      // 대표 사진이 있으면 사진을, 없으면 글 제목이 들어간 그림을 쓴다(lib/og.ts).
+      // 수상 카드·인증서 같은 사진이 제목 글자보다 많은 것을 말한다.
+      images: [thumbnail ? { url: thumbnail, alt: `${post.title} 대표 이미지` } : ogImage(url, post.title)],
     },
   };
 }
@@ -205,11 +210,16 @@ export default async function PostPage({ params }: Params) {
                 <span className="text-sm text-slate-500">조회 {post.views}</span>
               ) : null}
             </div>
-            <h1 className="text-3xl md:text-[2.6rem] font-black tracking-tight leading-[1.2] break-keep text-slate-900">
-              {post.title}
+            {/* 제목·요약은 화면에서만 NoBreak로 그린다 — 원문은 위 메타 설명·JSON-LD에 그대로 쓰인다.
+                text-balance: 제목이 휴대폰 폭(280~430px)에서 '출원'·'획득'·'소개' 한 단어만 마지막 줄에
+                남겼다. 요약은 문단이라 text-pretty로 마지막 줄 한 어절만 피한다. */}
+            <h1 className="text-3xl md:text-[2.6rem] font-black tracking-tight leading-[1.2] break-keep text-balance text-slate-900">
+              <NoBreak>{post.title}</NoBreak>
             </h1>
             {post.excerpt ? (
-              <p className="mt-5 text-lg text-slate-500 leading-relaxed break-keep">{post.excerpt}</p>
+              <p className="mt-5 text-lg text-slate-500 leading-relaxed break-keep text-pretty">
+                <NoBreak>{bindLastWords(post.excerpt, 14)}</NoBreak>
+              </p>
             ) : null}
             {press && post.excerpt && !bodyHtml ? (
               <p className="mt-3 text-xs text-slate-500">GSLT가 정리한 요약입니다.</p>
@@ -243,8 +253,10 @@ export default async function PostPage({ params }: Params) {
             />
           ) : null}
 
+          {/* 본문도 그릴 때만 NoBreak 규칙을 입힌다(noBreakHtml) — 'Z-/Wave'·'제10-/2659230호'가
+              하이픈 뒤에서 갈리고 '·'가 줄 첫머리로 내려가던 자리다. */}
           {bodyHtml ? (
-            <div className="post-body mt-10" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+            <div className="post-body mt-10" dangerouslySetInnerHTML={{ __html: noBreakHtml(bodyHtml) }} />
           ) : null}
 
           {/* 출처는 상자에 담기지 않는다. 헤어라인으로 나뉜 행으로 눕는다. 이전에는 2px 테두리

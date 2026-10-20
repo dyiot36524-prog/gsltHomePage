@@ -22,7 +22,7 @@ export default function NotFound() {
         >
           404
         </p>
-        <h1 className="text-2xl md:text-3xl font-black tracking-tight mb-3 -mt-6">
+        <h1 className="text-2xl md:text-3xl font-black tracking-tight break-keep text-balance mb-3 -mt-6">
           페이지를 찾을 수 없습니다
         </h1>
         <p className="text-white/55 break-keep mb-10">주소가 바뀌었거나 삭제된 페이지입니다.</p>

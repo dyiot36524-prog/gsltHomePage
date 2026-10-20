@@ -8,6 +8,7 @@ import Footer from '@/components/Footer';
 import TimelineProgress from './TimelineProgress';
 import VideoShowcase from './VideoShowcase';
 import { getAboutVideos } from '@/lib/about-videos';
+import { NoBreak } from '@/lib/nobreak';
 
 export const metadata: Metadata = pageSeo({
   title: "회사소개",
@@ -78,15 +79,20 @@ export default async function AboutPage() {
                 읽히지 않아 '수상자'로만 뒀던 자리다. */}
             <div className="p-8 md:p-12 grid gap-8 lg:gap-12 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-end">
               <div>
-                <p className="text-2xl md:text-4xl font-black leading-[1.2] break-keep text-white">
+                {/* 360px에서 마지막 줄에 '대상' 한 단어만 남았다. 줄 길이를 고르게 나눈다. */}
+                <p className="text-2xl md:text-4xl font-black leading-[1.2] break-keep text-balance text-white">
                   포브스 코리아 2026 소비자 선정 최고의 브랜드 대상
                 </p>
                 <p className="mt-3 text-lg md:text-xl font-bold text-amber-400 break-keep">
                   무선 IoT 기반 스마트 공간 부문
                 </p>
+                {/* 날짜는 NoBreak로 한 덩어리로 묶는다. break-keep은 하이픈 뒤를 막지 못해
+                    '2026-02-/27'로 갈렸다(캡션은 280px에서 실제로 그랬다). */}
                 <p className="mt-4 text-sm md:text-base text-slate-300 break-keep leading-relaxed max-w-2xl">
-                  포브스코리아 2026-02-27 선정, 한국경제TV 2026-04-21 보도.
-                  배선 공사 없이 기존 공간을 스마트 공간으로 바꾸는 무선 IoT 구축 역량을 평가받았습니다.
+                  <NoBreak>
+                    포브스코리아 2026-02-27 선정, 한국경제TV 2026-04-21 보도.
+                    배선 공사 없이 기존 공간을 스마트 공간으로 바꾸는 무선 IoT 구축 역량을 평가받았습니다.
+                  </NoBreak>
                 </p>
                 <Link
                   href="/news"
@@ -106,7 +112,7 @@ export default async function AboutPage() {
                   className="w-full h-auto block rounded-xl border border-white/15"
                 />
                 <figcaption className="mt-3 text-xs text-slate-400 break-keep">
-                  시상식 현장 · 최광수 대표 · 2026-02-27
+                  <NoBreak>시상식 현장 · 최광수 대표 · 2026-02-27</NoBreak>
                 </figcaption>
               </figure>
             </div>
@@ -122,18 +128,20 @@ export default async function AboutPage() {
           <p className="text-slate-600 text-lg break-keep max-w-2xl">지에스엘티(GSLT)는 배선 공사 없는 무선 IoT로 오피스·주거·빌딩을
             스마트 공간으로 완성합니다. 상담부터 유지보수까지, 구축의 전 과정을 책임집니다.</p>
 
-          <dl className="mt-10 flex flex-wrap items-baseline gap-x-8 gap-y-4 border-t border-slate-300 pt-5 max-w-2xl">
+          {/* 구분선을 항목 사이의 독립 span으로 두면 flex-wrap이 줄을 바꿀 때 선이 줄 끝이나
+              줄 첫머리에 홀로 남는다. 선을 항목 자신의 왼쪽 테두리로 붙이고, 한 줄에 다 들어가는
+              sm 이상에서만 긋는다. 휴대폰에서는 두 칸 격자에 세 번째 항목을 두 칸으로 놓아
+              선 없이 줄로만 나눈다. */}
+          <dl className="mt-10 grid grid-cols-2 items-baseline gap-x-8 gap-y-4 border-t border-slate-300 pt-5 max-w-2xl sm:flex">
             <div className="flex items-baseline gap-2">
               <dt className="text-sm text-slate-600">설립</dt>
               <dd className="text-lg font-black tabular-nums text-slate-900">2023년</dd>
             </div>
-            <span className="w-px h-4 bg-slate-300" aria-hidden="true" />
-            <div className="flex items-baseline gap-2">
+            <div className="flex items-baseline gap-2 sm:border-l sm:border-slate-300 sm:pl-8">
               <dt className="text-sm text-slate-600">자체 솔루션</dt>
               <dd className="text-lg font-black tabular-nums text-slate-900">3개</dd>
             </div>
-            <span className="w-px h-4 bg-slate-300" aria-hidden="true" />
-            <div className="flex items-baseline gap-2">
+            <div className="col-span-2 flex items-baseline gap-2 sm:border-l sm:border-slate-300 sm:pl-8">
               <dt className="text-sm text-slate-600">IoT 제어 안정성</dt>
               <dd className="text-lg font-black tabular-nums text-slate-900">99.9%</dd>
             </div>
@@ -152,7 +160,9 @@ export default async function AboutPage() {
           <div className="relative overflow-hidden rounded-3xl bg-[#0a0a0f] p-8 md:p-14">
             <div className="absolute -top-40 -left-28 w-[32rem] h-[32rem] rounded-full bg-gslt-500 blur-[150px] opacity-[0.13] pointer-events-none" />
             <div className="relative">
-              <h2 className="text-3xl md:text-5xl font-black tracking-tight text-white break-keep mb-4">IoT 구축, 이렇게 진행됩니다</h2>
+              {/* text-balance: 320~412px에서 'IoT 구축, 이렇게 / 진행됩니다'로 윗줄만 길었다. 줄 길이를 고르게
+                  맞추면 쉼표 뒤에서 'IoT 구축, / 이렇게 진행됩니다'로 나뉜다. */}
+              <h2 className="text-3xl md:text-5xl font-black tracking-tight text-white break-keep text-balance mb-4">IoT 구축, 이렇게 진행됩니다</h2>
               <p className="text-white/55 break-keep mb-14 max-w-2xl">무선 IoT라서 대규모 공사가 없습니다. 지금 쓰는 공간 그대로,
                 다섯 단계면 스마트 공간이 됩니다.</p>
 
@@ -377,20 +387,21 @@ export default async function AboutPage() {
             <Link href="/siot" className="group bg-white rounded-2xl border border-slate-200/70 p-8 hover:shadow-xl hover:-translate-y-1 transition-all duration-500">
               {/* 서수와 hover 색은 각 브랜드의 '글자로 쓰는' 등급을 쓴다. 12px 서수는 작은 글자라
                   4.5:1이 필요한데 siot-500(2.80:1)·bizmoa-500(3.68:1)·morak-600(3.10:1)은 면으로 쓰는 값이다.
-                  Tailwind 기본 orange/blue와 하드코딩 hex도 함께 팔레트 토큰으로 정리했다. */}
+                  Tailwind 기본 orange/blue와 하드코딩 hex도 함께 팔레트 토큰으로 정리했다.
+                  설명은 NoBreak로 그린다 — 1024px에서 '원우회/·동문회'로 '·'가 줄 첫머리에 왔다. */}
               <p className="text-xs font-black tracking-widest text-siot-700 mb-3">01</p>
               <p className="font-black text-xl mb-2 group-hover:text-siot-700 transition-colors">시옷 (Siot)</p>
-              <p className="text-sm text-slate-500 break-keep leading-relaxed">배선 공사 없는 무선 IoT 통합 제어. 조명·블라인드·공조를 하나의 대시보드에서.</p>
+              <p className="text-sm text-slate-500 break-keep leading-relaxed"><NoBreak>배선 공사 없는 무선 IoT 통합 제어. 조명·블라인드·공조를 하나의 대시보드에서.</NoBreak></p>
             </Link>
             <Link href="/bizmoa" className="group bg-white rounded-2xl border border-slate-200/70 p-8 hover:shadow-xl hover:-translate-y-1 transition-all duration-500">
               <p className="text-xs font-black tracking-widest text-bizmoa-600 mb-3">02</p>
               <p className="font-black text-xl mb-2 group-hover:text-bizmoa-600 transition-colors">비즈모아 (BizMoa)</p>
-              <p className="text-sm text-slate-500 break-keep leading-relaxed">도면 위 장비 배치부터 견적·계약·납품까지, IoT 시공업체용 올인원 SaaS.</p>
+              <p className="text-sm text-slate-500 break-keep leading-relaxed"><NoBreak>도면 위 장비 배치부터 견적·계약·납품까지, IoT 시공업체용 올인원 SaaS.</NoBreak></p>
             </Link>
             <Link href="/morak" className="group bg-white rounded-2xl border border-slate-200/70 p-8 hover:shadow-xl hover:-translate-y-1 transition-all duration-500">
               <p className="text-xs font-black tracking-widest text-morak-800 mb-3">03</p>
               <p className="font-black text-xl mb-2 group-hover:text-morak-800 transition-colors">모락 (Morak)</p>
-              <p className="text-sm text-slate-500 break-keep leading-relaxed">디지털 명함으로 만나는 기수제 모임(원우회·동문회) 커뮤니티 플랫폼.</p>
+              <p className="text-sm text-slate-500 break-keep leading-relaxed"><NoBreak>디지털 명함으로 만나는 기수제 모임(원우회·동문회) 커뮤니티 플랫폼.</NoBreak></p>
             </Link>
           </div>
         </div>

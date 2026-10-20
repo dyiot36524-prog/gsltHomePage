@@ -25,12 +25,20 @@ type State = 'idle' | 'sending' | 'error';
    5.30:1인 gslt-700로 둔다. 브라우저 기본 포커스 표시를 지우는 유틸리티는 쓰지 않는다. */
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gslt-700';
 
+/* 입력란 글자는 휴대폰에서 16px(text-base)이다. iPhone Safari는 16px보다 작은 입력란에 포커스가
+   가면 화면을 확대하고, 다 쓴 뒤에도 원래 배율로 돌아오지 않는다. viewport에 maximum-scale을 넣어
+   막는 방법은 확대 자체를 빼앗아 접근성 위반이라 쓰지 않는다. md 이상은 원래 크기(15px) 그대로다.
+   break-keep은 textarea 안내 문구 때문이다. 없으면 휴대폰 폭에서 '자유롭/게'처럼 어절 중간이 꺾였다. */
 const FIELD =
-  'w-full border border-slate-300 bg-white px-4 py-3 text-[0.9375rem] text-slate-900 ' +
+  'w-full border border-slate-300 bg-white px-4 py-3 text-base md:text-[0.9375rem] text-slate-900 break-keep ' +
   'placeholder-slate-500 transition-colors hover:border-slate-400 ' +
   `focus-visible:border-gslt-700 ${FOCUS}`;
 
 const LABEL = 'block text-[11px] font-bold tracking-[0.14em] text-slate-600 mb-2';
+
+/* 이메일 주소는 @ 뒤에서만 줄을 바꾼다(<wbr/>). break-all은 주소를 아무 글자에서나 잘랐다.
+   보이는 글자만 나누고 mailto 주소는 그대로 둔다. */
+const [EMAIL_USER, EMAIL_DOMAIN] = COMPANY.email.split('@');
 
 function Required() {
   // 필수 표시는 시각 신호일 뿐이고, 실제 전달은 input의 aria-required가 맡는다.
@@ -225,9 +233,10 @@ export default function ContactForm() {
           <label htmlFor="cf-privacy" className="cursor-pointer">
             개인정보 수집·이용에 동의합니다.<Required />
           </label>{' '}
+          {/* 링크 문구는 한 덩어리로 줄을 넘긴다 — '처리방침 / 보기'로 갈라지지 않게. */}
           <Link
             href="/legal/privacy"
-            className={`font-medium text-gslt-700 underline underline-offset-4 decoration-gslt-200 hover:decoration-gslt-500 transition-colors ${FOCUS}`}
+            className={`whitespace-nowrap font-medium text-gslt-700 underline underline-offset-4 decoration-gslt-200 hover:decoration-gslt-500 transition-colors ${FOCUS}`}
           >
             처리방침 보기
           </Link>
@@ -251,12 +260,12 @@ export default function ContactForm() {
             {offerFallback ? (
               <p className="mt-1 text-sm text-slate-600 break-keep">
                 전화{' '}
-                <a href={`tel:${COMPANY.tel.replace(/-/g, '')}`} className="font-medium text-gslt-700 underline underline-offset-4">
+                <a href={`tel:${COMPANY.tel.replace(/-/g, '')}`} className="whitespace-nowrap font-medium text-gslt-700 underline underline-offset-4">
                   {COMPANY.tel}
                 </a>{' '}
                 또는 이메일{' '}
-                <a href={`mailto:${COMPANY.email}`} className="font-medium text-gslt-700 underline underline-offset-4 break-all">
-                  {COMPANY.email}
+                <a href={`mailto:${COMPANY.email}`} className="font-medium text-gslt-700 underline underline-offset-4">
+                  {EMAIL_USER}@<wbr />{EMAIL_DOMAIN}
                 </a>
                 {' '}로 직접 연락해 주세요.
               </p>

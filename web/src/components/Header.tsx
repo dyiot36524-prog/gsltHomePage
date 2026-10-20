@@ -7,6 +7,12 @@ import SolutionsMenu from '@/components/SolutionsMenu';
 /**
  * overlay: 히어로 영상 위에 겹쳐 뜨는 모드. 배경을 지우고 흰 글씨로 바꾸며,
  * 아래 스페이서도 내지 않는다 — 영상이 화면 맨 위부터 차야 하기 때문이다.
+ *
+ * 배경을 지운 채로 두는 건 히어로 무대가 붙어 있는 동안뿐이다. 무대가 풀리면 Hero가 문서에
+ * .hero-ended를 걸고, 그때부터 헤더는 히어로 바닥과 같은 어두운 면(#05070c 90%)을 깐다.
+ * 예전에는 끝까지 투명해서 구축 분야 판과 푸터의 글자가 헤더 글자와 그대로 겹쳐 읽혔다
+ * (320x568 맨 아래에서 푸터의 '법적 고지'·'서비스 약관'이 메뉴 줄 밑에 깔렸다. 데스크톱도 같다).
+ * 다른 페이지의 흰 헤더(overlay 아님)는 이 신호와 상관이 없다.
  */
 export default async function Header({
   active = '' as NavKey,
@@ -32,10 +38,15 @@ export default async function Header({
 
   return (
     <header>
+      {/* overlay의 in-[.hero-ended]: 히어로가 끝난 뒤의 모습. 흰 헤더(흰색 90% + 흐림 + 아래 헤어라인)를
+          어두운 면으로 옮긴 것이라 글자색·로고는 그대로 두고 바탕만 깐다 — 높이도 자리도 바뀌지 않는다.
+          헤어라인을 border가 아니라 바깥 그림자로 긋는 건 헤더 높이(lg 미만 105px)를 1px도 늘리지 않기
+          위해서다. 히어로의 위 여백(pt-28)이 그 높이에 맞춰져 있다. 그라디언트는 걷지 않는다 —
+          background-image는 전환되지 않아 걷는 순간 한 번 밝아진다. 어두운 면 위에서는 거의 보이지 않는다. */}
       <nav
         className={
           overlay
-            ? 'fixed top-0 left-0 w-full z-50 bg-gradient-to-b from-black/45 to-transparent'
+            ? 'fixed top-0 left-0 w-full z-50 bg-gradient-to-b from-black/45 to-transparent transition-[background-color,box-shadow] duration-300 motion-reduce:transition-none in-[.hero-ended]:bg-[#05070c]/90 in-[.hero-ended]:backdrop-blur-xl in-[.hero-ended]:shadow-[0_1px_0_rgb(255_255_255/0.1)]'
             : 'fixed top-0 left-0 w-full z-50 bg-white/90 backdrop-blur-xl border-b border-slate-200/50 shadow-sm'
         }
       >
@@ -66,7 +77,9 @@ export default async function Header({
           </Link>
         </div>
 
-        <div className={overlay ? 'lg:hidden border-t border-white/10' : 'lg:hidden border-t border-slate-100 bg-white/95'}>
+        {/* 배경은 nav 한 겹(bg-white/90)만 쓴다. 이 줄에 bg-white/95를 한 겹 더 깔았더니 어두운
+            구역 위에서 윗줄은 비쳐 회색, 아랫줄은 흰색으로 색이 갈려 두 줄 사이에 경계가 보였다. */}
+        <div className={overlay ? 'lg:hidden border-t border-white/10' : 'lg:hidden border-t border-slate-100'}>
           {/* 세로 여백을 줄이 아니라 링크에 준다. 줄 높이(40px)는 그대로지만 각 링크의
               탭 영역이 20px → 40px가 된다. 손가락으로 누르는 유일한 내비게이션이다.
               간격도 24px로 벌려 WCAG 2.2 2.5.8의 간격 예외를 실제로 만족시킨다. */}
@@ -77,7 +90,10 @@ export default async function Header({
                 {s.name}
               </Link>
             ))}
-            <span className={`w-px h-4 shrink-0 ${overlay ? 'bg-white/20' : 'bg-slate-200'}`} aria-hidden="true" />
+            {/* 솔루션과 메뉴 사이 세로 막대. 배경이 nav 한 겹(bg-white/90)이 된 뒤로 어두운 구역 위에서는
+                바탕이 #e6e6e6 안팎까지 내려와 slate-200(#e2e8f0)이 바탕에 묻혀 사라졌다. 한 단계 진한
+                slate-300이면 흰 바탕에서도 어두운 구역 위에서도 막대로 읽힌다. */}
+            <span className={`w-px h-4 shrink-0 ${overlay ? 'bg-white/20' : 'bg-slate-300'}`} aria-hidden="true" />
             {nav.map((n) => (
               <Link key={n.key} href={n.href} className={`${linkCls(n.key)} py-2.5 shrink-0`}>{n.label}</Link>
             ))}
