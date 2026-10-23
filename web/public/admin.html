@@ -332,7 +332,7 @@
           </span>
         </label>
         <div class="mb-5 px-4 py-3 rounded-xl bg-amber-50 text-amber-900 text-sm leading-relaxed space-y-1">
-          <p>회사소개 페이지의 <b>'영상으로 보는 지에스엘티'</b>에 나옵니다. <b>맨 위의 공개 영상이 대표 영상</b>이며, 저장하면 <b>1분 안에</b> 반영됩니다.</p>
+          <p>회사소개 페이지의 <b>'영상으로 보는 지에스엘티'</b>에 나옵니다. <b>맨 위의 공개 영상이 대표 영상</b>이며, 저장하면 <b>바로</b>(몇 초 안에) 반영됩니다.</p>
           <p><b>긴 홍보 영상과 방송·언론 영상은 유튜브 주소로</b> 넣어 주세요. 방송사 영상을 파일로 올리면 저작권 문제가 됩니다.
             파일은 1~2분짜리 현장 클립에 권합니다 — 재생될 때마다 무료 전송 용량을 씁니다.
             <b>말소리가 있는 영상은 자막을 붙일 수 있는 유튜브로</b> 올려 주세요(파일 영상에는 자막을 넣을 수 없습니다).</p>
@@ -1192,6 +1192,7 @@
         box.querySelectorAll('[data-kb-del]').forEach(b => b.addEventListener('click', async () => {
           if (!confirm('이 자료를 삭제할까요?')) return;
           await deleteDoc(doc(db, 'knowledge', b.dataset.kbDel));
+          refreshSite();
           loadKnowledge();
         }));
       } catch (e) {
@@ -1206,6 +1207,7 @@
         for (const k of KB_SEED) {
           await addDoc(collection(db, 'knowledge'), { ...k, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
         }
+        refreshSite();
         loadKnowledge();
       } catch (e) {
         alert('실패: ' + e.message);
@@ -1238,7 +1240,8 @@
       try {
         if (kbEditing) await updateDoc(doc(db, 'knowledge', kbEditing), data);
         else await addDoc(collection(db, 'knowledge'), { ...data, createdAt: serverTimestamp() });
-        st.textContent = '저장했습니다. 사이트에는 5분 안에 반영됩니다.';
+        refreshSite();  // 지식은 챗봇과 공개 /llms-full.txt가 읽는다
+        st.textContent = '저장했습니다. 챗봇·사이트에 바로(몇 초 안에) 반영됩니다.';
         st.className = 'self-center text-sm text-gslt-700';
         $('kb-editor').classList.add('hidden');
         loadKnowledge();
@@ -1421,25 +1424,65 @@
     $('inq-unread-only').addEventListener('change', renderInquiries);
 
     /* ══ IndexNow — 바뀐 주소를 네이버·Bing 등에 알린다 ══
-       저장이 끝난 뒤 서버(/api/indexnow)에 맡기고 기다리지 않는다. 서버가 그 페이지 캐시를 비우고
-       새로 만든 다음에 알린다. 실패해도 저장에는 영향이 없다 — 검색엔진은 sitemap으로도 결국 온다. */
+       저장이 끝난 뒤 서버(/api/indexnow)에 맡기고 기다리지 않는다. 서버가 사이트 전체 캐시를 비우고
+       그 주소를 새로 만든 다음에 알린다(아래 refreshSite와 같은 비우기를 겸한다 — 글·영상 저장은 이것만
+       부르면 된다). 실패해도 저장에는 영향이 없다 — 검색엔진은 sitemap으로도 결국 온다. */
     const LIST_PATH = { news: '/news', downloads: '/downloads', portfolio: '/portfolio' };
     async function pingIndexNow(paths) {
-      try {
-        if (!auth.currentUser) return;
-        const token = await auth.currentUser.getIdToken();
-        await fetch('/api/indexnow', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ paths }),
-        });
-      } catch (e) { console.warn('[indexnow]', e); }
+      // /api/indexnow는 사이트 캐시도 비운다 — 실패하면 반영 실패와 같으므로 refreshSite와 같이 다시 시도·경고한다.
+      await callRefresh('/api/indexnow', {
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paths }),
+      });
+    }
+
+    /* ══ 사이트 반영 — 저장한 내용을 공개 페이지에 바로 싣는다 ══
+       2026-10-23 사이트가 Vercel 무료 한도(함수→CDN 전송 월 10GB) 초과로 멈췄다. 모든 페이지가 60초마다
+       스스로 다시 만들어지고 있었기 때문이다. 이제 서버는 하루에 한 번만 스스로 다시 만들고, 대신 관리자가
+       공개 내용을 저장할 때마다 이 호출로 사이트 전체 캐시를 비운다(/api/revalidate). 그래서 저장 직후 몇 초
+       안에 반영된다. 기다리지 않는다 — 실패해도 저장은 그대로이고 사이트는 늦어도 하루 안에 따라온다.
+       메뉴 설정·지식베이스처럼 IndexNow로 알릴 주소가 없는 저장이 부른다. */
+    async function refreshSite() {
+      await callRefresh('/api/revalidate', {});
+    }
+
+    /**
+     * 사이트 반영 요청을 보낸다. 실패하면 3초 뒤 한 번 더 해 보고, 그래도 안 되면 화면 위에 알린다.
+     * 서버가 스스로 다시 만드는 주기가 하루라, 이 요청이 조용히 실패하면 공개 페이지가 하루 동안 예전
+     * 내용으로 남는다 — 저장 문구('바로 반영됩니다')만 보고 넘어가지 않게 한다. 저장 자체는 기다리지 않는다.
+     */
+    async function callRefresh(url, { headers = {}, body } = {}) {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          if (!auth.currentUser) return;
+          const token = await auth.currentUser.getIdToken();
+          const res = await fetch(url, { method: 'POST', headers: { ...headers, Authorization: `Bearer ${token}` }, body });
+          if (res.ok) return;
+          console.warn('[site-refresh]', url, res.status, await res.text().catch(() => ''));
+        } catch (e) { console.warn('[site-refresh]', url, e); }
+        if (attempt === 0) await new Promise((r) => setTimeout(r, 3000));
+      }
+      warnRefreshFailed();
+    }
+
+    function warnRefreshFailed() {
+      let bar = document.getElementById('refresh-warning');
+      if (!bar) {
+        bar = document.createElement('div');
+        bar.id = 'refresh-warning';
+        bar.setAttribute('role', 'alert');
+        bar.className = 'fixed top-0 inset-x-0 z-[100] bg-amber-100 border-b border-amber-300 text-amber-900 text-sm font-bold px-4 py-3 flex items-center justify-center gap-4';
+        bar.innerHTML = '<span>저장은 됐지만 홈페이지 반영 요청이 실패했습니다. 잠시 뒤 같은 내용을 한 번 더 저장해 주세요(그래도 늦어도 하루 안에는 반영됩니다).</span>' +
+          '<button type="button" class="underline shrink-0">닫기</button>';
+        bar.querySelector('button').addEventListener('click', () => bar.remove());
+        document.body.appendChild(bar);
+      }
     }
 
     /* ══ 회사소개 영상 ══
        목록 전체가 settings/aboutVideos 문서 하나다. settings는 이미 "누구나 읽고 관리자만
        쓰는" 규칙이 있어 규칙을 다시 게시할 필요가 없고, 배열 순서가 곧 노출 순서다.
-       사이트는 web/src/lib/about-videos.ts가 60초 캐시로 읽고, 거기서 한 번 더 검증한다.
+       사이트는 web/src/lib/about-videos.ts가 읽어(하루 캐시 — 저장 때 pingIndexNow가 비운다) 한 번 더 검증한다.
 
        영상 파일은 uploadToCloudinary를 쓰지 않는다. 그 함수는 이미지가 아니면 비공개 Blob으로
        보내고, /api/file은 다운로드만 시키며 재생에 필요한 부분 요청(Range)을 받지 않는다 —
@@ -1603,7 +1646,7 @@
       $('vid-enabled-state').textContent = !on ? '숨김' : shown ? '보이는 중' : '켜짐 (공개 영상 없음)';
       $('vid-enabled-state').className = 'text-sm font-bold ' + (on && shown ? 'text-gslt-700' : 'text-slate-500');
       $('vid-enabled-note').textContent = !on
-        ? '지금 회사소개에 영상 구역이 없습니다. 켜면 1분 안에 다시 나타납니다.'
+        ? '지금 회사소개에 영상 구역이 없습니다. 켜면 바로 다시 나타납니다.'
         : shown ? '끄면 영상 목록은 그대로 두고 구역만 통째로 빠집니다.'
           : '공개된 영상이 하나도 없어 지금은 구역이 보이지 않습니다. 영상을 추가하거나 공개로 바꿔 주세요.';
     }
@@ -1670,7 +1713,7 @@
         $('vid-enabled').checked = next.enabled;
         renderVideos();
         pingIndexNow(['/about']);
-        vidSay(statusEl, '저장했습니다. 회사소개에는 1분 안에 반영됩니다.', 'ok');
+        vidSay(statusEl, '저장했습니다. 회사소개에 바로(몇 초 안에) 반영됩니다.', 'ok');
         return true;
       } catch (e) {
         const why = /permission/i.test(String(e.code || e.message || ''))
@@ -1940,7 +1983,7 @@
       if (ok) {
         $('vid-editor').classList.add('hidden');
         $('vid-preview').innerHTML = '';
-        vidSay($('vid-status'), '저장했습니다. 회사소개에는 1분 안에 반영됩니다.', 'ok');
+        vidSay($('vid-status'), '저장했습니다. 회사소개에 바로(몇 초 안에) 반영됩니다.', 'ok');
       }
     });
 
@@ -1977,9 +2020,10 @@
           updatedAt: serverTimestamp(), updatedBy: auth.currentUser?.email || ''
         }, { merge: true });
         try { sessionStorage.removeItem('gslt-menus'); } catch (e) { }
-        // 서버가 이 설정을 60초 동안 캐시한다(posts.ts getMenuVisibility). '바로'라고 쓰면
-        // 저장 직후 새로고침한 관리자가 반영이 안 됐다고 오해한다.
-        status.textContent = '저장되었습니다. 사이트에는 1분 안에 반영됩니다.';
+        // 메뉴는 모든 페이지의 머리글이 읽고, 끈 분류는 목록·글이 404가 된다 — 사이트 전체를 비운다.
+        // 서버 캐시는 하루라(posts.ts REVALIDATE) 이 호출이 없으면 하루 뒤에야 반영된다.
+        refreshSite();
+        status.textContent = '저장되었습니다. 사이트에 바로(몇 초 안에) 반영됩니다.';
         status.className = 'text-sm mt-3 text-gslt-600 font-bold';
       } catch (e) {
         status.textContent = '저장 실패: ' + e.message;

@@ -1,3 +1,4 @@
+import { revalidatePath } from 'next/cache';
 import { KNOWLEDGE_SEED } from '@/lib/knowledge-seed';
 import { adminPatch, isAdminAvailable } from '@/lib/firestore-admin';
 
@@ -58,8 +59,10 @@ async function sync() {
     (ok ? written : failed).push(d.id);
   }
 
-  // 챗봇은 지식을 5분 캐시한다(lib/knowledge.ts). 반영까지 그만큼 걸린다는 뜻을 함께 돌려준다.
-  return { ok: failed.length === 0, written: written.length, failed, note: '챗봇 반영까지 최대 5분' };
+  // 지식 캐시는 하루다(lib/knowledge.ts — 2026-10-23 무료 한도 초과 뒤 5분에서 늘렸다). 기다리지 않게
+  // 여기서 사이트 전체 캐시를 비운다. 챗봇과 /llms-full.txt가 다음 요청부터 새 지식을 읽는다.
+  if (written.length) revalidatePath('/', 'layout');
+  return { ok: failed.length === 0, written: written.length, failed, note: '챗봇·사이트에 바로 반영' };
 }
 
 export async function POST(request: Request) {

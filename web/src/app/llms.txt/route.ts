@@ -20,7 +20,9 @@ import { getAllPosts, getMenuVisibility, isPress, postTime } from '@/lib/posts';
  * 한 곳에서만 고치면 세 군데가 함께 맞는다.
  */
 
-export const revalidate = 3600;
+// 하루. 관리자 저장 때 /api/revalidate·/api/indexnow가 전체 캐시를 비우므로 바뀐 내용은 그때 바로 따라온다.
+// 짧게 두면 크롤러 방문마다 다시 만들어 Vercel 전송량이 쌓인다(2026-10-23 사이트 정지 — posts.ts REVALIDATE 참고).
+export const revalidate = 86400;
 
 /** 언론보도는 원문으로 보낸다. 우리가 본문을 갖고 있지 않으므로 우리 주소를 주면 헛걸음이다. */
 function newsLine(p: Awaited<ReturnType<typeof getAllPosts>>[number]): string {

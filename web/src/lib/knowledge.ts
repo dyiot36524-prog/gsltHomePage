@@ -19,8 +19,13 @@ const PROJECT_ID = 'gslthomepage';
 // posts.ts와 같은 공개용 웹 API 키. 실제 권한은 firestore.rules가 통제한다 (비밀이 아님).
 const API_KEY = 'AIzaSyCjnuHSGhy97XOtoVC1fSwnGInLwVs1wok';
 
-/** 지식은 자주 바뀌지 않는다. 5분이면 관리자가 고친 내용이 충분히 빨리 반영된다. */
-const REVALIDATE = 300;
+/**
+ * 하루. 지식은 공개 페이지(/llms-full.txt)도 그리므로, 5분이었을 때는 그 파일이 5분마다 다시 만들어져
+ * CDN으로 넘어갔다 — 2026-10-23 무료 한도(함수→CDN 전송 월 10GB) 초과로 사이트가 멈춘 원인 중 하나다
+ * (자세한 사정은 posts.ts REVALIDATE). 반영은 관리자 화면이 저장할 때 부르는 /api/revalidate와
+ * /api/admin/sync-knowledge가 캐시를 비워서 시킨다. 이 값은 그게 빠졌을 때의 안전망이다.
+ */
+const REVALIDATE = 86400;
 
 export type KnowledgeDoc = {
   id: string;

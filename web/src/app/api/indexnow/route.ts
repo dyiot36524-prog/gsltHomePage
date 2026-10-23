@@ -13,6 +13,11 @@ import { SITE } from '@/lib/site';
  * 내주고 뒤에서 다시 만드는' 캐시(ISR)라, 그냥 기다렸다 알리면 방문이 드문 이 사이트에서는
  * 알림 받고 달려온 수집기가 그 '첫 방문자'가 되어 수정 전 페이지를 가져간다(실측: STALE).
  * revalidatePath로 비우면 다음 방문은 새로 그려진다 — 그 첫 방문을 우리가 먼저 하고 나서 알린다.
+ *
+ * **비우는 범위는 알릴 주소만이 아니라 사이트 전체다.** 2026-10-23 무료 한도 초과로 사이트가 멈춘 뒤
+ * 페이지 캐시 수명을 60초에서 하루로 늘렸다(lib/posts.ts REVALIDATE). 그 전에는 글 하나를 고치면
+ * 이웃 글의 이전/다음 제목·홈·RSS가 1분 뒤 저절로 따라왔지만, 이제는 비워 주지 않으면 하루를 간다.
+ * 그래서 /api/revalidate와 같은 revalidatePath('/', 'layout')을 쓴다. 다시 그리는 일은 방문이 올 때만 일어난다.
  */
 export const runtime = 'nodejs';
 
@@ -34,8 +39,8 @@ export async function POST(request: Request) {
   const list = [...new Set(paths.map((p) => String(p).trim()))].filter((p) => /^\/[A-Za-z0-9_\-./]*$/.test(p)).slice(0, 50);
   if (!list.length) return Response.json({ ok: false, error: '알릴 주소가 없습니다.' }, { status: 400 });
 
-  // 1) 캐시 비우기 — 페이지와, 그 페이지가 읽은 Firestore 응답 캐시까지 함께 무효가 된다.
-  for (const p of list) revalidatePath(p);
+  // 1) 캐시 비우기 — 모든 페이지와, 그 페이지들이 읽은 Firestore 응답 캐시까지 함께 무효가 된다.
+  revalidatePath('/', 'layout');
 
   after(async () => {
     // 2) 새 페이지를 먼저 한 번 만들어 둔다(지운 글은 이때 404가 된다).

@@ -75,8 +75,19 @@ const ENDPOINT =
   `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}` +
   `/databases/(default)/documents:runQuery?key=${API_KEY}`;
 
-/** 목록은 60초마다 재생성. 관리자가 글을 올리면 늦어도 1분 안에 반영된다. */
-const REVALIDATE = 60;
+/**
+ * Firestore 응답과 그것을 읽는 페이지의 캐시 수명 — **하루.** 반영은 시간이 아니라 저장이 시킨다.
+ *
+ * 2026-10-23 사이트가 멈췄다. Vercel Hobby의 Fast Origin Transfer(함수가 CDN으로 넘기는 데이터,
+ * 월 10GB)를 넘겨 프로젝트가 일시 정지됐다(FAIR_USE_LIMITS_EXCEEDED). 원인이 이 값이었다 — 60초였다.
+ * Header가 메뉴 설정을 여기서 읽으므로 **모든 페이지**가 1분짜리 ISR이 됐고, 수집기가 쉬지 않고
+ * 들르는 사이트라 페이지마다 1분에 한 번씩 HTML과 RSC를 새로 만들어 CDN으로 다시 보냈다.
+ *
+ * 이제 관리자 화면이 저장할 때마다 사이트 전체 캐시를 비운다(/api/revalidate, /api/indexnow →
+ * revalidatePath('/', 'layout')). 그래서 저장 직후 몇 초 안에 반영되고, 이 값은 그 호출이 빠졌을 때의
+ * 안전망일 뿐이다 — 늦어도 하루 안에는 스스로 따라잡는다. about-videos.ts도 같은 값을 쓴다.
+ */
+export const REVALIDATE = 86400;
 
 /**
  * 언론보도 본문·썸네일이 비어 있으면 코드 쪽 기본값으로 채운다.

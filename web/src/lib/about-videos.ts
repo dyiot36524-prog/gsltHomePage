@@ -12,7 +12,7 @@
  */
 
 import 'server-only';
-import { API_KEY, PROJECT_ID, decode, type FsValue } from './posts';
+import { API_KEY, PROJECT_ID, REVALIDATE, decode, type FsValue } from './posts';
 
 export type VideoCategory = 'intro' | 'site' | 'demo' | 'press';
 
@@ -164,8 +164,9 @@ export async function getAboutVideos(): Promise<AboutVideo[]> {
     const res = await fetch(
       `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}` +
         `/databases/(default)/documents/settings/aboutVideos?key=${API_KEY}`,
-      // 게시글·메뉴와 같은 60초. 관리자 화면도 "1분 안에 반영"이라고 안내한다.
-      { next: { revalidate: 60 } },
+      // 게시글·메뉴와 같은 하루(posts.ts REVALIDATE). 60초였을 때 회사소개가 1분마다 다시 만들어져
+      // 무료 한도를 넘기는 데 한몫했다. 영상을 저장하면 관리자 화면이 캐시를 비워 바로 반영된다.
+      { next: { revalidate: REVALIDATE } },
     );
     if (!res.ok) return [];
     const doc = (await res.json()) as { fields?: Record<string, FsValue> };

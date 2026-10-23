@@ -20,7 +20,9 @@ import { getAllPosts, getMenuVisibility, hasBody, isPress, postTime } from '@/li
  * 으로 보고 개별 글을 남겼는데, 그러면 끈 글이 계속 색인되어 검색결과로 닿는다.
  * 숨김은 공개를 접는 것이고, 사이트는 그 글에 404를 낸다 — 목록에 넣으면 거짓말이 된다.
  */
-export const revalidate = 3600;
+// 하루. 관리자 저장 때 /api/revalidate·/api/indexnow가 전체 캐시를 비우므로 바뀐 내용은 그때 바로 따라온다.
+// 짧게 두면 크롤러 방문마다 다시 만들어 Vercel 전송량이 쌓인다(2026-10-23 사이트 정지 — posts.ts REVALIDATE 참고).
+export const revalidate = 86400;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = SITE.url;

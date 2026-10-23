@@ -8,7 +8,7 @@ import { ArrowLeft, ArrowRight, ArrowUpRight, Download } from '@/components/Icon
 import { renderMarkdown } from '@/lib/markdown';
 import { bindLastWords, NoBreak, noBreakHtml } from '@/lib/nobreak';
 import {
-  CATEGORY_LABEL, getPost, getPosts, hasBody, isHiddenCategory, isPress, mediaUrl, postDateLabel,
+  CATEGORY_LABEL, getAllPosts, getPost, getPosts, hasBody, isHiddenCategory, isPress, mediaUrl, postDateLabel,
   postMirrors, postTime, safeHttpUrl, type Post,
 } from '@/lib/posts';
 import { SITE } from '@/lib/site';
@@ -16,6 +16,27 @@ import { ogImage } from '@/lib/og';
 import { jsonLd, breadcrumbSchema } from '@/lib/schema';
 
 type Params = { params: Promise<{ id: string }> };
+
+/**
+ * 글 지면을 캐시(ISR)한다.
+ *
+ * generateStaticParams가 없으면 이 경로는 요청마다 함수가 그리는 페이지(ƒ)였다 — 수집기가 글을 하나
+ * 들를 때마다 HTML 전체가 함수에서 CDN으로 다시 넘어갔고, 2026-10-23 Vercel 무료 한도(함수→CDN
+ * 전송 월 10GB) 초과로 사이트가 멈춘 원인 중 하나다. 배포 때 발행 글을 전부 미리 그려 두고,
+ * 그 뒤에 올린 글은 첫 방문 때 그려 캐시한다(dynamicParams). 고치거나 지우면 관리자 화면이 부르는
+ * /api/indexnow가 사이트 캐시를 비운다. 없는 글은 404로 캐시된다.
+ *
+ * 목록을 못 읽으면 빈 배열 — 빌드를 막지 않고, 모든 글을 첫 방문 때 그리는 것으로 물러선다.
+ */
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  try {
+    return (await getAllPosts()).map((p) => ({ id: p.id }));
+  } catch {
+    return [];
+  }
+}
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { id } = await params;

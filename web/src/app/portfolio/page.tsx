@@ -1,11 +1,13 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import { Fragment, Suspense } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import PageHead, { FilterBar } from '@/components/PageHead';
 import { RecordEmpty, RecordHead, RecordList, RecordRow } from '@/components/Record';
-import { getPosts, isHiddenCategory, mediaUrl, postDateLabel } from '@/lib/posts';
+import { QueryFilterBar, QueryFilterRows, type FilterRow } from '@/components/QueryFilter';
+import { getPosts, isHiddenCategory, mediaUrl, postDateLabel, type Post } from '@/lib/posts';
 import { SITE } from '@/lib/site';
 import { ogImage } from '@/lib/og';
 
@@ -23,13 +25,14 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function PortfolioPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ tag?: string }>;
-}) {
-  const { tag } = await searchParams;
+const COLUMNS = ['일자', '현장'];
 
+/**
+ * searchParams를 읽지 않는다. 읽으면 요청마다 함수가 그리는 페이지(ƒ)가 되어 ?tag= 주소마다 HTML이
+ * 함수에서 다시 넘어갔다 — 2026-10-23 무료 한도(함수→CDN 전송 월 10GB) 초과로 사이트가 멈춘 원인 중
+ * 하나다. 서버는 전체 목록을 캐시(ISR)하고, ?tag= 거르기는 브라우저가 한다(components/QueryFilter.tsx).
+ */
+export default async function PortfolioPage() {
   // 관리자에서 끈 분류는 주소로 직접 들어와도 없는 페이지로 낸다. 메뉴에서만 빼면
   // 검색결과·옛 링크·RSS로 그대로 닿아 '숨김'이 숨김이 아니게 된다.
   if (await isHiddenCategory('portfolio')) notFound();
@@ -50,8 +53,11 @@ export default async function PortfolioPage({
   });
   const tags = [...tagCounts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'ko'));
 
-  const current = tag && tagCounts.has(tag) ? tag : 'all';
-  const shown = current === 'all' ? posts : posts.filter((p) => (p.tags || []).includes(current));
+  const filterItems = [
+    { value: 'all', label: '전체', count: posts.length },
+    ...tags.map(([t, c]) => ({ value: t, label: t, count: c })),
+  ];
+  const rows = posts.map(portfolioRow);
 
   return (
     <>
@@ -63,73 +69,92 @@ export default async function PortfolioPage({
           count={posts.length}
         >
           {tags.length > 0 ? (
-            <FilterBar
-              basePath="/portfolio"
-              param="tag"
-              current={current}
-              items={[
-                { value: 'all', label: '전체', count: posts.length },
-                ...tags.map(([t, c]) => ({ value: t, label: t, count: c })),
-              ]}
-            />
+            // fallback이 HTML에 실리는 '전체' 모습이다. 고른 태그는 브라우저에서 바뀐다.
+            <Suspense fallback={<FilterBar basePath="/portfolio" param="tag" current="all" items={filterItems} />}>
+              <QueryFilterBar basePath="/portfolio" param="tag" items={filterItems} />
+            </Suspense>
           ) : null}
         </PageHead>
 
-        {shown.length === 0 ? (
+        {posts.length === 0 ? (
           <RecordEmpty
-            columns={['일자', '현장']}
-            title={posts.length === 0 ? '시공사례를 준비하고 있습니다' : '해당 태그의 기록이 없습니다'}
-            body={
-              posts.length === 0
-                ? '진행한 현장을 정리해 순차적으로 공개하고 있습니다. 특정 현장 사례가 필요하시면 알려주세요.'
-                : '다른 태그를 선택해 보세요.'
-            }
+            columns={COLUMNS}
+            title="시공사례를 준비하고 있습니다"
+            body="진행한 현장을 정리해 순차적으로 공개하고 있습니다. 특정 현장 사례가 필요하시면 알려주세요."
             action={
-              posts.length === 0 ? (
-                <Link
-                  href="/contact"
-                  className="inline-flex items-center bg-gslt-500 hover:bg-gslt-400 text-slate-900 px-6 py-3 text-sm font-bold transition-colors"
-                >
-                  사례 요청하기
-                </Link>
-              ) : (
-                <Link
-                  href="/portfolio"
-                  className="inline-flex items-center px-6 py-3 border border-slate-300 text-sm font-bold text-slate-700 hover:border-gslt-500 hover:text-gslt-700 transition-colors"
-                >
-                  전체 보기
-                </Link>
-              )
+              <Link
+                href="/contact"
+                className="inline-flex items-center bg-gslt-500 hover:bg-gslt-400 text-slate-900 px-6 py-3 text-sm font-bold transition-colors"
+              >
+                사례 요청하기
+              </Link>
             }
           />
         ) : (
-          <>
-            <RecordHead columns={['일자', '현장']} />
-            <RecordList>
-              {shown.map((p) => (
-                <RecordRow
-                  key={p.id}
-                  href={`/news/${p.id}`}
-                  date={postDateLabel(p)}
-                  title={p.title}
-                  excerpt={p.excerpt}
-                  thumbnail={mediaUrl(p.thumbnail) || undefined}
-                  meta={
-                    Array.isArray(p.tags) && p.tags.length ? (
-                      <ul className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500">
-                        {p.tags.map((t) => (
-                          <li key={t}>{t}</li>
-                        ))}
-                      </ul>
-                    ) : undefined
+          // fallback = 전체 목록. 검색엔진과 첫 화면은 이것을 받는다. 행 node는 같은 객체를 넘긴다.
+          <Suspense
+            fallback={
+              <>
+                <RecordHead columns={COLUMNS} />
+                <RecordList>
+                  {rows.map((r) => (
+                    <Fragment key={r.key}>{r.node}</Fragment>
+                  ))}
+                </RecordList>
+              </>
+            }
+          >
+            <QueryFilterRows
+              param="tag"
+              values={tags.map(([t]) => t)}
+              columns={COLUMNS}
+              rows={rows}
+              empty={
+                <RecordEmpty
+                  columns={COLUMNS}
+                  title="해당 태그의 기록이 없습니다"
+                  body="다른 태그를 선택해 보세요."
+                  action={
+                    <Link
+                      href="/portfolio"
+                      className="inline-flex items-center px-6 py-3 border border-slate-300 text-sm font-bold text-slate-700 hover:border-gslt-500 hover:text-gslt-700 transition-colors"
+                    >
+                      전체 보기
+                    </Link>
                   }
                 />
-              ))}
-            </RecordList>
-          </>
+              }
+            />
+          </Suspense>
         )}
       </main>
       <Footer />
     </>
   );
+}
+
+/** 목록 행. 필터가 볼 갈래는 그 글의 태그들이다(앞뒤 공백을 걷어 필터 막대의 값과 맞춘다). */
+function portfolioRow(p: Post): FilterRow {
+  return {
+    key: p.id,
+    groups: (Array.isArray(p.tags) ? p.tags : []).map((t) => String(t).trim()).filter(Boolean),
+    node: (
+      <RecordRow
+        href={`/news/${p.id}`}
+        date={postDateLabel(p)}
+        title={p.title}
+        excerpt={p.excerpt}
+        thumbnail={mediaUrl(p.thumbnail) || undefined}
+        meta={
+          Array.isArray(p.tags) && p.tags.length ? (
+            <ul className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500">
+              {p.tags.map((t) => (
+                <li key={t}>{t}</li>
+              ))}
+            </ul>
+          ) : undefined
+        }
+      />
+    ),
+  };
 }
