@@ -8,7 +8,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Reveal from '@/components/Reveal';
 import AmbientVideo from '@/components/AmbientVideo';
-import { SITE } from '@/lib/site';
+import { SITE, SIOT_HOME } from '@/lib/site';
 import { SCENES } from '@/lib/scenes';
 import { NoBreak } from '@/lib/nobreak';
 import { ArrowUpRight } from '@/components/Icon';
@@ -23,9 +23,6 @@ export const metadata: Metadata = pageSeo({
   path: '/siot',
   image: '/img/siot1.png',
 });
-
-/** 시옷 제품 소개 사이트(별도 Vercel 프로젝트 siot-homepage). 모락 페이지가 morac.gslt.kr로 보내는 것과 같은 자리다. */
-const SIOT_HOME = 'https://siot-home.gslt.kr';
 
 const ld = {
   '@context': 'https://schema.org',

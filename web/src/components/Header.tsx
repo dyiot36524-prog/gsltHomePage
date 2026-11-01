@@ -84,12 +84,21 @@ export default async function Header({
               탭 영역이 20px → 40px가 된다. 손가락으로 누르는 유일한 내비게이션이다.
               간격도 24px로 벌려 WCAG 2.2 2.5.8의 간격 예외를 실제로 만족시킨다. */}
           <div className={`flex items-center gap-6 px-4 text-sm font-bold overflow-x-auto whitespace-nowrap ${overlay ? 'text-white/80' : 'text-slate-600'}`}>
-            {SOLUTIONS.map((s) => (
-              <Link key={s.href} href={s.href}
-                className={`py-2.5 transition-colors shrink-0 ${overlay ? 'hover:text-white' : 'hover:text-gslt-700'}`}>
-                {s.name}
-              </Link>
-            ))}
+            {/* 시옷은 솔루션 패널과 같이 제품 사이트를 새 창으로 연다(site.ts SIOT_HOME). */}
+            {SOLUTIONS.map((s) =>
+              'site' in s ? (
+                <a key={s.href} href={s.site} target="_blank" rel="noopener noreferrer"
+                  className={`py-2.5 transition-colors shrink-0 ${overlay ? 'hover:text-white' : 'hover:text-gslt-700'}`}>
+                  {s.name}
+                  <span className="sr-only">(새 창)</span>
+                </a>
+              ) : (
+                <Link key={s.href} href={s.href}
+                  className={`py-2.5 transition-colors shrink-0 ${overlay ? 'hover:text-white' : 'hover:text-gslt-700'}`}>
+                  {s.name}
+                </Link>
+              ),
+            )}
             {/* 솔루션과 메뉴 사이 세로 막대. 배경이 nav 한 겹(bg-white/90)이 된 뒤로 어두운 구역 위에서는
                 바탕이 #e6e6e6 안팎까지 내려와 slate-200(#e2e8f0)이 바탕에 묻혀 사라졌다. 한 단계 진한
                 slate-300이면 흰 바탕에서도 어두운 구역 위에서도 막대로 읽힌다. */}

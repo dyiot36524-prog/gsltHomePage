@@ -65,7 +65,14 @@ export const KAKAO = {
 } as const;
 
 /**
+ * 시옷 제품 소개 사이트(별도 Vercel 프로젝트 siot-homepage). 헤더에서 시옷을 누르면 이리로 간다 —
+ * 2026-11-02 대표 요청. 이 사이트의 /siot는 푸터·회사소개·구축 분야 페이지에서 계속 연결된다.
+ */
+export const SIOT_HOME = 'https://siot-home.gslt.kr';
+
+/**
  * 헤더 솔루션 패널·푸터·모바일 행이 모두 이 목록 하나를 쓴다.
+ * `site`가 있으면 헤더(패널·모바일 행)에서는 그 바깥 사이트를 새 창으로 연다.
  *
  * `lead`와 `pillars`는 헤더 카드 패널에서만 쓰는 추가 설명이다. 시옷이 이 회사의
  * 대표 솔루션이라 패널 맨 위에 큰 카드로 서고, 나머지 둘은 그 아래 한 줄로 붙는다.
@@ -74,6 +81,7 @@ export const KAKAO = {
 export const SOLUTIONS = [
   {
     href: '/siot',
+    site: SIOT_HOME,
     name: '시옷',
     en: 'SIOT',
     desc: '빌딩 관제 · 공간 예약 · 복합 자동화',

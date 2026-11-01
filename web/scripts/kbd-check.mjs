@@ -30,6 +30,7 @@ const state = () => page.evaluate(() => {
     inert: panel.hasAttribute('inert'),
     focus: a === b ? '솔루션버튼' : (a.getAttribute?.('href') || a.tagName),
     focusInPanel: panel.contains(a),
+    url: location.href,
   };
 });
 
@@ -82,7 +83,34 @@ expect(s4.inert === true, '닫힌 뒤 다시 inert여야 한다');
 const s5 = await step('Space (다시 열기)', () => page.keyboard.press('Space'));
 expect(s5.expanded === 'true', 'Space로도 열려야 한다');
 
-// 메뉴 링크로 실제 이동이 되는지 (키보드만으로 제품 페이지 도달)
+// 첫 항목은 시옷 대표 카드다. 제품 사이트(siot-home.gslt.kr)를 새 창으로 연다 — Enter로 새 창이 떠야 한다.
+await page.keyboard.press('Tab');
+const s6 = await step('Tab (시옷 대표 카드)');
+expect(s6.focus === 'https://siot-home.gslt.kr', '첫 항목은 시옷 제품 사이트 카드여야 한다');
+const opened = new Promise((r) => browser.once('targetcreated', r));
+await page.keyboard.press('Enter');
+const popup = await Promise.race([opened, new Promise((r) => setTimeout(() => r(null), 5000))]);
+let popupUrl = popup ? popup.url() : '';
+for (let i = 0; popup && i < 20 && !popupUrl.startsWith('https://siot-home.gslt.kr'); i++) {
+  await new Promise((r) => setTimeout(r, 250));
+  popupUrl = popup.url();
+}
+console.log(`${'Enter (새 창)'.padEnd(28)} → ${popupUrl || '(새 창 없음)'}`);
+expect(popupUrl.startsWith('https://siot-home.gslt.kr'), 'Enter로 시옷 제품 사이트가 새 창에서 열려야 한다');
+expect((await state()).url === BASE + '/about', '새 창을 열었으면 원래 창은 제자리여야 한다');
+if (popup) await (await popup.page())?.close();
+
+// 이 사이트 안의 메뉴 링크로 실제 이동이 되는지 (키보드만으로 제품 페이지 도달).
+// 카드를 누르면 패널이 닫히며 포커스가 빠지므로, 페이지를 새로 열어 처음부터 키보드로 들어간다.
+await page.goto(BASE + '/about', { waitUntil: 'networkidle0' });
+await page.mouse.move(700, 700);
+for (let i = 0; i < 8; i++) {
+  await page.keyboard.press('Tab');
+  if ((await state()).focus === '솔루션버튼') break;
+}
+const s7 = await step('다시 Tab → Enter (열기)', () => page.keyboard.press('Enter'));
+expect(s7.expanded === 'true', '다시 열려야 한다');
+await page.keyboard.press('Tab');
 await page.keyboard.press('Tab');
 await Promise.all([
   page.waitForNavigation({ waitUntil: 'domcontentloaded' }),
@@ -90,7 +118,7 @@ await Promise.all([
 ]);
 const url = page.url();
 console.log(`${'Enter (링크 이동)'.padEnd(28)} → ${url}`);
-expect(/\/(siot|bizmoa|morak)$/.test(url), '메뉴 링크를 키보드로 실행해 제품 페이지로 가야 한다');
+expect(/\/(siot(\/[a-z-]+)?|bizmoa|morak)$/.test(url), '메뉴 링크를 키보드로 실행해 제품 페이지로 가야 한다');
 
 await browser.close();
 console.log(fail === 0 ? '\n✓ 키보드 조작 전 항목 통과' : `\n✗ 실패 ${fail}건`);

@@ -92,9 +92,12 @@ export default function SolutionsMenu({ overlay = false }: { overlay?: boolean }
         }`}
       >
         <div className="w-[min(46rem,calc(100vw-2rem))] rounded-2xl border border-slate-200/70 bg-white p-3 shadow-xl">
-          {/* 대표 솔루션. 어두운 바닥과 주황 강조로 나머지 둘과 무게를 갈라 둔다. */}
-          <Link
-            href={FEATURED.href}
+          {/* 대표 솔루션. 어두운 바닥과 주황 강조로 나머지 둘과 무게를 갈라 둔다.
+              누르면 시옷 제품 사이트(siot-home.gslt.kr)를 새 창으로 연다 — 이 사이트의 다른 바깥 링크와 같다. */}
+          <a
+            href={FEATURED.site}
+            target="_blank"
+            rel="noopener noreferrer"
             onClick={() => close()}
             className={`group relative block overflow-hidden rounded-xl bg-[#0a0a0f] p-6 transition-colors hover:bg-[#12121a] ${cardFocus}`}
           >
@@ -111,6 +114,8 @@ export default function SolutionsMenu({ overlay = false }: { overlay?: boolean }
                 <span className="ml-auto rounded-full border border-siot-500/40 px-2.5 py-1 text-[11px] font-bold text-siot-400">
                   대표 솔루션
                 </span>
+                <ArrowUpRight className="h-4 w-4 shrink-0 text-white/55 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-siot-400" />
+                <span className="sr-only">(새 창)</span>
               </span>
               <span className="block text-sm font-bold text-white/85 break-keep">{FEATURED.desc}</span>
               <span className="mt-1.5 block text-sm text-white/55 break-keep leading-relaxed">
@@ -127,7 +132,7 @@ export default function SolutionsMenu({ overlay = false }: { overlay?: boolean }
                 ))}
               </span>
             </span>
-          </Link>
+          </a>
 
           {/* 시옷 활용 장면. 대표 카드 자체가 링크라 그 안에 링크를 넣을 수 없어 바로 아래 한 줄로 둔다. */}
           <div className="mt-2 flex flex-wrap items-center gap-1.5 px-1">
