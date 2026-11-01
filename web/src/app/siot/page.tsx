@@ -11,6 +11,7 @@ import AmbientVideo from '@/components/AmbientVideo';
 import { SITE } from '@/lib/site';
 import { SCENES } from '@/lib/scenes';
 import { NoBreak } from '@/lib/nobreak';
+import { ArrowUpRight } from '@/components/Icon';
 import NodeCanvas from './NodeCanvas';
 import CountUp from './CountUp';
 import styles from './siot.module.css';
@@ -23,12 +24,16 @@ export const metadata: Metadata = pageSeo({
   image: '/img/siot1.png',
 });
 
+/** 시옷 제품 소개 사이트(별도 Vercel 프로젝트 siot-homepage). 모락 페이지가 morac.gslt.kr로 보내는 것과 같은 자리다. */
+const SIOT_HOME = 'https://siot-home.gslt.kr';
+
 const ld = {
   '@context': 'https://schema.org',
   '@type': 'SoftwareApplication',
   name: '시옷 (SIOT)',
   alternateName: 'SIOT Space Operating Platform',
   url: `${SITE.url}/siot`,
+  sameAs: [SIOT_HOME],
   applicationCategory: 'BusinessApplication',
   operatingSystem: 'Web',
   description:
@@ -337,6 +342,18 @@ export default function SiotPage() {
               {/* 포트폴리오는 올릴 사례가 쌓일 때까지 메뉴에서 숨긴 상태다. 숨긴 곳으로
                   보내지 않고, 구축 과정을 실제로 설명하는 회사소개로 보낸다. */}
               <Link href="/about" className="px-8 py-4 rounded-full border-2 border-white/15 text-white/80 font-bold hover:border-siot-500 hover:text-siot-400 transition-all">구축 과정 보기</Link>
+              {/* 바깥 사이트라 맨 뒤에 둔다. 375px에서 앞의 두 버튼이 한 줄에 들고 이것만 둘째 줄로 내려간다 —
+                  가운데에 두면 세 버튼이 폭이 제각각인 채 세 줄로 쌓였다. */}
+              <a
+                href={SIOT_HOME}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group inline-flex items-center gap-2 px-8 py-4 rounded-full border-2 border-white/15 text-white/80 font-bold hover:border-siot-500 hover:text-siot-400 transition-all"
+              >
+                시옷 홈페이지 바로가기
+                <ArrowUpRight className="w-4 h-4 shrink-0 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                <span className="sr-only">(새 창)</span>
+              </a>
             </div>
             <div className={`${styles.fadeUp} grid grid-cols-3 max-w-xl gap-6`} style={d('1.2s')}>
               {/* 쇼룸에서 실제로 돌고 있는 수치다. 화면에서 읽은 값만 쓴다 —
