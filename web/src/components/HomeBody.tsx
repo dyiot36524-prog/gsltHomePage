@@ -1,6 +1,7 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowUpRight } from '@/components/Icon';
-import { SOLUTIONS } from '@/lib/site';
+import { SOLUTIONS, SIOT_HOME } from '@/lib/site';
 
 /**
  * 히어로 다음에 이어지는 구축 분야 판.
@@ -87,6 +88,58 @@ export default function HomeBody() {
             </li>
           ))}
         </ul>
+
+        {/* 시옷으로 잇는 띠. 위 여섯 분야는 모두 시옷으로 운영한다(fields.ts의 product가 전부 시옷) —
+            카드를 다 훑은 자리에서 그 공통분모를 로고와 실제 대시보드로 보여 주고 시옷 홈페이지로 보낸다.
+            헤더 솔루션 패널의 시옷 카드와 같은 문법(공식 로고·대시보드·siothome 주황 단추)이다.
+            화면 이미지는 아래쪽이라 기본 지연 로딩으로 스크롤이 닿을 때 받는다. */}
+        <a
+          href={SIOT_HOME}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group relative mt-6 block overflow-hidden rounded-3xl border border-white/10 bg-[#0a0a0f] px-6 pt-8 pb-0 sm:px-10 sm:pt-10 lg:min-h-[23rem] lg:pb-10 transition-colors duration-300 hover:border-white/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gslt-400"
+        >
+          <span className="relative z-10 block lg:max-w-[26rem]">
+            <Image
+              src="/img/siot-home-logo-white.png"
+              alt="시옷(SIOT)"
+              width={377}
+              height={96}
+              sizes="220px"
+              className="h-11 md:h-14 w-auto"
+            />
+            <h3 className="mt-7 text-2xl md:text-[1.75rem] font-black tracking-tight leading-[1.3] text-white break-keep text-balance">
+              여섯 분야 모두, 운영은 시옷 한 화면에서
+            </h3>
+            <span className="mt-3 block text-base text-white/70 leading-relaxed break-keep">
+              {SOLUTIONS[0].lead} 배선 공사 없이 지금 쓰는 공간 그대로 얹습니다.
+            </span>
+            <span className="mt-7 flex flex-wrap items-center gap-x-4 gap-y-2">
+              <span className="inline-flex items-center gap-2 rounded-full bg-siothome-500 px-6 py-3 text-sm font-bold text-slate-900 transition-colors duration-300 group-hover:bg-siothome-400">
+                시옷 홈페이지 바로가기
+                <ArrowUpRight className="h-4 w-4 shrink-0 transition-transform duration-300 ease-out group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+              </span>
+              <span className="text-sm font-medium text-white/55">siot-home.gslt.kr</span>
+              <span className="sr-only">(새 창)</span>
+            </span>
+          </span>
+
+          {/* 휴대폰·태블릿: 글 아래로 흘러 카드 바닥과 오른쪽 밖으로 잘린다. lg부터: 오른쪽에 걸려 위·왼쪽만 보인다.
+              옆으로 거는 것을 md(768)부터 하면 화면이 제목 밑으로 파고들어 글자가 대시보드 위에 얹혔다. */}
+          <span
+            aria-hidden="true"
+            className="pointer-events-none relative mt-8 -mr-10 sm:-mr-16 block overflow-hidden rounded-tl-xl shadow-[0_24px_60px_-20px_rgb(0_0_0/0.8)] ring-1 ring-white/10 transition-transform duration-700 ease-out group-hover:-translate-x-2 group-hover:-translate-y-1.5 motion-reduce:transition-none lg:absolute lg:mt-0 lg:mr-0 lg:-right-16 lg:top-12 lg:w-[38rem] lg:[mask-image:linear-gradient(to_right,transparent,black_22%)]"
+          >
+            <Image
+              src="/img/siot-home-dashboard.webp"
+              alt=""
+              width={1440}
+              height={1000}
+              sizes="(min-width: 1024px) 608px, 100vw"
+              className="block h-auto w-full"
+            />
+          </span>
+        </a>
 
         {/* 솔루션으로 가는 내부 링크. 히어로에서 목록을 뺐으므로 여기가 홈의 유일한 경로다. */}
         <ul className="mt-16 border-t border-white/12">

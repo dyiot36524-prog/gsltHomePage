@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { SCENE_NAMES } from '@/lib/scene-names';
 import Link from 'next/link';
+import Image from 'next/image';
 import { SOLUTIONS } from '@/lib/site';
 import { ChevronDown, ArrowUpRight } from '@/components/Icon';
 
@@ -23,6 +24,9 @@ const [FEATURED, ...REST] = SOLUTIONS;
 
 export default function SolutionsMenu({ overlay = false }: { overlay?: boolean }) {
   const [open, setOpen] = useState(false);
+  // 대표 카드의 대시보드 화면은 메뉴를 열 생각이 보일 때(버튼에 커서·포커스) 처음 불러온다.
+  // 헤더는 모든 페이지에 있으므로, 숨은 패널 안 이미지를 바로 받으면 메뉴를 안 여는 방문자까지 받는다.
+  const [armed, setArmed] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const panelId = useId();
@@ -61,9 +65,13 @@ export default function SolutionsMenu({ overlay = false }: { overlay?: boolean }
     'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gslt-600';
 
   return (
+    // relative를 두지 않는다. 패널(absolute)이 버튼이 아니라 헤더 가운데 메뉴 묶음을 기준으로 서게 하려는 것이다 —
+    // 버튼 기준으로 가운데를 맞추면 메뉴가 나오는 가장 좁은 폭(1024px)에서 46rem 판이 왼쪽 화면 밖으로 20px 밀려났다.
+    // 묶음은 화면 가운데에 있으므로 판도 화면 가운데에 선다.
     <div
       ref={rootRef}
-      className="relative"
+      onPointerEnter={() => setArmed(true)}
+      onFocus={() => setArmed(true)}
       // 포커스가 이 묶음 밖으로 나가면 닫는다. React의 onBlur는 focusout이라 버블한다.
       onBlur={(e) => {
         if (e.currentTarget.contains(e.relatedTarget)) return;
@@ -92,33 +100,50 @@ export default function SolutionsMenu({ overlay = false }: { overlay?: boolean }
         }`}
       >
         <div className="w-[min(46rem,calc(100vw-2rem))] rounded-2xl border border-slate-200/70 bg-white p-3 shadow-xl">
-          {/* 대표 솔루션. 어두운 바닥과 주황 강조로 나머지 둘과 무게를 갈라 둔다.
-              누르면 시옷 제품 사이트(siot-home.gslt.kr)를 새 창으로 연다 — 이 사이트의 다른 바깥 링크와 같다. */}
+          {/* 대표 솔루션 = 시옷 홈페이지(siot-home.gslt.kr)로 넘어가는 문. 로고를 크게 세우고, 넘어가서 보게 될
+              대시보드 화면을 오른쪽에 걸어 '다른 사이트로 간다'를 그림으로 먼저 말한다. 주황은 GSLT의 siot-500이
+              아니라 그 사이트의 주황(siothome-500, globals.css)이다. */}
           <a
             href={FEATURED.site}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => close()}
-            className={`group relative block overflow-hidden rounded-xl bg-[#0a0a0f] p-6 transition-colors hover:bg-[#12121a] ${cardFocus}`}
+            className={`group relative block min-h-[16.5rem] overflow-hidden rounded-xl bg-[#0a0a0f] p-7 transition-colors duration-300 hover:bg-[#101017] ${cardFocus}`}
           >
+            {/* 왼쪽 끝은 마스크로 카드 바탕에 녹인다. 오른쪽·아래는 카드 밖으로 잘려 나가 화면이 더 크다는 느낌을 준다. */}
             <span
               aria-hidden="true"
-              className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-siot-500 opacity-[0.16] blur-[70px] transition-opacity duration-500 group-hover:opacity-[0.26]"
-            />
-            <span className="relative block">
-              <span className="mb-2 flex items-center gap-2.5">
-                <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: FEATURED.dot }} />
-                <span className="text-lg font-black text-white">
-                  {FEATURED.name} <span className="text-sm font-bold text-siot-400">{FEATURED.en}</span>
-                </span>
-                <span className="ml-auto rounded-full border border-siot-500/40 px-2.5 py-1 text-[11px] font-bold text-siot-400">
+              className="pointer-events-none absolute -right-12 top-7 w-[25rem] overflow-hidden rounded-tl-lg shadow-[0_18px_40px_-12px_rgb(0_0_0/0.7)] ring-1 ring-white/10 transition-transform duration-500 ease-out [mask-image:linear-gradient(to_right,transparent,black_28%)] group-hover:-translate-x-1.5 group-hover:-translate-y-1 motion-reduce:transition-none"
+            >
+              {armed || open ? (
+                <Image
+                  src="/img/siot-home-dashboard.webp"
+                  alt=""
+                  width={1440}
+                  height={1000}
+                  sizes="400px"
+                  className="block h-auto w-full"
+                />
+              ) : (
+                <span className="block aspect-[1440/1000] w-full bg-white/[0.03]" />
+              )}
+            </span>
+
+            <span className="relative block max-w-[21rem]">
+              <span className="flex items-center gap-3">
+                <Image
+                  src="/img/siot-home-logo-white.png"
+                  alt="시옷(SIOT)"
+                  width={377}
+                  height={96}
+                  sizes="160px"
+                  className="h-10 w-auto"
+                />
+                <span className="rounded-full border border-siothome-500/45 px-2.5 py-1 text-[11px] font-bold text-siothome-500">
                   대표 솔루션
                 </span>
-                <ArrowUpRight className="h-4 w-4 shrink-0 text-white/55 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-siot-400" />
-                <span className="sr-only">(새 창)</span>
               </span>
-              <span className="block text-sm font-bold text-white/85 break-keep">{FEATURED.desc}</span>
-              <span className="mt-1.5 block text-sm text-white/55 break-keep leading-relaxed">
+              <span className="mt-5 block text-[15px] font-bold leading-relaxed text-white/80 break-keep">
                 {FEATURED.lead}
               </span>
               <span className="mt-4 flex flex-wrap gap-1.5">
@@ -130,6 +155,14 @@ export default function SolutionsMenu({ overlay = false }: { overlay?: boolean }
                     {p}
                   </span>
                 ))}
+              </span>
+              <span className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-siothome-500 px-4 py-2 text-sm font-bold text-slate-900 transition-colors duration-300 group-hover:bg-siothome-400">
+                  시옷 홈페이지
+                  <ArrowUpRight className="h-4 w-4 shrink-0 transition-transform duration-300 ease-out group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                </span>
+                <span className="text-xs font-medium text-white/50">siot-home.gslt.kr</span>
+                <span className="sr-only">(새 창)</span>
               </span>
             </span>
           </a>

@@ -21,6 +21,11 @@
   --color-siot-500: #f97316;
   --color-siot-600: #ea580c;
   --color-siot-700: #c2410c;
+  /* 시옷 홈페이지(siot-home.gslt.kr)의 주황(--siot-orange). 그 사이트로 넘어가는 문(헤더 솔루션 카드·홈 구축 분야 띠)에만
+     쓴다 — 공식 로고 마름모(#f5a21c)와 같은 계열이라 로고 옆에서 siot-500(#f97316)처럼 붉게 갈라지지 않는다.
+     먹색 글자 8.69:1, hover 400 위 10.16:1, #0a0a0f 위 글자로 9.62:1. */
+  --color-siothome-400: #ffb547;
+  --color-siothome-500: #ff9f19;
 
   --color-bizmoa-50: #eff6ff;
   --color-bizmoa-100: #dbeafe;
