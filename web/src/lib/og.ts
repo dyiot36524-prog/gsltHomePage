@@ -22,12 +22,12 @@ import { getPost, isHiddenCategory } from '@/lib/posts';
  * 카카오는 이미지 주소마다 썸네일을 캐시하고 지워 주지 않는다 — 주소가 바뀌어야 새로 받는다.
  * 응답도 1년짜리 immutable 캐시라 같은 주소로는 CDN에서도 예전 그림이 나간다.
  */
-const OG_VERSION = 1;
+const OG_VERSION = 2;
 
 /** 카톡·페이스북 큰 카드 규격(1.91:1). */
 export const OG_SIZE = { width: 1200, height: 630 } as const;
 
-/** 홈 그림의 제목. 상호는 그림 아래 줄에 들어가므로 여기서 또 쓰지 않는다. */
+/** 홈 그림의 제목. 홈 그림은 로고만 그려 이 글자는 찍히지 않고, 대체 글(alt)과 지문(h)에만 쓰인다. */
 export const HOME_OG_TITLE = '무선 IoT 구축 전문기업';
 
 /**

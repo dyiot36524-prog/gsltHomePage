@@ -12,6 +12,8 @@ import { OG_SIZE, ogTitle, ogTitleHash } from '@/lib/og';
  * 모양은 기존 /img/og-image.png를 잇는다 — 먹색 바탕, 위쪽 청록 띠, 오른쪽 아래 짙은 청록 원.
  * 그 위에 왼쪽 위 로고, 아래쪽에 페이지 제목, 맨 아래 괘선과 상호 줄을 둔다.
  * 제목은 아래에 붙여 둔다. 한 줄이든 두 줄이든 상호 줄과의 거리가 같아 그림마다 흔들리지 않는다.
+ *
+ * 홈만 다르다 — 먹색 바탕 가운데 로고 하나뿐이다(LogoOnly).
  */
 
 /**
@@ -227,7 +229,29 @@ function glue(title: string, size: number): string {
     .replace(/ ·/g, ' \u2060·');
 }
 
-function Card({ title, home, logo }: { title: string | null; home: boolean; logo: string }) {
+/**
+ * 홈(www.gslt.kr) 그림. 제목·상호 줄·청록 띠·원 없이 먹색 바탕 가운데 로고만 둔다(대표님 요청, 2026-11).
+ * 로고 폭 511px — 작은 미리보기가 가운데 정사각형(630)만 보여 줘도 로고가 잘리지 않는다.
+ */
+function LogoOnly({ logo }: { logo: string }) {
+  return (
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: INK,
+      }}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text -- satori가 그리는 그림 속 이미지다 */}
+      <img src={logo} width={Math.round(140 * LOGO_RATIO)} height={140} />
+    </div>
+  );
+}
+
+function Card({ title, logo }: { title: string | null; logo: string }) {
   const layout = title ? titleLayout(title) : null;
   return (
     <div
@@ -310,8 +334,7 @@ function Card({ title, home, logo }: { title: string | null; home: boolean; logo
             whiteSpace: 'nowrap',
           }}
         >
-          {/* 홈은 제목이 이미 '무선 IoT 구축 전문기업'이라 상호만 둔다. */}
-          <span>{home ? SITE.siteName : `${SITE.siteName} · 무선 IoT 구축 전문기업`}</span>
+          <span>{`${SITE.siteName} · 무선 IoT 구축 전문기업`}</span>
           <span>www.gslt.kr</span>
         </div>
       </div>
@@ -350,7 +373,8 @@ export async function GET(req: Request, { params }: Ctx) {
     const { bold, medium, logo } = await pending;
     // 끝까지 그린 뒤에 응답한다. ImageResponse를 그대로 돌려주면 200과 1년 캐시 헤더가 먼저 나가고
     // 그리다 실패한 반쪽 그림이 CDN에 굳는다.
-    const png = await new ImageResponse(<Card title={title} home={path === '/'} logo={logo} />, {
+    const card = path === '/' ? <LogoOnly logo={logo} /> : <Card title={title} logo={logo} />;
+    const png = await new ImageResponse(card, {
       ...OG_SIZE,
       fonts: [
         { name: 'Pretendard', data: bold, weight: 700, style: 'normal' },
@@ -365,6 +389,7 @@ export async function GET(req: Request, { params }: Ctx) {
         'CDN-Cache-Control': cache,
         // 배포본 검사(scripts/seo-check.mjs)가 그림 속 제목과 페이지 <title>을, 그림 주소의 h와 이 지문을
         // 맞춰 본다. 헤더 값은 ASCII만 받으므로 인코딩한다. 긴 제목은 그림에서 '…'로 잘려도 원 제목을 낸다.
+        // 홈은 그림에 제목을 찍지 않지만 지문(h)이 이 제목으로 만들어지므로 똑같이 낸다.
         ...(title ? { 'x-og-title': encodeURIComponent(title), 'x-og-hash': ogTitleHash(title) } : {}),
       },
     });

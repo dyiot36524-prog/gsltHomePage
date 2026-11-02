@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     siteName: SITE.siteName,
     locale: 'ko_KR',
     url: SITE.url,
-    // 홈 그림의 제목은 '무선 IoT 구축 전문기업'이고 상호는 그림 아래 줄에 있다(lib/og.ts).
+    // 홈 그림은 먹색 바탕 가운데 로고 하나뿐이다(app/og 라우트의 LogoOnly).
     // 하위 페이지는 pageSeo가 자기 제목 그림으로 덮는다. 직접 metadata를 쓰는 페이지가
     // openGraph를 빠뜨리면 이 홈 그림을 물려받는다.
     images: [ogImage('/', `${SITE.siteName} — ${HOME_OG_TITLE}`)],
