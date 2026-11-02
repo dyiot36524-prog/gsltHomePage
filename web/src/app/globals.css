@@ -665,6 +665,33 @@ html:not(.js-hero) .hero-gate { display: none; }
   .scroll-dash { animation: none; }
 }
 
+/* ─── 외국어 판(/en · /zh · /ja) ───
+   break-keep(word-break: keep-all)은 한글 어절 안에서 줄을 바꾸지 않게 하려고 거의 모든 글에 걸려 있다.
+   그런데 중국어·일본어는 띄어쓰기가 없어, keep-all이면 문장 전체가 한 덩어리가 되어 휴대폰 폭에서 화면 밖으로
+   뻗는다. 두 언어에서는 기본 줄바꿈으로 돌리고, 금칙 처리(줄 첫머리의 。、 따위)는 line-break: strict에 맡긴다.
+   영어는 keep-all이어도 띄어쓰기에서 끊기므로 그대로 둔다.
+   서체: Pretendard에는 가나·간체자가 없다. 빠진 글자만 그 언어의 시스템 서체로 그리도록 뒤에 잇는다. */
+:lang(zh) .break-keep,
+:lang(ja) .break-keep,
+:lang(zh) .post-body,
+:lang(ja) .post-body {
+  word-break: normal;
+  line-break: strict;
+  overflow-wrap: anywhere;
+}
+html:lang(ja) {
+  font-family: Pretendard, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'Yu Gothic UI', Meiryo, system-ui, sans-serif;
+}
+html:lang(zh) {
+  font-family: Pretendard, 'PingFang SC', 'Noto Sans SC', 'Microsoft YaHei', 'Hiragino Sans GB', system-ui, sans-serif;
+}
+html:lang(ja) .font-sans {
+  font-family: inherit;
+}
+html:lang(zh) .font-sans {
+  font-family: inherit;
+}
+
 /* ─── 게시글 본문 ───
    타이포그래피 플러그인의 기본값 대신 직접 짠다. 한글 본문이라 letter-spacing을 조금 좁히고,
    행간을 넉넉히 준다. 제목 위 여백이 아래보다 크게 — 문단이 제목에 붙어 읽히도록. */

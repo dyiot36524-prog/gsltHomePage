@@ -1,4 +1,5 @@
 import { SITE, COMPANY, FURNITURE, KAKAO, SOLUTIONS } from '@/lib/site';
+import { HTML_LANG, type ForeignLocale } from '@/i18n/config';
 
 /**
  * 구조화 데이터(JSON-LD).
@@ -155,6 +156,22 @@ export const webSiteSchema = {
   publisher: { '@id': ORG_ID },
   inLanguage: 'ko-KR',
 } as const;
+
+/**
+ * 영어·중국어·일본어 사이트(/en · /zh · /ja). 회사(Organization)는 한국어 사이트와 같은 실체라 @id로 잇고,
+ * 사이트만 언어별로 하나씩 둔다 — 이름·설명·언어가 다르다.
+ */
+export function localizedWebSiteSchema(locale: ForeignLocale, name: string, description: string) {
+  return {
+    '@type': 'WebSite',
+    '@id': `${SITE.url}/${locale}#website`,
+    url: `${SITE.url}/${locale}`,
+    name,
+    description,
+    publisher: { '@id': ORG_ID },
+    inLanguage: HTML_LANG[locale],
+  };
+}
 
 /** 여러 스키마를 한 덩어리로 묶어 내보낸다. @graph는 서로를 @id로 참조할 수 있게 해준다. */
 export function jsonLd(...nodes: object[]) {

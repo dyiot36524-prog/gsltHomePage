@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { DEMO_MARK, SCENE_NAMES, type SceneSlug } from '@/lib/scene-names';
+import { DEFAULT_LOCALE, fmt, localePath, type Locale } from '@/i18n/config';
+import type { ContactFormMessages } from '@/i18n/messages/contact';
 import { readFirstTouch } from '@/lib/traffic-source';
 import { Suspense, useEffect, useRef, useState, type RefObject } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -16,6 +18,9 @@ import { ArrowRight } from '@/components/Icon';
  *
  * 제출만 클라이언트에서 돈다. JS가 없거나 전송이 실패한 방문자를 위해
  * 전화·이메일은 이 폼 밖(서버 렌더된 좌측 열)에 항상 서 있다.
+ *
+ * 글자는 서버 부모(contact/page.tsx)가 그 언어의 조각(t)으로 넘긴다. 문의함에 저장되는 칸은 언어와
+ * 상관없이 같다 — 언어는 접수 API 주소(?lang=)로만 알리고, API는 안내 문구를 그 언어로 돌려준다.
  */
 
 type State = 'idle' | 'sending' | 'error';
@@ -45,10 +50,16 @@ function Required() {
   return <span className="text-gslt-700" aria-hidden="true"> *</span>;
 }
 
-function demoMessage(name: string) {
-  return `${DEMO_MARK} ${name} 장면을 성남 쇼룸에서 보고 싶습니다.\n희망 날짜·시간: \n방문 인원: \n우리 공간(층·실 수 등): `;
+type SceneNames = Record<SceneSlug, string>;
+
+/**
+ * 시연 신청 미리 채움. 표식과 한국어 장면 이름은 어느 언어에서나 그대로 둔다 — 알림 메일이 표식으로
+ * 시연 신청을 알아보고, 직원이 장면 이름을 읽는다. 외국어 판은 방문자가 알아보게 그 언어 이름을 괄호로 붙인다.
+ */
+function demoMessage(template: string, slug: SceneSlug, local: SceneNames, korean: boolean) {
+  const scene = korean ? SCENE_NAMES[slug] : `${SCENE_NAMES[slug]} (${local[slug]})`;
+  return fmt(template, { mark: DEMO_MARK, scene });
 }
-const DEMO_MESSAGES = new Set(Object.values(SCENE_NAMES).map(demoMessage));
 
 /**
  * 장면 페이지(/siot/*)의 '쇼룸 시연 신청'으로 들어왔을 때의 안내와 미리 채움.
@@ -61,24 +72,53 @@ const DEMO_MESSAGES = new Set(Object.values(SCENE_NAMES).map(demoMessage));
  * 페이지는 그대로 두고 주소만 바뀌는데, 그때도 안내를 걷고 미리 채운 글을 비워야 일반 문의가
  * 시연 신청으로 잘못 집계되지 않는다. 방문자가 손댄 글은 건드리지 않는다.
  */
-function DemoNotice({ messageRef }: { messageRef: RefObject<HTMLTextAreaElement | null> }) {
-  const slug = useSearchParams().get('demo') ?? '';
-  const name = Object.prototype.hasOwnProperty.call(SCENE_NAMES, slug) ? SCENE_NAMES[slug as SceneSlug] : '';
+function DemoNotice({
+  messageRef,
+  t,
+  sceneNames,
+  korean,
+}: {
+  messageRef: RefObject<HTMLTextAreaElement | null>;
+  t: ContactFormMessages['demo'];
+  sceneNames: SceneNames;
+  korean: boolean;
+}) {
+  const param = useSearchParams().get('demo') ?? '';
+  const slug = Object.prototype.hasOwnProperty.call(SCENE_NAMES, param) ? (param as SceneSlug) : null;
 
   useEffect(() => {
     const box = messageRef.current;
-    if (box && (!box.value || DEMO_MESSAGES.has(box.value))) box.value = name ? demoMessage(name) : '';
-  }, [name, messageRef]);
+    if (!box) return;
+    const prefills = new Set(
+      (Object.keys(SCENE_NAMES) as SceneSlug[]).map((s) => demoMessage(t.message, s, sceneNames, korean)),
+    );
+    if (!box.value || prefills.has(box.value)) box.value = slug ? demoMessage(t.message, slug, sceneNames, korean) : '';
+  }, [slug, messageRef, t.message, sceneNames, korean]);
 
-  if (!name) return null;
+  if (!slug) return null;
   return (
     <p role="status" className="mb-6 border-l-4 border-gslt-600 bg-slate-50 px-4 py-3 text-sm text-slate-700 break-keep leading-relaxed">
-      <strong className="text-slate-900">쇼룸 시연 신청</strong> — {name}. 희망 날짜와 시간을 적어 주시면 담당자가 일정을 잡아 연락드립니다.
+      <strong className="text-slate-900">{t.title}</strong>
+      {fmt(t.notice, { scene: sceneNames[slug] })}
     </p>
   );
 }
 
-export default function ContactForm() {
+export default function ContactForm({
+  locale,
+  t,
+  tel,
+  sceneNames,
+}: {
+  locale: Locale;
+  /** contact[locale].form */
+  t: ContactFormMessages;
+  /** 화면에 보이는 대표 번호(그 언어의 표기). tel: 링크도 이 값으로 건다 — 외국어 판은 국제 형식이라 해외에서도 걸린다. */
+  tel: string;
+  /** common[locale].scenes — 시연 안내에 보이는 장면 이름. */
+  sceneNames: SceneNames;
+}) {
+  const korean = locale === DEFAULT_LOCALE;
   const [state, setState] = useState<State>('idle');
   const [error, setError] = useState('');
   /**
@@ -110,7 +150,8 @@ export default function ContactForm() {
     setError('');
 
     try {
-      const res = await fetch('/api/inquiry', {
+      // 한국어는 예전 주소 그대로 — API는 lang이 없으면 한국어로 답한다.
+      const res = await fetch(korean ? '/api/inquiry' : `/api/inquiry?lang=${locale}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -130,9 +171,9 @@ export default function ContactForm() {
         // 400은 사용자가 고칠 수 있는 입력 문제, 그 외(429·5xx)는 우리 쪽 문제다.
         // 서버 메시지에 이미 연락처가 들어 있으면 아래에서 또 붙이지 않는다.
         const ours = res.status !== 400;
-        const message = body.message || '전송에 실패했습니다.';
+        const message = body.message || t.failed;
         setError(message);
-        setOfferFallback(ours && !message.includes(COMPANY.tel));
+        setOfferFallback(ours && !message.includes(tel));
         setState('error');
         return;
       }
@@ -140,9 +181,9 @@ export default function ContactForm() {
       // 작은 글씨만 바뀌는 화면은 "보내졌나?"를 남긴다. 완료 페이지가 접수 사실과
       // 다음 순서, 갈 곳을 한 번에 말한다. 'sending' 상태는 이동이 끝날 때까지 유지한다.
       conversions.inquirySubmitted('form');
-      router.push('/contact/done');
+      router.push(localePath(locale, '/contact/done'));
     } catch {
-      setError('네트워크 연결이 끊겨 전송하지 못했습니다.');
+      setError(t.network);
       setOfferFallback(true);
       setState('error');
     }
@@ -157,34 +198,35 @@ export default function ContactForm() {
           숨겨진 필드를 건너뛰기 때문이다. 스크린리더에게는 aria-hidden과 tabIndex로
           없는 것으로 만들고, 브라우저 자동완성도 꺼 둔다. */}
       <div aria-hidden="true" className="absolute -left-[9999px] top-0 h-0 w-0 overflow-hidden">
-        <label htmlFor="cf-website">이 칸은 비워 두세요</label>
+        <label htmlFor="cf-website">{t.honeypot}</label>
         <input id="cf-website" name="website" type="text" tabIndex={-1} autoComplete="off" />
       </div>
 
       {/* 주소에서 읽는 부분만 따로 감싼다 — 폼 자체는 서버에서 그려진 채 나간다. */}
       <Suspense fallback={null}>
-        <DemoNotice messageRef={messageRef} />
+        <DemoNotice messageRef={messageRef} t={t.demo} sceneNames={sceneNames} korean={korean} />
       </Suspense>
       <p className="text-sm text-slate-500 mb-8">
-        <span className="text-gslt-700" aria-hidden="true">*</span> 표시는 필수 항목입니다.
+        <span className="text-gslt-700" aria-hidden="true">*</span>
+        {t.required}
       </p>
 
       <div className="grid gap-6 sm:grid-cols-2">
         <div>
           <label htmlFor="cf-name" className={LABEL}>
-            이름<Required />
+            {t.name}<Required />
           </label>
           <input
             id="cf-name" name="name" type="text" autoComplete="name"
             required aria-required="true" maxLength={100}
-            placeholder="홍길동" className={FIELD}
+            placeholder={t.namePlaceholder} className={FIELD}
           />
         </div>
         <div>
-          <label htmlFor="cf-company" className={LABEL}>회사명</label>
+          <label htmlFor="cf-company" className={LABEL}>{t.company}</label>
           <input
             id="cf-company" name="company" type="text" autoComplete="organization"
-            maxLength={200} placeholder="(주)예시회사" className={FIELD}
+            maxLength={200} placeholder={t.companyPlaceholder} className={FIELD}
           />
         </div>
       </div>
@@ -192,31 +234,32 @@ export default function ContactForm() {
       <div className="mt-6 grid gap-6 sm:grid-cols-2">
         <div>
           <label htmlFor="cf-email" className={LABEL}>
-            이메일<Required />
+            {t.email}<Required />
           </label>
           <input
             id="cf-email" name="email" type="email" autoComplete="email"
             required aria-required="true" maxLength={200}
-            placeholder="example@company.com" className={FIELD}
+            placeholder={t.emailPlaceholder} className={FIELD}
           />
         </div>
         <div>
-          <label htmlFor="cf-phone" className={LABEL}>연락처</label>
+          {/* 형식을 강제하지 않는다 — 국제 번호(+1 …, +81 …, +86 …)도 그대로 받는다. 길이만 API가 본다. */}
+          <label htmlFor="cf-phone" className={LABEL}>{t.phone}</label>
           <input
             id="cf-phone" name="phone" type="tel" autoComplete="tel"
-            maxLength={50} placeholder="010-0000-0000" className={FIELD}
+            maxLength={50} placeholder={t.phonePlaceholder} className={FIELD}
           />
         </div>
       </div>
 
       <div className="mt-6">
         <label htmlFor="cf-message" className={LABEL}>
-          문의 내용<Required />
+          {t.message}<Required />
         </label>
         <textarea
           id="cf-message" name="message" rows={6} ref={messageRef}
           required aria-required="true" maxLength={5000}
-          placeholder="도입을 검토 중인 솔루션이나 궁금하신 점을 자유롭게 적어주세요."
+          placeholder={t.messagePlaceholder}
           className={`${FIELD} resize-y leading-relaxed`}
         />
       </div>
@@ -231,14 +274,14 @@ export default function ContactForm() {
         />
         <p className="text-sm text-slate-600 break-keep">
           <label htmlFor="cf-privacy" className="cursor-pointer">
-            개인정보 수집·이용에 동의합니다.<Required />
+            {t.consent}<Required />
           </label>{' '}
           {/* 링크 문구는 한 덩어리로 줄을 넘긴다 — '처리방침 / 보기'로 갈라지지 않게. */}
           <Link
-            href="/legal/privacy"
+            href={localePath(locale, '/legal/privacy')}
             className={`whitespace-nowrap font-medium text-gslt-700 underline underline-offset-4 decoration-gslt-200 hover:decoration-gslt-500 transition-colors ${FOCUS}`}
           >
-            처리방침 보기
+            {t.privacy}
           </Link>
         </p>
       </div>
@@ -249,7 +292,7 @@ export default function ContactForm() {
       <div role="status" aria-live="polite" className="empty:hidden mt-8">
         {sending ? (
           <p className="border-l-2 border-slate-900 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-900">
-            전송 중…
+            {t.sending}
           </p>
         ) : null}
         {state === 'error' ? (
@@ -259,15 +302,15 @@ export default function ContactForm() {
                 aria-live가 읽어 가는 문자열에는 그대로 남는다. */}
             {offerFallback ? (
               <p className="mt-1 text-sm text-slate-600 break-keep">
-                전화{' '}
-                <a href={`tel:${COMPANY.tel.replace(/-/g, '')}`} className="whitespace-nowrap font-medium text-gslt-700 underline underline-offset-4">
-                  {COMPANY.tel}
-                </a>{' '}
-                또는 이메일{' '}
+                {t.fallback.before}
+                <a href={`tel:${tel.replace(/-/g, '')}`} className="whitespace-nowrap font-medium text-gslt-700 underline underline-offset-4">
+                  {tel}
+                </a>
+                {t.fallback.between}
                 <a href={`mailto:${COMPANY.email}`} className="font-medium text-gslt-700 underline underline-offset-4">
                   {EMAIL_USER}@<wbr />{EMAIL_DOMAIN}
                 </a>
-                {' '}로 직접 연락해 주세요.
+                {t.fallback.after}
               </p>
             ) : null}
           </div>
@@ -280,15 +323,13 @@ export default function ContactForm() {
         aria-busy={sending}
         className={`group mt-8 inline-flex w-full items-center justify-center gap-2 bg-gslt-500 px-6 py-4 text-base font-bold text-slate-900 transition-colors hover:bg-gslt-400 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-700 disabled:hover:bg-slate-200 ${FOCUS}`}
       >
-        {sending ? '전송 중…' : '상담 신청 보내기'}
+        {sending ? t.sending : t.submit}
         {sending ? null : (
           <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5" />
         )}
       </button>
 
-      <p className="mt-4 text-sm text-slate-500 break-keep">
-        입력하신 정보는 상담 목적으로만 사용됩니다.
-      </p>
+      <p className="mt-4 text-sm text-slate-500 break-keep">{t.note}</p>
     </form>
   );
 }

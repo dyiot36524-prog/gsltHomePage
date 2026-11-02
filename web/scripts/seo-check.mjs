@@ -263,5 +263,75 @@ console.log('\n══ 공유 이미지 ══');
   }
 }
 
+/* ── 7. 외국어 판(/en · /zh · /ja) ──
+   한국어 페이지마다 같은 경로의 영어·중국어·일본어 판이 있다(2026-11). 판마다 본다:
+   200 · <html lang> · 제목 틀(' | GSLT', 홈은 'GSLT') · 설명 · canonical이 자기 주소이고 sitemap에 있는가 ·
+   hreflang 네 언어 + x-default · 화면 글자에 한글이 남지 않았는가(번역 누락).
+   한국어 판도 hreflang을 갖는지 본다. 글자 수 상한은 한글 기준이라 외국어에는 걸지 않는다. */
+console.log('\n══ 외국어 판 ══');
+{
+  const LANGS = { en: 'en', zh: 'zh-CN', ja: 'ja' };
+  const { body: sitemapXml } = await text(`${BASE}/sitemap.xml`);
+  const locs = new Set([...sitemapXml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]));
+  const own = (u) => u.replace(/^https:\/\/www\.gslt\.kr/, BASE);
+
+  /** 화면에 보이는 글자의 한글 — 스크립트·스타일·주석·언어 고르기의 '한국어'는 뺀다. */
+  function hangulLeak(html) {
+    const body = html.slice(html.indexOf('<body'));
+    const textOnly = body
+      .replace(/<script[\s\S]*?<\/script>/g, ' ')
+      .replace(/<style[\s\S]*?<\/style>/g, ' ')
+      .replace(/<!--[\s\S]*?-->/g, ' ')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/한국어/g, ' ');
+    const attrs = [...body.matchAll(/(?:aria-label|alt|title|placeholder)="([^"]*[가-힣][^"]*)"/g)].map((m) => m[1]);
+    const words = textOnly.match(/[가-힣][가-힣\s·.,()]{0,24}/g) ?? [];
+    return [...words.map((w) => w.trim()), ...attrs].filter(Boolean);
+  }
+
+  const hreflangOf = (html) =>
+    Object.fromEntries([...html.matchAll(/<link rel="alternate" hrefLang="([^"]+)" href="([^"]+)"/g)].map((m) => [m[1], m[2]]));
+
+  for (const route of ROUTES) {
+    const koHtml = pages.get(route);
+    if (koHtml) {
+      const alt = hreflangOf(koHtml);
+      const missing = ['ko', 'en', 'zh-CN', 'ja', 'x-default'].filter((k) => !alt[k]);
+      if (missing.length) bad(`${route} (ko) hreflang 없음: ${missing.join(', ')}`);
+    }
+    for (const [l, htmlLang] of Object.entries(LANGS)) {
+      const path = route === '/' ? `/${l}` : `/${l}${route}`;
+      const { status, body } = await text(BASE + path);
+      if (status !== 200) { bad(`${path} HTTP ${status}`); continue; }
+      const notes = [];
+      if (pick(body, /<html lang="([^"]*)"/) !== htmlLang) notes.push(`<html lang> ≠ ${htmlLang}`);
+      const title = unescapeHtml(pick(body, /<title>([^<]*)<\/title>/));
+      if (route === '/' ? title !== 'GSLT' : !title.endsWith(' | GSLT')) notes.push(`제목 '${title}'`);
+      if (/[가-힣]/.test(title)) notes.push('제목에 한글');
+      const desc = unescapeHtml(pick(body, /<meta name="description" content="([^"]*)"/));
+      if (!desc) notes.push('설명 없음');
+      else if (/[가-힣]/.test(desc)) notes.push('설명에 한글');
+      const canonical = pick(body, /<link rel="canonical" href="([^"]*)"/);
+      const want = `https://www.gslt.kr${path}`;
+      if (canonical !== want) notes.push(`canonical ${canonical || '없음'} ≠ ${want}`);
+      else if (!locs.has(canonical)) notes.push('canonical이 sitemap에 없다');
+      const alt = hreflangOf(body);
+      const missing = ['ko', 'en', 'zh-CN', 'ja', 'x-default'].filter((k) => !alt[k]);
+      if (missing.length) notes.push(`hreflang 없음: ${missing.join(', ')}`);
+      const og = unescapeHtml(pick(body, /<meta property="og:image" content="([^"]*)"/));
+      if (!og) notes.push('og:image 없음');
+      else {
+        const res = await fetch(own(og), { redirect: 'follow' });
+        await res.arrayBuffer();
+        if (res.status !== 200 || !(res.headers.get('content-type') || '').startsWith('image/')) notes.push(`og:image ${res.status}`);
+      }
+      const leak = hangulLeak(body);
+      if (leak.length) notes.push(`한글 남음 ${leak.length}곳: ${leak.slice(0, 4).map((w) => `'${w}'`).join(', ')}`);
+      if (notes.length) bad(`${path} — ${notes.join(' · ')}`);
+      else ok(`${path}  ${title}`);
+    }
+  }
+}
+
 console.log(fail === 0 ? '\n✓ 전부 통과' : `\n✗ 문제 ${fail}건`);
 process.exit(fail === 0 ? 0 : 1);

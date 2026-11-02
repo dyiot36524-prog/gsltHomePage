@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import type { ReactNode } from 'react';
 import { ArrowUpRight, ArrowRight, Download } from '@/components/Icon';
+import type { Locale } from '@/i18n/config';
 
 /**
  * 기록부(as-built record) 행.
@@ -17,13 +18,30 @@ import { ArrowUpRight, ArrowRight, Download } from '@/components/Icon';
 export type RecordMark = 'default' | 'press' | 'file';
 
 /** 왼쪽 일자 기둥. 연도는 작게, 월·일은 크게 — tabular 숫자로 세로 정렬을 맞춘다. */
-function DateStack({ date }: { date: string }) {
+function DateStack({ date, locale }: { date: string; locale?: Locale }) {
   // 같은 글의 두 번째 첨부처럼 이어지는 행은 일자를 비운다. 자리표시 글리프를 넣지 않는다.
   if (!date) return null;
 
   const m = /^(\d{4})\.\s*(\d{2})\.\s*(\d{2})/.exec(date);
   if (!m) {
     return <span className="text-sm text-slate-500 tabular-nums">{date}</span>;
+  }
+  if (locale === 'en') {
+    // 영어권은 '10.07'을 7월 10일로도 읽는다(영국식 일·월). 달 이름을 연도 줄로 올리고 큰 글자는 일만 둔다.
+    // 중국어·일본어는 연→월→일 순서라 한국어 모양 그대로 읽힌다.
+    const month = new Intl.DateTimeFormat('en', { month: 'short', timeZone: 'UTC' }).format(
+      Date.UTC(Number(m[1]), Number(m[2]) - 1, 1),
+    );
+    return (
+      <span className="block tabular-nums leading-none">
+        <span className="block text-[11px] font-medium text-slate-500 mb-1.5">
+          {month} {m[1]}
+        </span>
+        <span className="block text-2xl md:text-[1.75rem] font-black text-slate-900 tracking-tight transition-colors duration-300 group-hover:text-gslt-700">
+          {m[3]}
+        </span>
+      </span>
+    );
   }
   return (
     <span className="block tabular-nums leading-none">
@@ -89,6 +107,10 @@ export function RecordRow({
   meta,
   thumbnail,
   action = 'read',
+  dateLocale,
+  note,
+  textLang,
+  trackLabel,
 }: {
   href: string;
   external?: boolean;
@@ -102,6 +124,14 @@ export function RecordRow({
   meta?: ReactNode;
   thumbnail?: string;
   action?: 'read' | 'external' | 'download';
+  /** 페이지 언어. 일자 기둥을 그 언어로 읽히게 그린다(영어). 한국어는 넘기지 않는다. */
+  dateLocale?: Locale;
+  /** 외국어 화면의 번역 안내('AI 번역' · '한국어 원문'). 한국어 화면에는 없다. */
+  note?: string;
+  /** 제목·요약이 페이지와 다른 언어일 때(번역 실패로 한국어 원문) 그 언어. 스크린리더가 한국어로 읽는다. */
+  textLang?: string;
+  /** 내려받기 집계 이름. 언어마다 파일 이름이 달라져도 같은 자료로 세도록 한국어 원래 이름을 넘긴다. */
+  trackLabel?: string;
 }) {
   const ActionIcon = action === 'external' ? ArrowUpRight : action === 'download' ? Download : ArrowRight;
   // 내려받기 글리프는 '이 행은 파일을 받는다'를 혼자 말하므로 4.76:1로 둔다.
@@ -114,7 +144,7 @@ export function RecordRow({
         href={href}
         {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
         // 내려받기 행은 전환 지점이다. ConversionTracker가 이 속성을 보고 센다.
-        {...(action === 'download' ? { 'data-track': 'download', 'data-track-label': title } : {})}
+        {...(action === 'download' ? { 'data-track': 'download', 'data-track-label': trackLabel ?? title } : {})}
         // 내려받기 주소(/api/file)는 페이지가 아니라 미리 받으면 400이 콘솔에 남는다.
         prefetch={action === 'download' ? false : undefined}
         className={`group grid grid-cols-[4.5rem_1fr] ${
@@ -124,7 +154,7 @@ export function RecordRow({
         {/* 모바일에서는 일자가 좌측 레일로 2행을 관통하고 나머지가 오른쪽 열에 쌓인다.
             데스크톱에서는 네 칸이 한 줄로 선다. */}
         <div className="col-start-1 row-start-1 row-span-2 md:row-span-1 pt-0.5">
-          <DateStack date={date} />
+          <DateStack date={date} locale={dateLocale} />
         </div>
 
         <div className={`col-start-2 row-start-1 flex items-center justify-between gap-3 md:justify-start md:pt-1 ${mark ? '' : 'md:hidden'}`}>
@@ -135,15 +165,19 @@ export function RecordRow({
         <div className={`col-start-2 row-start-2 ${mark ? 'md:col-start-3' : 'md:col-start-2'} md:row-start-1 min-w-0`}>
           {/* 목록 페이지의 h1(제목) 바로 다음 단계다. h3로 두면 h1 → h3로 한 칸 건너뛰어
               스크린리더의 제목 목록에 빈 층이 생긴다. 크기는 클래스가 정하므로 위계만 바로잡는다. */}
-          <h2 className="text-lg md:text-xl font-bold text-slate-900 leading-snug break-keep text-balance transition-colors duration-300 group-hover:text-gslt-700">
+          <h2
+            lang={textLang}
+            className="text-lg md:text-xl font-bold text-slate-900 leading-snug break-keep text-balance transition-colors duration-300 group-hover:text-gslt-700"
+          >
             {title}
           </h2>
           {excerpt ? (
-            <p className="mt-1.5 text-sm text-slate-500 leading-relaxed break-keep line-clamp-2 max-w-[60ch]">
+            <p lang={textLang} className="mt-1.5 text-sm text-slate-500 leading-relaxed break-keep line-clamp-2 max-w-[60ch]">
               {excerpt}
             </p>
           ) : null}
           {meta ? <div className="mt-3">{meta}</div> : null}
+          {note ? <p className="mt-2 text-[11px] text-slate-500">{note}</p> : null}
         </div>
 
         <div className={`hidden md:flex ${mark ? 'md:col-start-4' : 'md:col-start-3'} md:row-start-1 items-center gap-4 md:pt-1`}>

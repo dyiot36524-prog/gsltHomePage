@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useId, useRef, useState } from 'react';
-import { SCENE_NAMES } from '@/lib/scene-names';
 import Link from 'next/link';
 import Image from 'next/image';
-import { SOLUTIONS } from '@/lib/site';
 import { ChevronDown, ArrowUpRight } from '@/components/Icon';
+import { localePath, type Locale } from '@/i18n/config';
+import type { CommonMessages, solutionsFor } from '@/i18n/messages/common';
 
 /**
  * 헤더의 솔루션 패널. Header는 서버 컴포넌트로 두고 상태가 필요한 이 조각만 떼어냈다.
@@ -18,11 +18,21 @@ import { ChevronDown, ArrowUpRight } from '@/components/Icon';
  * 내용도 목록이 아니라 카드다. 시옷이 이 회사의 대표 솔루션이므로 맨 위에 큰 카드로
  * 혼자 서고, 나머지 둘은 아래 한 줄에 붙는다 — 셋을 같은 크기로 늘어놓으면 무엇이
  * 중심인지 화면이 말하지 못한다.
+ *
+ * 글자는 서버 헤더가 지금 언어의 사전에서 골라 넘긴다(브라우저 번들에 네 언어를 다 싣지 않게).
  */
 
-const [FEATURED, ...REST] = SOLUTIONS;
+type Props = {
+  overlay?: boolean;
+  locale: Locale;
+  /** solutionsFor(locale) — 순서가 곧 비중이라 첫 항목(시옷)이 큰 카드다. */
+  solutions: ReturnType<typeof solutionsFor>;
+  t: CommonMessages['solutions'] & { label: string; newWindow: string };
+  sceneNames: CommonMessages['scenes'];
+};
 
-export default function SolutionsMenu({ overlay = false }: { overlay?: boolean }) {
+export default function SolutionsMenu({ overlay = false, locale, solutions, t, sceneNames }: Props) {
+  const [FEATURED, ...REST] = solutions;
   const [open, setOpen] = useState(false);
   // 대표 카드의 대시보드 화면은 메뉴를 열 생각이 보일 때(버튼에 커서·포커스) 처음 불러온다.
   // 헤더는 모든 페이지에 있으므로, 숨은 패널 안 이미지를 바로 받으면 메뉴를 안 여는 방문자까지 받는다.
@@ -86,7 +96,7 @@ export default function SolutionsMenu({ overlay = false }: { overlay?: boolean }
         onClick={() => setOpen((v) => !v)}
         className={`flex items-center gap-1 transition-colors ${focusRing} ${overlay ? 'hover:text-white' : 'hover:text-gslt-700'}`}
       >
-        솔루션
+        {t.label}
         <ChevronDown className={`w-3 h-3 transition-transform duration-300 ${open ? 'rotate-180' : ''}`} />
       </button>
 
@@ -104,7 +114,7 @@ export default function SolutionsMenu({ overlay = false }: { overlay?: boolean }
               대시보드 화면을 오른쪽에 걸어 '다른 사이트로 간다'를 그림으로 먼저 말한다. 주황은 GSLT의 siot-500이
               아니라 그 사이트의 주황(siothome-500, globals.css)이다. */}
           <a
-            href={FEATURED.site}
+            href={'site' in FEATURED ? FEATURED.site : localePath(locale, FEATURED.href)}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => close()}
@@ -133,21 +143,21 @@ export default function SolutionsMenu({ overlay = false }: { overlay?: boolean }
               <span className="flex items-center gap-3">
                 <Image
                   src="/img/siot-home-logo-white.png"
-                  alt="시옷(SIOT)"
+                  alt={locale === 'ko' ? '시옷(SIOT)' : 'SIOT'}
                   width={377}
                   height={96}
                   sizes="160px"
                   className="h-10 w-auto"
                 />
                 <span className="rounded-full border border-siothome-500/45 px-2.5 py-1 text-[11px] font-bold text-siothome-500">
-                  대표 솔루션
+                  {t.featured}
                 </span>
               </span>
               <span className="mt-5 block text-[15px] font-bold leading-relaxed text-white/80 break-keep">
                 {FEATURED.lead}
               </span>
               <span className="mt-4 flex flex-wrap gap-1.5">
-                {FEATURED.pillars.map((p) => (
+                {(FEATURED.pillars ?? []).map((p) => (
                   <span
                     key={p}
                     className="rounded-full border border-white/15 px-2.5 py-1 text-[11px] font-bold text-white/70"
@@ -158,22 +168,22 @@ export default function SolutionsMenu({ overlay = false }: { overlay?: boolean }
               </span>
               <span className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-siothome-500 px-4 py-2 text-sm font-bold text-slate-900 transition-colors duration-300 group-hover:bg-siothome-400">
-                  시옷 홈페이지
+                  {t.siotSite}
                   <ArrowUpRight className="h-4 w-4 shrink-0 transition-transform duration-300 ease-out group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                 </span>
                 <span className="text-xs font-medium text-white/50">siot-home.gslt.kr</span>
-                <span className="sr-only">(새 창)</span>
+                <span className="sr-only">{t.newWindow}</span>
               </span>
             </span>
           </a>
 
           {/* 시옷 활용 장면. 대표 카드 자체가 링크라 그 안에 링크를 넣을 수 없어 바로 아래 한 줄로 둔다. */}
           <div className="mt-2 flex flex-wrap items-center gap-1.5 px-1">
-            <span className="mr-1 text-xs font-bold text-slate-500">활용 장면</span>
-            {Object.entries(SCENE_NAMES).map(([slug, name]) => (
+            <span className="mr-1 text-xs font-bold text-slate-500">{t.scenes}</span>
+            {Object.entries(sceneNames).map(([slug, name]) => (
               <Link
                 key={slug}
-                href={`/siot/${slug}`}
+                href={localePath(locale, `/siot/${slug}`)}
                 onClick={() => close()}
                 className={`rounded-full border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 transition-colors hover:border-siot-500/60 hover:text-siot-700 ${cardFocus}`}
               >
@@ -186,14 +196,16 @@ export default function SolutionsMenu({ overlay = false }: { overlay?: boolean }
             {REST.map((s) => (
               <Link
                 key={s.href}
-                href={s.href}
+                href={localePath(locale, s.href)}
                 onClick={() => close()}
                 className={`group block rounded-xl border border-slate-200/70 p-5 transition-colors hover:border-slate-300 hover:bg-slate-50 ${cardFocus}`}
               >
                 <span className="mb-1.5 flex items-center gap-2.5">
                   <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: s.dot }} />
                   <span className="font-bold text-slate-900">
-                    {s.name} <span className="text-xs font-medium text-slate-500">{s.en}</span>
+                    {s.name}
+                    {/* 외국어에서는 이름이 곧 영문 이름이라 한 번만 쓴다. */}
+                    {locale === 'ko' ? <span className="text-xs font-medium text-slate-500"> {s.en}</span> : null}
                   </span>
                   <ArrowUpRight className="ml-auto h-4 w-4 shrink-0 text-slate-400 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                 </span>

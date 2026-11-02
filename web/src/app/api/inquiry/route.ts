@@ -4,6 +4,9 @@ import { after } from 'next/server';
 import { notifyAll, sendAutoReply, summarize, type Inquiry } from '@/lib/notify';
 import { saveHandoffLog, SESSION_RE } from '@/lib/chat-log';
 import { adminPatch, isAdminAvailable } from '@/lib/firestore-admin';
+import { DEFAULT_LOCALE, fmt, isForeignLocale, isLocale, type ForeignLocale, type Locale } from '@/i18n/config';
+import { common } from '@/i18n/messages/common';
+import { contact } from '@/i18n/messages/contact';
 
 /**
  * 상담 문의 접수.
@@ -22,6 +25,11 @@ import { adminPatch, isAdminAvailable } from '@/lib/firestore-admin';
  * 여러 채널로 동시에 보내고, 채널 하나가 죽어도 나머지가 간다.
  *
  * POST는 기본적으로 캐시되지 않으므로(route handler 문서) 세그먼트 설정을 따로 두지 않는다.
+ *
+ * 외국어 페이지(/en · /zh · /ja/contact)의 폼은 주소에 ?lang=을 붙여 보낸다. 방문자에게 돌려주는 안내만
+ * 그 언어로 바꾸고, 저장하는 칸은 그대로다(firestore.rules가 정해진 칸만 받는다). 직원 알림에는 회신할
+ * 언어를 한 줄 붙인다. lang이 없거나 모르는 값이면 한국어 — 챗봇(Chat.tsx)과 한국어 폼은 예전 그대로다.
+ * 실패 응답에는 언어와 상관없는 code(사전 키)도 함께 싣는다.
  */
 
 const PROJECT_ID = 'gslthomepage';
@@ -34,10 +42,26 @@ const COMMIT_ENDPOINT =
 /** firestore.rules의 상한과 정확히 같은 값. 규칙이 거절하기 전에 우리가 먼저 400으로 돌려준다. */
 const LIMIT = { name: 100, company: 200, email: 200, phone: 50, message: 5000 } as const;
 
-const FALLBACK = `전송에 실패했습니다. ${COMPANY.tel} 또는 ${COMPANY.email} 으로 직접 연락해 주세요.`;
+type ApiMessages = (typeof contact)[Locale]['api'];
+type FailCode = keyof ApiMessages;
 
-function fail(message: string, status: number) {
-  return Response.json({ ok: false, message }, { status });
+/** 직원 알림에 붙이는 회신 언어. 직원이 읽는 글이라 한국어다. */
+const REPLY_IN: Record<ForeignLocale, string> = { en: '영어', zh: '중국어(간체)', ja: '일본어' };
+
+/** 주소의 ?lang= → 언어. 없거나 모르는 값이면 한국어. */
+function requestLocale(request: Request): Locale {
+  const lang = new URL(request.url).searchParams.get('lang');
+  return isLocale(lang) ? lang : DEFAULT_LOCALE;
+}
+
+/** 그 언어의 안내 문구. {tel}은 그 언어의 번호 표기(외국어는 +82-…)로 채운다. */
+function failure(locale: Locale, code: FailCode, status: number, n?: number) {
+  const message = fmt(contact[locale].api[code], {
+    tel: common[locale].company.tel,
+    email: COMPANY.email,
+    ...(n === undefined ? {} : { n }),
+  });
+  return Response.json({ ok: false, code, message }, { status });
 }
 
 /** Firestore 자동 ID와 같은 형식(62진 20자). */
@@ -53,22 +77,25 @@ function clean(v: unknown): string {
   return typeof v === 'string' ? v.trim() : '';
 }
 
-function validate(raw: Record<string, unknown>): { ok: true; data: Inquiry } | { ok: false; message: string } {
+type Invalid = { ok: false; code: FailCode; n?: number };
+
+function validate(raw: Record<string, unknown>): { ok: true; data: Inquiry } | Invalid {
   const name = clean(raw.name);
   const company = clean(raw.company);
   const email = clean(raw.email);
   const phone = clean(raw.phone);
   const message = clean(raw.message);
 
-  if (!name) return { ok: false, message: '이름을 입력해 주세요.' };
-  if (name.length > LIMIT.name) return { ok: false, message: `이름은 ${LIMIT.name}자 이내로 입력해 주세요.` };
-  if (company.length > LIMIT.company) return { ok: false, message: `회사명은 ${LIMIT.company}자 이내로 입력해 주세요.` };
-  if (!email) return { ok: false, message: '이메일을 입력해 주세요.' };
-  if (email.length > LIMIT.email) return { ok: false, message: `이메일은 ${LIMIT.email}자 이내로 입력해 주세요.` };
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, message: '이메일 형식을 확인해 주세요.' };
-  if (phone.length > LIMIT.phone) return { ok: false, message: `연락처는 ${LIMIT.phone}자 이내로 입력해 주세요.` };
-  if (!message) return { ok: false, message: '문의 내용을 입력해 주세요.' };
-  if (message.length > LIMIT.message) return { ok: false, message: `문의 내용은 ${LIMIT.message}자 이내로 입력해 주세요.` };
+  // 연락처는 형식을 보지 않는다 — 외국어 페이지에서 오는 국제 번호(+1 …, +81 …)도 그대로 받는다.
+  if (!name) return { ok: false, code: 'nameRequired' };
+  if (name.length > LIMIT.name) return { ok: false, code: 'nameTooLong', n: LIMIT.name };
+  if (company.length > LIMIT.company) return { ok: false, code: 'companyTooLong', n: LIMIT.company };
+  if (!email) return { ok: false, code: 'emailRequired' };
+  if (email.length > LIMIT.email) return { ok: false, code: 'emailTooLong', n: LIMIT.email };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, code: 'emailInvalid' };
+  if (phone.length > LIMIT.phone) return { ok: false, code: 'phoneTooLong', n: LIMIT.phone };
+  if (!message) return { ok: false, code: 'messageRequired' };
+  if (message.length > LIMIT.message) return { ok: false, code: 'messageTooLong', n: LIMIT.message };
 
   // 빈 칸은 원본과 같이 '미기재'로 채운다. 관리자 수신함에서 누락과 구분되어야 한다.
   return { ok: true, data: { name, company: company || '미기재', email, phone: phone || '미기재', message } };
@@ -188,18 +215,17 @@ function tooMany(request: Request): boolean {
 }
 
 export async function POST(request: Request) {
-  if (tooMany(request)) {
-    return fail(`잠시 후 다시 시도해 주세요. 급하시면 ${COMPANY.tel}로 연락 주세요.`, 429);
-  }
+  const locale = requestLocale(request);
+  if (tooMany(request)) return failure(locale, 'rateLimited', 429);
 
   let raw: unknown;
   try {
     raw = await request.json();
   } catch {
-    return fail('요청을 읽지 못했습니다. 다시 시도해 주세요.', 400);
+    return failure(locale, 'unreadable', 400);
   }
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
-    return fail('요청 형식이 올바르지 않습니다.', 400);
+    return failure(locale, 'malformed', 400);
   }
   const fields = raw as Record<string, unknown>;
 
@@ -207,7 +233,7 @@ export async function POST(request: Request) {
   if (looksAutomated(fields)) return Response.json({ ok: true });
 
   const checked = validate(fields);
-  if (!checked.ok) return fail(checked.message, 400);
+  if (!checked.ok) return failure(locale, checked.code, 400, checked.n);
 
   // 1) 기록이 먼저다.
   const id = autoId();
@@ -221,10 +247,14 @@ export async function POST(request: Request) {
 
   // 2) 알림은 그 다음. 저장이 실패했다면 이 알림이 유일한 기록이라는 사실을 본문에 적는다.
   // 첫 방문 출처는 알림에만 싣는다. 문의함(DB)은 정해진 칸만 받으므로 저장 데이터와 분리한다.
-  const results = await notifyAll(
-    { ...checked.data, source: sourceLabel(fields.source) },
+  // 외국어 페이지에서 온 문의는 회신 언어를 같은 자리(알림 맨 위)에 적는다 — 이것도 알림에만 있고 저장하지 않는다.
+  const warning = [
     saveError ? '문의함 저장에 실패했습니다. 이 알림이 유일한 기록입니다 — 즉시 회신해 주세요.' : '',
-  );
+    isForeignLocale(locale) ? `${REPLY_IN[locale]} 페이지에서 온 문의입니다 — ${REPLY_IN[locale]}로 회신해 주세요.` : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+  const results = await notifyAll({ ...checked.data, source: sourceLabel(fields.source) }, warning);
   const summary = summarize(results);
 
   if (summary.failed.length) console.error('[inquiry] notify failed:', summary.failed.join(' | '));
@@ -233,7 +263,7 @@ export async function POST(request: Request) {
 
   // 저장도 알림도 전부 실패했을 때만 방문자에게 실패를 알린다.
   // 어느 하나라도 남았으면 우리가 문의를 잡고 있는 것이므로 접수 완료다.
-  if (saveError && summary.ok.length === 0) return fail(FALLBACK, 502);
+  if (saveError && summary.ok.length === 0) return failure(locale, 'failed', 502);
 
   // 응답을 보낸 뒤에 한다. 둘 다 방문자가 기다릴 이유가 없는 일이다.
   // 위의 502 판정보다 **뒤에** 둔다 — 우리가 문의를 잡지 못했는데 '잘 받았습니다'를 보내면 거짓말이다.

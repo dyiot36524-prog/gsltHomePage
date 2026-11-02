@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { readFirstTouch } from '@/lib/traffic-source';
 import Link from 'next/link';
 import { ArrowRight } from '@/components/Icon';
 import KakaoChatLink from '@/components/KakaoChatLink';
-import { COMPANY } from '@/lib/site';
 import { conversions } from '@/lib/analytics';
+import { fmt, localePath, type Locale } from '@/i18n/config';
+import type { ChatMessages } from '@/i18n/messages/chat';
 
 /**
  * 히어로 안에서 이어지는 상담 챗봇.
@@ -29,24 +30,20 @@ import { conversions } from '@/lib/analytics';
  * 머리 줄과 입력창은 제자리에 두고 그 사이(.hero-chat-body)만 줄어든다. 높이가 낮은 휴대폰에서는
  * 목록 대신 이 사이 영역 전체가 한 덩어리로 스크롤한다 — 담당자 연결 카드까지 함께 굴러야
  * 입력창이 무대 밖으로 밀려나지 않는다.
+ *
+ * 글자는 서버 부모(app/(ko)/page → Hero)가 그 언어의 사전 조각(messages/chat의 ui)으로 넘긴다.
+ * 담당자에게 가는 글(대화 기록 머리·이름표·빈 본문 대신 넣는 문장)만은 한국어로 둔다 — 받는 사람이 한국어 담당자다.
  */
 
 type Msg = { role: 'user' | 'assistant'; content: string };
 
-const SUGGESTIONS = [
-  '3층 사무실인데 배선 공사 없이 될까요?',
-  '비슷한 규모로 구축한 사례가 있나요?',
-  '컨설팅만 먼저 받아볼 수 있나요?',
-];
-
-/** 실제 진행에 관한 이야기가 나왔는지. 이때부터 담당자 연결이 의미가 있다. */
-const INTENT = /견적|비용|가격|얼마|일정|기간|방문|현장|실측|도입|계약|상담|미팅|연락/;
-
-function wantsHandoff(messages: Msg[]): boolean {
+/** 실제 진행에 관한 이야기가 나왔는지. 이때부터 담당자 연결이 의미가 있다. intent는 언어마다 사전에 있다. */
+function wantsHandoff(messages: Msg[], intent: RegExp): boolean {
   if (messages.filter((m) => m.role === 'user').length >= 3) return true;
-  return messages.some((m) => m.role === 'user' && INTENT.test(m.content));
+  return messages.some((m) => m.role === 'user' && intent.test(m.content));
 }
 
+/** 담당자가 읽는 대화 기록. 이름표·머리는 방문자의 언어와 상관없이 한국어다(파일 머리 주석). */
 function transcript(messages: Msg[]): string {
   return messages
     .map((m) => `${m.role === 'user' ? '방문자' : 'AI 안내'}: ${m.content}`)
@@ -78,10 +75,21 @@ function newSession(): string {
 }
 
 export default function Chat({
+  t,
+  locale,
+  tel,
+  newWindow,
   onEngage,
   onStart,
   onClose,
 }: {
+  /** 그 언어의 chat.ui. */
+  t: ChatMessages['ui'];
+  locale: Locale;
+  /** 안내문의 회사 전화(common[locale].company.tel). 외국어 판은 +82 형식이다. */
+  tel: string;
+  /** 낭독용 '(새 창)'(common[locale].header.newWindow). */
+  newWindow: string;
   onEngage?: () => void;
   /** 첫 메시지가 나가는 순간 한 번. 히어로가 이걸 받아 헤드라인을 걷고 판을 넓힌다. */
   onStart?: () => void;
@@ -109,6 +117,10 @@ export default function Chat({
   const session = useRef('');
   /** 담당자 연결 폼이 열린 시각. /contact 폼과 같은 봇 판별(3초 미만 제출)에 쓴다. */
   const formOpenedAt = useRef(0);
+  // 한국어 정규식에는 대소문자가 없어 i를 붙여도 그대로다. 영어는 'Quote'·'quote'를 함께 잡는다.
+  const intent = useMemo(() => new RegExp(t.intent, 'i'), [t.intent]);
+  const connError = fmt(t.connError, { tel });
+  const submitError = fmt(t.submitError, { tel });
 
   // 서버 렌더와 어긋나지 않게 세션은 마운트 뒤에 만든다.
   useEffect(() => {
@@ -179,7 +191,7 @@ export default function Chat({
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: next }),
+        body: JSON.stringify({ messages: next, locale }),
       });
       const data = (await res.json()) as {
         ok?: boolean;
@@ -188,13 +200,13 @@ export default function Chat({
         grounded?: boolean;
       };
       if (!res.ok || !data.ok || !data.reply) {
-        setError(data.message || `연결이 원활하지 않습니다. ${COMPANY.tel}로 연락 주세요.`);
+        setError(data.message || connError);
         return;
       }
       setMessages([...next, { role: 'assistant', content: data.reply }]);
-      setNotice(data.grounded === false ? '아직 등록된 회사 자료가 없어 답변이 제한됩니다.' : '');
+      setNotice(data.grounded === false ? t.ungrounded : '');
     } catch {
-      setError(`연결이 원활하지 않습니다. ${COMPANY.tel}로 연락 주세요.`);
+      setError(connError);
     } finally {
       setBusy(false);
     }
@@ -214,7 +226,7 @@ export default function Chat({
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode: 'summary', messages }),
+        body: JSON.stringify({ mode: 'summary', messages, locale }),
       });
       const data = (await res.json().catch(() => ({}))) as { summary?: string };
       if (data.summary) setDraft((cur) => (cur.trim() ? cur : data.summary!));
@@ -232,7 +244,9 @@ export default function Chat({
     setBusy(true);
     setError('');
     try {
-      const res = await fetch('/api/inquiry', {
+      // 외국어 판은 /contact 폼(ContactForm)과 같이 ?lang=을 붙인다 — /api/inquiry는 언어를 주소에서만 읽는다.
+      // 그러면 안내문이 그 언어로 오고, 담당자 알림에 회신 언어가 붙는다. 저장하는 칸은 그대로다.
+      const res = await fetch(locale === 'ko' ? '/api/inquiry' : `/api/inquiry?lang=${locale}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -254,13 +268,15 @@ export default function Chat({
       });
       const data = (await res.json()) as { ok?: boolean; message?: string };
       if (!res.ok || !data.ok) {
-        setError(data.message || `접수에 실패했습니다. ${COMPANY.tel}로 연락 주세요.`);
+        // 혹시 안내문이 한국어로 오면(구 서버 등) 외국어 방문자에게는 그 언어의 일반 문구를 보인다.
+        const own = data.message && (locale === 'ko' || !/[가-힣]/.test(data.message)) ? data.message : '';
+        setError(own || submitError);
         return;
       }
       conversions.inquirySubmitted('chat');
       setSent(true);
     } catch {
-      setError(`접수에 실패했습니다. ${COMPANY.tel}로 연락 주세요.`);
+      setError(submitError);
     } finally {
       setBusy(false);
     }
@@ -278,7 +294,7 @@ export default function Chat({
           className="flex items-center justify-center gap-2.5 mb-5 text-sm font-bold tracking-[0.14em] text-white/70"
         >
           <Sparkle className="w-5 h-5" />
-          AI에게 바로 물어보기
+          {t.heading}
         </h2>
       ) : (
         /* 대화 중에는 히어로로 돌아갈 길을 화면에 둔다. 이게 없으면 판이 걷히지 않아
@@ -286,7 +302,7 @@ export default function Chat({
         <div className="flex items-center justify-between gap-4 mb-5">
           <h2 id="chat-heading" className="flex items-center gap-2.5 text-sm font-bold tracking-[0.14em] text-white/65">
             <Sparkle className="w-5 h-5" />
-            AI 상담
+            {t.chatting}
           </h2>
           <button
             type="button"
@@ -304,7 +320,7 @@ export default function Chat({
             }}
             className="shrink-0 rounded-full border border-white/15 hover:border-white/30 px-4 py-2 text-sm font-bold text-white/70 hover:text-white transition-colors"
           >
-            대화 닫기
+            {t.close}
           </button>
         </div>
       )}
@@ -313,7 +329,7 @@ export default function Chat({
           hero-chat-chips: 높이가 낮은 휴대폰에서는 globals.css가 카드를 덜어 낸다(좁으면 첫 장만, 가로로 눕히면 모두). */}
       {!started && (
         <ul className="hero-chat-chips grid gap-2.5 sm:grid-cols-3 mb-6">
-          {SUGGESTIONS.map((s) => (
+          {t.suggestions.map((s) => (
             <li key={s}>
               <button
                 type="button"
@@ -360,7 +376,7 @@ export default function Chat({
             {busy && !contactOpen && (
               <div className="flex gap-3 items-center">
                 <Sparkle className="w-5 h-5 shrink-0 animate-pulse" />
-                <span className="text-sm text-white/65">고객님을 위한 솔루션 생각중..</span>
+                <span className="text-sm text-white/65">{t.thinking}</span>
               </div>
             )}
             <div ref={endRef} />
@@ -382,12 +398,12 @@ export default function Chat({
         )}
 
         {/* ── 담당자 연결 ── */}
-        {started && wantsHandoff(messages) && !sent && (
+        {started && wantsHandoff(messages, intent) && !sent && (
           <div ref={handoffRef} className="mb-5 rounded-3xl border border-white/12 bg-white/[0.05] backdrop-blur-sm p-5 text-left">
             {!contactOpen ? (
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <p className="text-sm text-white/80 break-keep">
-                  현장 조건은 담당자가 직접 보는 편이 정확합니다.
+                  {t.handoff.lead}
                 </p>
                 <div className="flex flex-wrap items-center gap-2">
                   <button
@@ -395,35 +411,35 @@ export default function Chat({
                     onClick={openContact}
                     className="group inline-flex min-h-11 items-center gap-2 rounded-full bg-gslt-500 hover:bg-gslt-400 text-slate-900 px-5 py-2.5 text-sm font-bold transition-colors"
                   >
-                    담당자 연결
+                    {t.handoff.connect}
                     <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5" />
                   </button>
                   {/* 둘째 선택지(카카오톡 노랑). 담당자 연결은 지금 대화를 요약해 넘기지만 카카오톡은
                       아무것도 넘어가지 않는다 — 그 사실을 바로 아래에 적는다. */}
-                  <KakaoChatLink place="chat" describedBy="chat-kakao-note">
-                    카카오톡으로 문의
+                  <KakaoChatLink place="chat" describedBy="chat-kakao-note" newWindow={newWindow}>
+                    {t.handoff.kakao}
                   </KakaoChatLink>
                 </div>
                 <p id="chat-kakao-note" className="w-full text-xs text-white/65 break-keep">
-                  카카오톡으로 문의하면 지금 대화 내용은 넘어가지 않습니다 · 새 창에서 열립니다
+                  {t.handoff.kakaoNote}
                 </p>
               </div>
             ) : (
               <form onSubmit={submitContact} className="relative grid gap-2.5 sm:grid-cols-2">
                 {/* 허니팟 — /contact 폼과 같은 봇 차단. 사람에게는 없는 칸이다. */}
                 <div aria-hidden="true" className="absolute -left-[9999px] top-0 h-0 w-0 overflow-hidden">
-                  <label htmlFor="chat-website">이 칸은 비워 두세요</label>
+                  <label htmlFor="chat-website">{t.form.honeypot}</label>
                   <input id="chat-website" name="website" type="text" tabIndex={-1} autoComplete="off" />
                 </div>
-                <Field name="name" label="이름" required autoComplete="name" />
-                <Field name="company" label="회사명" autoComplete="organization" />
-                <Field name="email" label="이메일" type="email" required autoComplete="email" />
-                <Field name="phone" label="연락처" type="tel" autoComplete="tel" />
+                <Field name="name" label={t.form.name} required autoComplete="name" />
+                <Field name="company" label={t.form.company} autoComplete="organization" />
+                <Field name="email" label={t.form.email} type="email" required autoComplete="email" />
+                <Field name="phone" label={t.form.phone} type="tel" autoComplete="tel" />
                 <label className="block sm:col-span-2">
                   <span className="flex items-baseline justify-between gap-3 text-xs font-bold text-white/65 mb-1.5">
-                    문의 내용
+                    {t.form.message}
                     <span className="font-medium text-white/55" aria-live="polite">
-                      {summarizing ? '대화를 정리하는 중…' : draft ? '대화에서 정리했습니다. 고쳐 쓰셔도 됩니다.' : ''}
+                      {summarizing ? t.form.summarizing : draft ? t.form.summarized : ''}
                     </span>
                   </span>
                   <textarea
@@ -432,7 +448,7 @@ export default function Chat({
                     maxLength={3000}
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}
-                    placeholder="어떤 공간에 무엇을 하고 싶으신지 적어 주세요."
+                    placeholder={t.form.placeholder}
                     className="w-full resize-y rounded-xl bg-white/[0.07] border border-white/15 focus:border-gslt-400 focus:outline-none focus:ring-4 focus:ring-gslt-400/20 px-3.5 py-2.5 text-sm text-white placeholder:text-white/45 leading-relaxed transition-colors"
                   />
                 </label>
@@ -443,7 +459,7 @@ export default function Chat({
                     defaultChecked
                     className="w-4 h-4 accent-gslt-500"
                   />
-                  지금까지의 대화 내용을 함께 보냅니다
+                  {t.form.withLog}
                 </label>
                 {/* 이름·연락처를 받는 모든 폼은 동의를 받아야 한다. 전에는 이 폼만 빠져 있었다. */}
                 <div className="sm:col-span-2 flex items-start gap-2.5 text-sm text-white/80 py-1">
@@ -457,14 +473,14 @@ export default function Chat({
                   />
                   <p className="break-keep">
                     <label htmlFor="chat-privacy" className="cursor-pointer">
-                      개인정보 수집·이용에 동의합니다.<span className="text-gslt-400"> *</span>
+                      {t.form.privacy}<span className="text-gslt-400"> *</span>
                     </label>{' '}
                     <Link
-                      href="/legal/privacy"
+                      href={localePath(locale, '/legal/privacy')}
                       target="_blank"
                       className="font-medium text-gslt-300 underline underline-offset-4 decoration-gslt-400/40 hover:decoration-gslt-300"
                     >
-                      처리방침 보기
+                      {t.form.privacyLink}
                     </Link>
                   </p>
                 </div>
@@ -473,7 +489,7 @@ export default function Chat({
                   disabled={busy}
                   className="sm:col-span-2 rounded-full bg-gslt-500 hover:bg-gslt-400 text-slate-900 px-6 py-3 text-sm font-bold transition-colors disabled:opacity-60"
                 >
-                  {busy ? '보내는 중…' : '문의 남기기'}
+                  {busy ? t.form.sending : t.form.submit}
                 </button>
               </form>
             )}
@@ -482,7 +498,7 @@ export default function Chat({
 
         {sent && (
           <p className="mb-5 rounded-3xl bg-gslt-500/15 border border-gslt-400/30 px-5 py-4 text-sm font-bold text-gslt-200">
-            접수되었습니다. 담당자가 곧 연락드리겠습니다.
+            {t.sent}
           </p>
         )}
       </div>
@@ -496,13 +512,14 @@ export default function Chat({
         className="hero-chat-field relative rounded-[1.6rem]"
       >
         <label htmlFor="chat-input" className="sr-only">
-          궁금한 점을 입력하세요
+          {t.inputLabel}
         </label>
         {/* 안내 문구는 320px 폭에서 한 줄에 들어가야 한다. 좌우 여백(보내기 버튼 자리 포함 88px)을
             빼면 글자 자리가 198px인데, 예전 문구('배선 공사 없이 가능한지 물어보세요', 223px)는
             두 줄로 넘쳐 아랫줄이 잘렸다. 지금 문구는 178px다. 그보다 좁은 화면(280px 폴드 등)도
             두 줄로 넘기지 않고 한 줄 끝에서 자른다(placeholder:truncate — 크롬은 textarea
-            안내 문구에 말줄임표를 그리지 않아 글자 중간에서 잘린다. 반쯤 보이는 둘째 줄보다 낫다). */}
+            안내 문구에 말줄임표를 그리지 않아 글자 중간에서 잘린다. 반쯤 보이는 둘째 줄보다 낫다).
+            번역도 같은 폭에 맞췄다(영어 169px · 중국어 128px · 일본어 192px). */}
         <textarea
           id="chat-input"
           rows={1}
@@ -516,13 +533,13 @@ export default function Chat({
               send(input);
             }
           }}
-          placeholder="배선 없이 되는지 물어보세요"
+          placeholder={t.inputPlaceholder}
           className="block w-full resize-none rounded-[1.6rem] bg-white/[0.07] border border-white/10 focus:border-transparent focus:bg-white/[0.11] focus:outline-none focus:ring-4 focus:ring-gslt-400/20 backdrop-blur-sm py-4 pl-6 pr-16 text-base text-white placeholder:text-white/60 placeholder:truncate text-left leading-relaxed transition-colors"
         />
         <button
           type="submit"
           disabled={busy || !input.trim()}
-          aria-label="보내기"
+          aria-label={t.send}
           className="absolute right-1.5 top-1/2 -translate-y-1/2 grid place-items-center w-12 h-12 rounded-full bg-gslt-500 hover:bg-gslt-400 text-slate-900 transition-colors disabled:bg-white/10 disabled:text-white/35"
         >
           <ArrowRight className="w-5 h-5" />

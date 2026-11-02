@@ -49,12 +49,15 @@ function Bubble({ className }: { className: string }) {
 export default function KakaoChatLink({
   place,
   describedBy,
+  newWindow = '(새 창)',
   children,
 }: {
   /** 놓인 자리. 모양과 클릭 집계의 label이 이것으로 정해진다. */
   place: Place;
   /** 화면에 '새 창에서 열립니다'를 적은 보조 문구의 id. 없으면 '(새 창)'을 낭독용으로만 붙인다. */
   describedBy?: string;
+  /** 낭독용 '(새 창)' — 외국어 페이지는 common[locale].header.newWindow를 넘긴다. */
+  newWindow?: string;
   children: ReactNode;
 }) {
   const footer = place === 'footer';
@@ -71,7 +74,7 @@ export default function KakaoChatLink({
       {footer ? null : <Bubble className={place === 'contact' ? 'w-5 h-5' : 'w-4 h-4'} />}
       {children}
       {footer ? <ArrowUpRight className="w-3 h-3" /> : null}
-      {describedBy ? null : <span className="sr-only">(새 창)</span>}
+      {describedBy ? null : <span className="sr-only">{newWindow}</span>}
     </a>
   );
 }

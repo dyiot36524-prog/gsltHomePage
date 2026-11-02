@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { SITE } from '@/lib/site';
 import { ogImage } from '@/lib/og';
+import { DEFAULT_LOCALE, HTML_LANG, LOCALES, OG_LOCALE, localePath, type Locale } from '@/i18n/config';
+import { common } from '@/i18n/messages/common';
 // 배포본 검사(scripts/seo-check.mjs)도 이 파일을 읽는다. 상한이 두 곳에 따로 있으면 한쪽만 고쳐진다.
 import LIMITS from './seo-limits.json';
 
@@ -33,11 +35,33 @@ function warn(kind: string, value: string, max: number) {
   );
 }
 
+/**
+ * 그 언어 판의 절대 주소. 한국어 홈은 슬래시 없이 낸다 — Next가 머리의 canonical·hreflang을 그렇게
+ * 정규화하고 sitemap도 그 꼴이다(app/sitemap.ts). sitemap의 hreflang은 정규화를 거치지 않아 여기서 맞춘다.
+ */
+export function localeUrl(locale: Locale, path: string): string {
+  if (locale === DEFAULT_LOCALE) return path === '/' ? SITE.url : `${SITE.url}${path}`;
+  return `${SITE.url}${localePath(locale, path)}`;
+}
+
+/**
+ * 같은 페이지의 네 언어 판 — hreflang(alternates.languages). x-default는 한국어다.
+ * path는 한국어 기준 경로('/about'). 홈은 '/'.
+ */
+export function languageAlternates(path: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const l of LOCALES) out[HTML_LANG[l]] = localeUrl(l, path);
+  out['x-default'] = localeUrl(DEFAULT_LOCALE, path);
+  return out;
+}
+
 type PageSeoInput = {
-  /** ' | 지에스엘티'를 뺀 제목. 틀은 layout.tsx가 붙인다. */
+  /** 지금 언어. 빠지면 한국어. */
+  locale?: Locale;
+  /** ' | 지에스엘티'(외국어는 ' | GSLT')를 뺀 제목. 틀은 레이아웃이 붙인다. */
   title: string;
   description: string;
-  /** '/siot' 처럼 앞에 슬래시가 붙은 경로. */
+  /** '/siot' 처럼 앞에 슬래시가 붙은 **한국어 기준** 경로. 언어 접두어는 여기서 붙인다. */
   path: string;
   /**
    * 공유 이미지. 지정하지 않으면 이 페이지 제목이 들어간 그림(/og<path>, lib/og.ts)을 쓴다.
@@ -57,30 +81,42 @@ type PageSeoInput = {
  * 전에는 여기서 `제목 | GSLT`를 따로 조립해, 틀을 바꾸면 검색 제목과 공유 제목이
  * 서로 다른 상호를 달고 나갈 수 있었다.
  */
-export function pageSeo({ title, description, path, image }: PageSeoInput): Metadata {
-  const full = TITLE_TEMPLATE.replace('%s', title);
-  if (full.length > TITLE_MAX) warn('제목', full, TITLE_MAX);
-  if (description.length > DESC_MAX) warn('설명', description, DESC_MAX);
-  if (description.length < DESC_MIN && process.env.NODE_ENV !== 'production') {
-    console.warn(`[seo] 설명이 ${description.length}자로 짧습니다(권장 ${DESC_MIN}자 이상). "${description}"`);
+export function pageSeo({ locale = DEFAULT_LOCALE, title, description, path, image }: PageSeoInput): Metadata {
+  // 글자 수 상한은 한글 기준이다(구글이 보여 주는 폭). 외국어는 seo-check가 따로 본다.
+  if (locale === DEFAULT_LOCALE) {
+    const full = TITLE_TEMPLATE.replace('%s', title);
+    if (full.length > TITLE_MAX) warn('제목', full, TITLE_MAX);
+    if (description.length > DESC_MAX) warn('설명', description, DESC_MAX);
+    if (description.length < DESC_MIN && process.env.NODE_ENV !== 'production') {
+      console.warn(`[seo] 설명이 ${description.length}자로 짧습니다(권장 ${DESC_MIN}자 이상). "${description}"`);
+    }
   }
 
-  const url = `${SITE.url}${path}`;
   return {
     title,
     description,
     // types를 함께 적는다. 페이지가 alternates를 쓰면 레이아웃의 RSS 자동탐지 링크가 통째로
     // 덮여 사라진다(메타데이터는 얕게 합쳐진다). 모든 페이지가 피드를 알리게 한다.
-    alternates: { canonical: path, types: { 'application/rss+xml': `${SITE.url}/rss.xml` } },
+    // languages는 같은 페이지의 다른 언어 판(hreflang)이다.
+    alternates: {
+      canonical: localePath(locale, path),
+      languages: languageAlternates(path),
+      types: { 'application/rss+xml': `${SITE.url}/rss.xml` },
+    },
     openGraph: {
       type: 'website',
-      siteName: SITE.siteName,
-      locale: 'ko_KR',
-      url,
+      siteName: common[locale].site.name,
+      locale: OG_LOCALE[locale],
+      url: localeUrl(locale, path),
       description,
       // 사진도 대체 글을 단다. 그림을 못 받았을 때, 카드를 읽어 주는 스크린리더에 남는 것이 이 글이다.
       // 사진은 크기가 페이지마다 달라 적지 않는다 — 틀린 크기는 카톡이 자리를 잘못 잡게 한다.
-      images: [image ? { url: image, alt: title } : ogImage(path, title)],
+      // 제목 그림(/og)은 Pretendard로 그려 한글·영문만 된다. 외국어 판은 글자 없는 홈 그림(로고)을 쓴다.
+      images: [
+        image
+          ? { url: image, alt: title }
+          : ogImage(locale === DEFAULT_LOCALE ? path : '/', title),
+      ],
     },
     twitter: { card: 'summary_large_image', description },
   };

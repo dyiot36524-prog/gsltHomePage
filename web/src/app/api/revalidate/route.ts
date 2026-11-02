@@ -22,5 +22,7 @@ export async function POST(request: Request) {
     return Response.json({ ok: false, error: '관리자 로그인이 필요합니다.' }, { status: 401 });
   }
   revalidatePath('/', 'layout');
+  // 영어·중국어·일본어 판(/en · /zh · /ja)은 루트 레이아웃이 따로라 한 번 더 비운다.
+  revalidatePath('/[lang]', 'layout');
   return Response.json({ ok: true });
 }

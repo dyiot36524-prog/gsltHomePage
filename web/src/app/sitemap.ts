@@ -3,6 +3,8 @@ import { SITE } from '@/lib/site';
 import { FIELDS } from '@/lib/fields';
 import { SCENES } from '@/lib/scenes';
 import { getAllPosts, getMenuVisibility, hasBody, isPress, postTime } from '@/lib/posts';
+import { LOCALES } from '@/i18n/config';
+import { languageAlternates, localeUrl } from '@/lib/seo';
 
 /**
  * sitemap.xml — 검색엔진에 어떤 주소가 있는지 알려준다.
@@ -19,10 +21,31 @@ import { getAllPosts, getMenuVisibility, hasBody, isPress, postTime } from '@/li
  * 관리자에서 끈 분류는 목록도 개별 글도 넣지 않는다. 처음엔 '숨김은 메뉴에서만 빼는 것'
  * 으로 보고 개별 글을 남겼는데, 그러면 끈 글이 계속 색인되어 검색결과로 닿는다.
  * 숨김은 공개를 접는 것이고, 사이트는 그 글에 404를 낸다 — 목록에 넣으면 거짓말이 된다.
+ *
+ * 영어·중국어·일본어 판(/en · /zh · /ja)도 같은 목록으로 낸다. 주소마다 네 언어 판을 서로 알린다
+ * (xhtml:link hreflang) — 페이지 머리의 hreflang과 같은 값이다(lib/seo.ts languageAlternates).
  */
 // 하루. 관리자 저장 때 /api/revalidate·/api/indexnow가 전체 캐시를 비우므로 바뀐 내용은 그때 바로 따라온다.
 // 짧게 두면 크롤러 방문마다 다시 만들어 Vercel 전송량이 쌓인다(2026-10-23 사이트 정지 — posts.ts REVALIDATE 참고).
 export const revalidate = 86400;
+
+type Entry = MetadataRoute.Sitemap[number];
+
+/**
+ * 한국어 항목 하나를 네 언어 항목으로 늘린다. 한국어 주소는 지금까지 낸 그대로다(홈은 슬래시 없이).
+ * 경로는 항목의 url에서 SITE.url을 뗀 한국어 기준 경로다.
+ */
+function withLocales(entries: MetadataRoute.Sitemap): MetadataRoute.Sitemap {
+  return entries.flatMap((e) => {
+    const path = e.url.slice(SITE.url.length) || '/';
+    const alternates = { languages: languageAlternates(path) };
+    return LOCALES.map((l): Entry => ({
+      ...e,
+      url: l === 'ko' ? e.url : localeUrl(l, path),
+      alternates,
+    }));
+  });
+}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = SITE.url;
@@ -83,9 +106,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.6,
       }));
 
-    return [...fixed, ...lists, ...details];
+    return withLocales([...fixed, ...lists, ...details]);
   } catch {
     // Firestore를 못 읽어도 sitemap 자체가 없어지면 안 된다. 고정 목록만이라도 낸다.
-    return fixed;
+    return withLocales(fixed);
   }
 }

@@ -148,6 +148,8 @@ ${fields}
 - [자료실](${SITE.url}/downloads): 회사소개서 등 자료 내려받기
 - [도입 문의](${SITE.url}/contact): 상담 신청
 - [고객 지원](${SITE.url}/support): 연락처·오시는 길
+
+같은 페이지의 영어·중국어(간체)·일본어 판: [English](${SITE.url}/en) · [中文](${SITE.url}/zh) · [日本語](${SITE.url}/ja) — 주소 앞에 /en · /zh · /ja를 붙인다. 소식 글의 외국어 판은 AI 번역이다.
 ${newsBlock}
 ## 인용 안내
 

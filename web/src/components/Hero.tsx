@@ -2,6 +2,9 @@
 
 import { useEffect, useRef } from 'react';
 import Chat from '@/components/Chat';
+import type { Locale } from '@/i18n/config';
+import type { HomeMessages } from '@/i18n/messages/home';
+import type { ChatMessages } from '@/i18n/messages/chat';
 
 /**
  * 히어로 — 스크롤에 따라 재생되는 스마트빌딩 필름.
@@ -18,12 +21,42 @@ import Chat from '@/components/Chat';
  * 클라이언트 컴포넌트지만 마크업은 서버에서도 렌더되므로 크롤러는 헤드라인·본문을 그대로 본다.
  * 초기 은닉은 layout의 인라인 스크립트가 붙이는 .js-hero 클래스가 담당한다 —
  * 마운트 후 숨기면 텍스트가 한 번 번쩍이기 때문이다.
+ *
+ * 글자는 서버 부모(app/(ko)/page)가 그 언어의 사전 조각으로 넘긴다(home.hero · chat.ui).
  */
 
 /** navigator.connection — 표준 DOM 타입에 없어 필요한 필드만 좁혀 받는다 */
 type NetworkInfo = { saveData?: boolean; effectiveType?: string };
 
-export default function Hero() {
+type Line = HomeMessages['hero']['title']['lines'][number];
+
+/** 헤드라인 한 줄. 강조는 줄 전체가 아니라 accent 말에만 준다(한국어는 '딱 맞춘' 네 글자). */
+function TitleLine({ pre, accent, post }: Line) {
+  return (
+    <>
+      {pre}
+      {accent ? <span className="text-gslt-400">{accent}</span> : null}
+      {post || null}
+    </>
+  );
+}
+
+export default function Hero({
+  t,
+  chat,
+  locale,
+  tel,
+  newWindow,
+}: {
+  t: HomeMessages['hero'];
+  /** 상담판(Chat)의 글자 — 그대로 넘긴다. */
+  chat: ChatMessages['ui'];
+  locale: Locale;
+  /** 회사 전화(common[locale].company.tel). */
+  tel: string;
+  /** 낭독용 '(새 창)'(common[locale].header.newWindow). */
+  newWindow: string;
+}) {
   const trackRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -504,7 +537,7 @@ export default function Hero() {
         className="hero-gate"
         role="status"
         aria-live="polite"
-        aria-label="첫 화면을 준비하고 있습니다"
+        aria-label={t.gateAria}
       >
         <div className="flex flex-col items-center px-8">
           {/* 입자 스퀘어클. 회전하면서 형태가 둥근 사각과 구 사이를 오간다.
@@ -513,7 +546,7 @@ export default function Hero() {
             <canvas ref={orbRef} aria-hidden="true" className="hero-gate-orb" />
           </div>
           <p className="hero-gate-label mt-1 text-sm text-white/70 break-keep text-center">
-            지에스엘티에 방문 감사드립니다
+            {t.gateLabel}
           </p>
           <span className="hero-gate-rail mt-6">
             <span className="hero-gate-bar" ref={gateBarRef} />
@@ -579,20 +612,24 @@ export default function Hero() {
                 그대로 남아 톤이 끊기지 않는다. 둘을 grid로 겹쳐 두면 전환 중에
                 무대 높이가 흔들리지 않는다. */}
             <div className="hero-inner max-w-6xl mx-auto my-auto w-full hero-shadow text-center">
+              {/* 결론 두 줄은 320px 폭(글자 자리 288px)에서 한 줄씩 들어가게 언어마다 끊어 둔다(messages/home).
+                  Pretendard Black 1.9rem 실측: 한국어 197px · 영어 'spatial intelligence' 266px 이하,
+                  중국어·일본어는 한 줄 9자(265px)까지. */}
               <h1 className="hero-title font-black break-keep text-white">
                 <span className="hero-line hero-line-setup">
                   <span className="hero-line-inner hero-title-setup text-white/75" ref={kickerRef}>
-                    맞춤형 공간 설계부터 디바이스 구축까지,
+                    {t.title.setup}
                   </span>
                 </span>
                 <span className="hero-line">
-                  {/* 강조는 한 줄 전체가 아니라 이 네 글자에만 준다 */}
                   <span className="hero-line-inner" ref={line1Ref}>
-                    당신에게 <span className="text-gslt-400">딱 맞춘</span>
+                    <TitleLine {...t.title.lines[0]} />
                   </span>
                 </span>
                 <span className="hero-line">
-                  <span className="hero-line-inner" ref={line2Ref}>공간 지능 솔루션.</span>
+                  <span className="hero-line-inner" ref={line2Ref}>
+                    <TitleLine {...t.title.lines[1]} />
+                  </span>
                 </span>
               </h1>
 
@@ -600,8 +637,7 @@ export default function Hero() {
                 className="hero-fade hero-desc max-w-xl mx-auto text-white/70 leading-relaxed break-keep"
                 ref={descRef}
               >
-                지에스엘티는 오피스·주거·빌딩, 모든 공간을 배선 공사 없이
-                스마트 공간으로 완성하는 IoT 구축 전문기업입니다.
+                {t.desc}
               </p>
 
               {/* 예전에는 여기에 솔루션 링크 세 줄이 있었다. 목록을 빼고 상담을 바로 놓는다.
@@ -609,6 +645,10 @@ export default function Hero() {
                   그 질문을 받는 자리가 여기다. 솔루션으로 가는 길은 헤더 드롭다운과 푸터에 있다. */}
               <div className="hero-fade hero-chat mt-8 md:mt-10" ref={chatRef} aria-hidden="true">
                 <Chat
+                  t={chat}
+                  locale={locale}
+                  tel={tel}
+                  newWindow={newWindow}
                   onEngage={() => {
                     engagedRef.current = true;
                   }}
@@ -634,9 +674,9 @@ export default function Hero() {
             className="absolute bottom-7 left-1/2 -translate-x-1/2 z-10 hero-shadow pointer-events-none"
           >
             {/* 영문 대문자 마이크로 라벨(tracking .35em)은 어느 템플릿에나 붙어 있는 장식이다.
-                이 사이트는 한국어로 말하므로 한국어로, 자간도 보통으로 둔다. */}
+                이 사이트는 그 페이지의 언어로 말하므로 그 언어로, 자간도 보통으로 둔다. */}
             <div className="flex flex-col items-center gap-3">
-              <span className="text-xs font-semibold text-white/60">스크롤</span>
+              <span className="text-xs font-semibold text-white/60">{t.scroll}</span>
               <span className="relative block w-px h-12 bg-white/15 overflow-hidden">
                 <span className="scroll-dash" />
               </span>

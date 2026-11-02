@@ -1,24 +1,27 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { COMPANY, FURNITURE, KAKAO, SITE, SOLUTIONS } from '@/lib/site';
+import { COMPANY, FURNITURE, SITE } from '@/lib/site';
 import { ArrowUpRight } from '@/components/Icon';
 import KakaoChatLink from '@/components/KakaoChatLink';
 import { NoBreak } from '@/lib/nobreak';
 import { getMenuVisibility, type MenuKey } from '@/lib/posts';
+import { localePath } from '@/i18n/config';
+import { getLocale } from '@/i18n/server';
+import { common, solutionsFor } from '@/i18n/messages/common';
 
 /** 상단 메뉴와 같은 설정을 따른다 — 헤더에서 숨긴 항목이 푸터에만 남으면 앞뒤가 안 맞는다. */
-const NEWS_LINKS: { href: string; label: string; menu: MenuKey }[] = [
-  { href: '/news', label: '뉴스', menu: 'news' },
-  { href: '/downloads', label: '자료실', menu: 'downloads' },
-  { href: '/portfolio', label: '포트폴리오', menu: 'portfolio' },
+const NEWS_LINKS: { href: string; key: 'news' | 'downloads' | 'portfolio'; menu: MenuKey }[] = [
+  { href: '/news', key: 'news', menu: 'news' },
+  { href: '/downloads', key: 'downloads', menu: 'downloads' },
+  { href: '/portfolio', key: 'portfolio', menu: 'portfolio' },
 ];
 
 const LEGAL_LINKS = [
-  { href: '/legal/terms', label: '서비스 약관' },
-  { href: '/legal/privacy', label: '개인정보 처리방침' },
-  { href: '/support', label: '고객 지원' },
-];
+  { href: '/legal/terms', key: 'terms' },
+  { href: '/legal/privacy', key: 'privacy' },
+  { href: '/support', key: 'support' },
+] as const;
 
 /**
  * 사업자 정보의 '라벨+값' 한 쌍. 휴대폰에서는 한 줄에 하나씩 쌓고, md부터 '|'로 이어 한 줄에 둔다.
@@ -84,8 +87,14 @@ function Column({ title, links }: { title: string; links: { href: string; label:
  * 오른쪽의 버튼이 가로로 비켜나고, lg부터는 저작권 줄이 정보 칸 맨 윗줄 높이로 올라간다.
  */
 export default async function Footer({ flush = false }: { flush?: boolean }) {
-  const menus = await getMenuVisibility();
-  const newsLinks = NEWS_LINKS.filter((l) => menus[l.menu]);
+  const [menus, locale] = await Promise.all([getMenuVisibility(), getLocale()]);
+  const t = common[locale];
+  const ko = locale === 'ko';
+  const newsLinks = NEWS_LINKS.filter((l) => menus[l.menu]).map((l) => ({
+    href: localePath(locale, l.href),
+    label: t.nav[l.key],
+  }));
+  const legalLinks = LEGAL_LINKS.map((l) => ({ href: localePath(locale, l.href), label: t.footer[l.key] }));
   return (
     <footer
       className={`pt-14 pb-24 md:pb-8 bg-[#050505] text-slate-400 border-t border-white/5 ${flush ? '' : 'mt-24'}`}
@@ -94,7 +103,7 @@ export default async function Footer({ flush = false }: { flush?: boolean }) {
         <div className="flex flex-col md:flex-row justify-between items-start gap-10 pb-10 border-b border-white/5">
           <div>
             <div className="flex items-center gap-3 mb-3">
-              <Image src="/img/gslt-logo-white.png" alt={SITE.siteName} width={110} height={28}
+              <Image src="/img/gslt-logo-white.png" alt={t.site.name} width={110} height={28}
                 className="h-7 w-auto object-contain" style={{ width: 'auto', height: '1.75rem' }} />
               {/* 실제 브랜드 태그라인이다. 대문자로 바꾸고 자간을 넓히는 건 원본 표기를
                   뭉개면서 템플릿 마이크로 라벨처럼 보이게 만든다 — 적힌 대로 쓴다. */}
@@ -103,16 +112,20 @@ export default async function Footer({ flush = false }: { flush?: boolean }) {
               </span>
             </div>
             <p className="text-sm text-slate-400 leading-relaxed break-keep max-w-xs">
-              무선 IoT 구축 전문기업.<br />
-              오피스·주거·빌딩을 배선 공사 없이 스마트 공간으로 완성합니다.
+              {t.footer.intro[0]}<br />
+              {t.footer.intro[1]}
             </p>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-10 text-sm">
-            <Column title="솔루션"
-              links={SOLUTIONS.map((s) => ({ href: s.href, label: `${s.name} (${s.en})` }))} />
-            <Column title="소식" links={newsLinks} />
-            <Column title="법적 고지" links={LEGAL_LINKS} />
+            {/* 외국어에서는 이름이 곧 영문 이름이라 괄호를 붙이지 않는다. */}
+            <Column title={t.footer.colSolutions}
+              links={solutionsFor(locale).map((s) => ({
+                href: localePath(locale, s.href),
+                label: ko ? `${s.name} (${s.en})` : s.name,
+              }))} />
+            <Column title={t.footer.colNews} links={newsLinks} />
+            <Column title={t.footer.colLegal} links={legalLinks} />
           </div>
         </div>
 
@@ -124,47 +137,50 @@ export default async function Footer({ flush = false }: { flush?: boolean }) {
               break-keep이 없어 '우림라이/온스밸리'처럼 어절 중간이 꺾였다. */}
           <div className="text-xs text-slate-400 space-y-1.5 leading-relaxed break-keep">
             <p>
-              <Pair label="상호">{SITE.nameKo}({SITE.name})</Pair>
+              <Pair label={t.footer.company}>{ko ? t.company.name : t.company.legalName}</Pair>
               <Sep />
-              <Pair label="대표자">{COMPANY.ceo}</Pair>
+              <Pair label={t.footer.ceo}>{t.company.ceo}</Pair>
               <Sep />
-              <Pair label="사업자등록번호">{COMPANY.bizNo}</Pair>
+              <Pair label={t.footer.bizNo}>{COMPANY.bizNo}</Pair>
             </p>
             {/* 주소만 한 줄에 다 들어가지 않는다. 어절로 넘기되 '3차 501호'는 NoBreak가 붙잡는다. */}
             <p>
-              <Pair label="주소" wrap><NoBreak>{COMPANY.address}</NoBreak></Pair>
+              <Pair label={t.footer.address} wrap><NoBreak>{t.company.address}</NoBreak></Pair>
             </p>
             <p>
-              <Pair label="Tel">{COMPANY.tel}</Pair>
+              <Pair label={t.footer.tel}>{t.company.tel}</Pair>
               <Sep />
               {/* 인라인 링크는 세로 여백이 줄 높이에 잡히지 않는다 — md 미만에서만 inline-block으로 세운다. */}
-              <Pair label="Email">
+              <Pair label={t.footer.email}>
                 <a href={`mailto:${COMPANY.email}`}
                   className="inline-block md:inline hover:text-white transition-colors">{COMPANY.email}</a>
               </Pair>
               <Sep />
               {/* 라벨까지 링크 안에 둔다 — 링크 목록에서 '(주)지에스엘티'만 들리면 회사 사이트로 오해한다. */}
               <Pair>
-                <KakaoChatLink place="footer">
-                  <span className="text-slate-300 font-medium">카카오톡 채널</span>&nbsp;&nbsp;{KAKAO.name}
+                <KakaoChatLink place="footer" newWindow={t.header.newWindow}>
+                  <span className="text-slate-300 font-medium">{t.footer.kakao}</span>&nbsp;&nbsp;{t.company.legalName}
                 </KakaoChatLink>
               </Pair>
             </p>
             {/* 같은 법인의 가구 사업. 상호가 같아 검색에서 서로 섞이므로, 두 사이트가
                 같은 회사라는 것을 여기서 밝히고 서로 링크한다(site.ts FURNITURE). */}
             <p>
-              <Pair label="패밀리 사이트">
+              {/* 외국어는 이름이 길어('Family site  GSLT Furniture (lockers & furniture · Korean site)') 한 줄로
+                  묶으면 320px 폭을 넘어 페이지 전체가 가로로 밀렸다. 외국어에서만 어절로 넘기고, 링크도 inline으로
+                  풀어 안에서 줄이 바뀌게 한다. 한국어는 짧아 예전 그대로 한 덩어리다. */}
+              <Pair label={t.footer.family} wrap={!ko}>
                 <a href={FURNITURE.url} target="_blank" rel="noopener"
-                  className="inline-flex items-center gap-0.5 hover:text-white transition-colors">
-                  {FURNITURE.name} ({FURNITURE.desc})
-                  <ArrowUpRight className="w-3 h-3" />
-                  <span className="sr-only">(새 창)</span>
+                  className={`${ko ? 'inline-flex items-center gap-0.5' : 'inline'} hover:text-white transition-colors`}>
+                  {t.furniture.name} ({t.furniture.desc})
+                  <ArrowUpRight className={ko ? 'w-3 h-3' : 'ml-0.5 inline-block w-3 h-3 align-[-1px]'} />
+                  <span className="sr-only">{t.header.newWindow}</span>
                 </a>
               </Pair>
             </p>
           </div>
           <p className="text-xs text-slate-400 mt-1 lg:mt-0 shrink-0 break-keep">
-            © {seoulYear()} {SITE.siteName}. All rights reserved.
+            © {seoulYear()} {t.site.name}. All rights reserved.
           </p>
         </div>
       </div>

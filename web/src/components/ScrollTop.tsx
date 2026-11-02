@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 /** 600px 넘게 내려가면 나타나는 맨 위로 버튼. 전 페이지 공통. 홈에서는 히어로 무대가 걷힌 뒤부터. */
-export default function ScrollTop() {
+export default function ScrollTop({ label }: { label: string }) {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
@@ -36,7 +36,7 @@ export default function ScrollTop() {
   return (
     <button
       type="button"
-      aria-label="맨 위로"
+      aria-label={label}
       // opacity:0으로만 감추면 버튼이 초점 순서에 그대로 남아, 키보드 사용자는 보이지 않는 버튼을
       // 밟는다. inert가 초점·접근성 트리에서 함께 빼준다.
       inert={!show}

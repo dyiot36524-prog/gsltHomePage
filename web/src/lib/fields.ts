@@ -11,7 +11,16 @@
  * 회사가 실제로 그렇게 말하고 있다(초기창업패키지 보도).
  *
  * title은 ' | 지에스엘티'(8자)를 붙여 30자 이하, description은 60~85자. seo-check.mjs가 배포본에서 검사한다.
+ *
+ * 영어·중국어·일본어 글자는 i18n/messages/fields/{en,zh,ja}.ts에 분야(slug)별로 있고 fieldsFor()가 입힌다.
+ * FIELDS는 한국어 그대로 둔다 — 사이트맵·공유 그림(lib/og.ts, 엣지)·llms.txt·챗봇이 읽는다.
+ * 그래서 이 파일은 순수한 데이터만 가져온다(엣지에서 돈다 — server-only나 Node API를 들이지 않는다).
  */
+
+import type { ForeignLocale, Locale } from '@/i18n/config';
+import { en } from '@/i18n/messages/fields/en';
+import { zh } from '@/i18n/messages/fields/zh';
+import { ja } from '@/i18n/messages/fields/ja';
 
 export type Field = {
   slug: string;
@@ -259,4 +268,40 @@ export const FIELDS: readonly Field[] = [
 
 export function fieldBySlug(slug: string): Field | undefined {
   return FIELDS.find((f) => f.slug === slug);
+}
+
+export type FieldSlug =
+  | 'smart-office'
+  | 'smart-home'
+  | 'smart-building'
+  | 'unmanned-automation'
+  | 'ai-building-bms'
+  | 'ai-office';
+
+/** 분야 한 장에서 번역하는 글자. 주소(slug·product.href)는 코드가 찾는 값이라 FIELDS 것을 그대로 쓴다. */
+export type FieldText = Omit<Field, 'slug' | 'product'> & { product: Omit<Field['product'], 'href'> };
+
+/** 그 언어의 분야 글자(분야별) — 모양은 i18n/messages/fields/index.ts가 한국어와 맞는지 빌드 때 검사한다. */
+const TEXT: Record<ForeignLocale, { conditions: string; items: Record<FieldSlug, FieldText> }> = { en, zh, ja };
+
+/** FIELDS에 그 언어의 글자를 입힌다. 순서·주소는 그대로. 한국어는 FIELDS 자체다. */
+export function fieldsFor(locale: Locale): readonly Field[] {
+  if (locale === 'ko') return FIELDS;
+  const items = TEXT[locale].items;
+  return FIELDS.map((f) => {
+    const t = items[f.slug as FieldSlug];
+    return { ...f, ...t, product: { ...f.product, ...t.product } };
+  });
+}
+
+export function fieldBySlugFor(locale: Locale, slug: string): Field | undefined {
+  return fieldsFor(locale).find((f) => f.slug === slug);
+}
+
+/**
+ * CONDITIONS의 그 언어 판. 한국어는 장면 사전(i18n/messages/scenes/ko.ts)도 CONDITIONS를 함께 쓴다 —
+ * 외국어 장면 사전이 따로 옮긴 문장을 이것으로 바꾸면 언어마다 한 문장으로 맞춰진다.
+ */
+export function conditionsFor(locale: Locale): string {
+  return locale === 'ko' ? CONDITIONS : TEXT[locale].conditions;
 }

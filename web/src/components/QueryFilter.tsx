@@ -27,10 +27,23 @@ function useCurrent(param: string, values: string[]): string {
 
 type Item = { value: string; label: string; count: number };
 
-/** 필터 막대. 지금 고른 갈래에 밑줄과 aria-current를 준다. */
-export function QueryFilterBar({ items, basePath, param = 'type' }: { items: Item[]; basePath: string; param?: string }) {
+/**
+ * 필터 막대. 지금 고른 갈래에 밑줄과 aria-current를 준다.
+ * label(낭독용 이름)은 서버 부모가 그 언어로 넘긴다 — 이 파일이 사전을 읽으면 네 언어가 모두 번들에 실린다.
+ */
+export function QueryFilterBar({
+  items,
+  basePath,
+  param = 'type',
+  label,
+}: {
+  items: Item[];
+  basePath: string;
+  param?: string;
+  label?: string;
+}) {
   const current = useCurrent(param, items.map((it) => it.value));
-  return <FilterBar items={items} current={current} basePath={basePath} param={param} />;
+  return <FilterBar items={items} current={current} basePath={basePath} param={param} label={label} />;
 }
 
 /** 목록의 한 행. node는 서버가 그린 RecordRow, groups는 이 행이 걸리는 필터 값들이다. */

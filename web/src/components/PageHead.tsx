@@ -11,13 +11,14 @@ export default function PageHead({
   title,
   lead,
   count,
-  countLabel = '건',
+  totalTemplate = '총 {n}건',
   children,
 }: {
   title: string;
   lead: string;
   count?: number;
-  countLabel?: string;
+  /** 총 건수 문구. {n}에 숫자가 굵게 들어간다. 외국어 페이지는 common[locale].list.total을 넘긴다. */
+  totalTemplate?: string;
   /** 필터 등 제목 아래 붙는 조작 영역 */
   children?: ReactNode;
 }) {
@@ -32,8 +33,16 @@ export default function PageHead({
         </h1>
         {typeof count === 'number' ? (
           <p className="shrink-0 text-sm text-slate-500 tabular-nums sm:pb-2">
-            총 <span className="font-bold text-slate-900">{count}</span>
-            {countLabel}
+            {totalTemplate.split('{n}').map((part, i) =>
+              i ? (
+                <span key={i}>
+                  <span className="font-bold text-slate-900">{count}</span>
+                  {part}
+                </span>
+              ) : (
+                part
+              ),
+            )}
           </p>
         ) : null}
       </div>
@@ -55,18 +64,21 @@ export function FilterBar({
   current,
   basePath,
   param = 'type',
+  label = '목록 필터',
 }: {
   items: { value: string; label: string; count: number }[];
   current: string;
   basePath: string;
   param?: string;
+  /** 필터 묶음의 이름(낭독용). 외국어 페이지는 common[locale].list.filter를 넘긴다. */
+  label?: string;
 }) {
   // 값이 있는 갈래가 하나뿐이면 '전체'와 결과가 같아 컨트롤이 둘 다 무의미해진다.
   const usable = items.filter((it) => it.count > 0 || it.value === current);
   if (usable.filter((it) => it.value !== 'all').length < 2) return null;
 
   return (
-    <nav className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm" aria-label="목록 필터">
+    <nav className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm" aria-label={label}>
       {usable.map((it) => {
         const on = it.value === current;
         const href = it.value === 'all' ? basePath : `${basePath}?${param}=${encodeURIComponent(it.value)}`;

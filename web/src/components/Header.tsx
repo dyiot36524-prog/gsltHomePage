@@ -1,8 +1,12 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { NAV, SITE, SOLUTIONS, type NavKey } from '@/lib/site';
+import { NAV, type NavKey } from '@/lib/site';
 import { getMenuVisibility, type MenuKey } from '@/lib/posts';
 import SolutionsMenu from '@/components/SolutionsMenu';
+import LanguageMenu from '@/components/LanguageMenu';
+import { fmt, localePath } from '@/i18n/config';
+import { getLocale } from '@/i18n/server';
+import { common, solutionsFor } from '@/i18n/messages/common';
 
 /**
  * overlay: 히어로 영상 위에 겹쳐 뜨는 모드. 배경을 지우고 흰 글씨로 바꾸며,
@@ -13,6 +17,8 @@ import SolutionsMenu from '@/components/SolutionsMenu';
  * 예전에는 끝까지 투명해서 구축 분야 판과 푸터의 글자가 헤더 글자와 그대로 겹쳐 읽혔다
  * (320x568 맨 아래에서 푸터의 '법적 고지'·'서비스 약관'이 메뉴 줄 밑에 깔렸다. 데스크톱도 같다).
  * 다른 페이지의 흰 헤더(overlay 아님)는 이 신호와 상관이 없다.
+ *
+ * 글자와 링크는 지금 언어를 따른다(i18n/server.ts getLocale). 링크는 localePath가 '/en/…'으로 바꾼다.
  */
 export default async function Header({
   active = '' as NavKey,
@@ -22,8 +28,14 @@ export default async function Header({
   overlay?: boolean;
 }) {
   // 관리자가 끈 메뉴는 내지 않는다. menu 키가 없는 항목(홈·회사소개)은 항상 보인다.
-  const menus = await getMenuVisibility();
-  const nav = NAV.filter((n) => !('menu' in n) || menus[(n as { menu: MenuKey }).menu]);
+  const [menus, locale] = await Promise.all([getMenuVisibility(), getLocale()]);
+  const t = common[locale];
+  const solutions = solutionsFor(locale);
+  const nav = NAV.filter((n) => !('menu' in n) || menus[(n as { menu: MenuKey }).menu]).map((n) => ({
+    key: n.key,
+    href: localePath(locale, n.href),
+    label: t.nav[n.key],
+  }));
 
   const linkCls = (key: string) =>
     overlay
@@ -51,10 +63,10 @@ export default async function Header({
         }
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between h-16 relative">
-          <Link href="/" className="flex items-center h-8 z-10" aria-label={`${SITE.siteName} 홈`}>
+          <Link href={localePath(locale, '/')} className="flex items-center h-8 z-10" aria-label={fmt(t.header.homeAria, { name: t.site.name })}>
             <Image
               src={overlay ? '/img/gslt-logo-white.png' : '/img/gslt-logo-color.png'}
-              alt={SITE.siteName} width={120} height={32}
+              alt={t.site.name} width={120} height={32}
               priority className="h-full w-auto object-contain"
               style={{ width: 'auto', height: '100%' }}
             />
@@ -63,18 +75,27 @@ export default async function Header({
           {/* 중앙 네비는 lg(1024px)부터. md(768px)에서는 라벨 5개 + 로고 + CTA가 폭에 들어가지
               않아 '포트폴리/오'처럼 어절 중간이 꺾였다. whitespace-nowrap은 그 안전장치다. */}
           <div className={`absolute left-1/2 -translate-x-1/2 hidden lg:flex items-center gap-9 text-sm font-bold whitespace-nowrap ${overlay ? 'text-white/80' : 'text-slate-600'}`}>
-            <SolutionsMenu overlay={overlay} />
+            <SolutionsMenu
+              overlay={overlay}
+              locale={locale}
+              solutions={solutions}
+              t={{ ...t.solutions, label: t.nav.solutions, newWindow: t.header.newWindow }}
+              sceneNames={t.scenes}
+            />
             {nav.map((n) => (
               <Link key={n.key} href={n.href} className={linkCls(n.key)}>{n.label}</Link>
             ))}
           </div>
 
-          {/* 휴대폰에서도 보인다 — 아래 가로 스크롤 줄에는 문의가 없어서, 이게 숨으면 휴대폰에서는
-              도입 문의로 가는 길이 없었다. 로고 맞은편 자리라 폭은 충분하다. */}
-          <Link href="/contact"
-            className="flex items-center gap-2 bg-gslt-500 hover:bg-gslt-400 text-slate-900 px-4 py-2 lg:px-5 lg:py-2.5 rounded-full text-sm font-semibold hover:scale-[1.02] active:scale-[0.98] transition-all duration-500 z-10">
-            도입 문의
-          </Link>
+          {/* 언어 고르기와 도입 문의. 문의 단추는 휴대폰에서도 보인다 — 아래 가로 스크롤 줄에는 문의가 없어서,
+              이게 숨으면 휴대폰에서는 도입 문의로 가는 길이 없었다. 로고 맞은편 자리라 폭은 충분하다. */}
+          <div className="flex items-center gap-1 sm:gap-2 z-10">
+            <LanguageMenu overlay={overlay} label={t.header.language} />
+            <Link href={localePath(locale, '/contact')}
+              className="flex items-center gap-2 bg-gslt-500 hover:bg-gslt-400 text-slate-900 px-4 py-2 lg:px-5 lg:py-2.5 rounded-full text-sm font-semibold whitespace-nowrap hover:scale-[1.02] active:scale-[0.98] transition-all duration-500">
+              {t.nav.contact}
+            </Link>
+          </div>
         </div>
 
         {/* 배경은 nav 한 겹(bg-white/90)만 쓴다. 이 줄에 bg-white/95를 한 겹 더 깔았더니 어두운
@@ -85,15 +106,15 @@ export default async function Header({
               간격도 24px로 벌려 WCAG 2.2 2.5.8의 간격 예외를 실제로 만족시킨다. */}
           <div className={`flex items-center gap-6 px-4 text-sm font-bold overflow-x-auto whitespace-nowrap ${overlay ? 'text-white/80' : 'text-slate-600'}`}>
             {/* 시옷은 솔루션 패널과 같이 제품 사이트를 새 창으로 연다(site.ts SIOT_HOME). */}
-            {SOLUTIONS.map((s) =>
+            {solutions.map((s) =>
               'site' in s ? (
                 <a key={s.href} href={s.site} target="_blank" rel="noopener noreferrer"
                   className={`py-2.5 transition-colors shrink-0 ${overlay ? 'hover:text-white' : 'hover:text-gslt-700'}`}>
                   {s.name}
-                  <span className="sr-only">(새 창)</span>
+                  <span className="sr-only">{t.header.newWindow}</span>
                 </a>
               ) : (
-                <Link key={s.href} href={s.href}
+                <Link key={s.href} href={localePath(locale, s.href)}
                   className={`py-2.5 transition-colors shrink-0 ${overlay ? 'hover:text-white' : 'hover:text-gslt-700'}`}>
                   {s.name}
                 </Link>

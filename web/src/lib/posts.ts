@@ -8,6 +8,7 @@ import { PRESS_SEED, PRESS_POSTS } from './press-seed';
  */
 
 import 'server-only';
+import { DEFAULT_LOCALE, HTML_LANG, type Locale } from '@/i18n/config';
 
 // about-videos.ts도 같은 값과 decode()를 쓴다. 복사본을 늘리지 않으려고 내보낸다.
 export const PROJECT_ID = 'gslthomepage';
@@ -238,6 +239,24 @@ export function formatDate(d?: Date | null): string {
   if (!(d instanceof Date) || Number.isNaN(d.getTime())) return '';
   const [y, m, day] = SEOUL_DATE.format(d).split('-');
   return `${y}. ${m}. ${day}`;
+}
+
+/**
+ * 그 언어로 쓴 카드 날짜 — 'October 7, 2026' · '2026年10月7日'. 한국어는 postDateLabel 그대로다.
+ * 날짜는 이미 서울 날짜로 정해진 값(postDateLabel)에서 읽는다. 여기서 시간대를 다시 따지면
+ * 서버(UTC)에서 하루가 밀린다.
+ */
+export function postDateText(p: Post, locale: Locale): string {
+  const label = postDateLabel(p);
+  if (locale === DEFAULT_LOCALE) return label;
+  const m = /^(\d{4})\. (\d{2})\. (\d{2})$/.exec(label);
+  if (!m) return label;
+  return new Intl.DateTimeFormat(HTML_LANG[locale], {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'UTC',
+  }).format(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
 }
 
 /**

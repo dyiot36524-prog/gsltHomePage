@@ -13,15 +13,12 @@
 
 import 'server-only';
 import { API_KEY, PROJECT_ID, REVALIDATE, decode, type FsValue } from './posts';
+import { DEFAULT_LOCALE, fmt, type Locale } from '@/i18n/config';
+import { about } from '@/i18n/messages/about';
 
-export type VideoCategory = 'intro' | 'site' | 'demo' | 'press';
-
-const CATEGORY_LABEL: Record<VideoCategory, string> = {
-  intro: '회사 소개',
-  site: '시공 현장',
-  demo: '제품 시연',
-  press: '언론·행사',
-};
+// 분류 이름은 사전(i18n/messages/about의 videos.categories)에 언어별로 있다.
+const CATEGORIES = ['intro', 'site', 'demo', 'press'] as const;
+export type VideoCategory = (typeof CATEGORIES)[number];
 
 /** 화면이 바로 쓰는 모양. 주소는 전부 서버에서 완성해 넘긴다. */
 export type AboutVideo = {
@@ -30,7 +27,7 @@ export type AboutVideo = {
   title: string;
   description: string;
   categoryLabel: string;
-  /** 'YYYY. MM. DD' 또는 '' */
+  /** 그 언어의 날짜 꼴(한국어 'YYYY. MM. DD') 또는 '' */
   dateLabel: string;
   /** 세로 영상(Shorts·세로 촬영). 16:9 판 가운데에 9:16으로 앉힌다. */
   vertical: boolean;
@@ -80,12 +77,23 @@ function withTransform(url: string, prefix: string, t: string): string {
   return prefix + t + '/' + url.slice(prefix.length);
 }
 
-function dateLabel(v: unknown): string {
+function dateLabel(v: unknown, template: string): string {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(typeof v === 'string' ? v : '');
-  return m ? `${m[1]}. ${m[2]}. ${m[3]}` : '';
+  return m ? fmt(template, { y: m[1], m: m[2], d: m[3] }) : '';
 }
 
-function toVideo(raw: unknown): AboutVideo | null {
+/**
+ * 외국어 판의 제목·설명. 관리자가 항목에 i18n.<언어>.title·description을 적었으면 그것을,
+ * 없으면 한국어 원문을 쓴다 — 영상 제목은 관리자가 쓰는 글이라 사전에 미리 번역해 둘 수 없다.
+ */
+function localized(r: Record<string, unknown>, locale: Locale, field: 'title' | 'description', max: number): string {
+  if (locale === DEFAULT_LOCALE) return '';
+  const all = r.i18n && typeof r.i18n === 'object' ? (r.i18n as Record<string, unknown>) : null;
+  const mine = all?.[locale];
+  return mine && typeof mine === 'object' ? str((mine as Record<string, unknown>)[field], max) : '';
+}
+
+function toVideo(raw: unknown, locale: Locale): AboutVideo | null {
   if (!raw || typeof raw !== 'object') return null;
   const r = raw as Record<string, unknown>;
   // 비공개는 페이지에서 뺀다. 값이 없으면 공개로 본다(관리자 화면의 기본값과 같다).
@@ -93,16 +101,18 @@ function toVideo(raw: unknown): AboutVideo | null {
 
   const title = str(r.title, 80);
   if (!title) return null;
-  const category = (
-    Object.prototype.hasOwnProperty.call(CATEGORY_LABEL, String(r.category)) ? r.category : 'intro'
-  ) as VideoCategory;
+  const category: VideoCategory = (CATEGORIES as readonly unknown[]).includes(r.category)
+    ? (r.category as VideoCategory)
+    : 'intro';
+  const t = about[locale].videos;
 
   const base = {
+    // id가 없는 옛 항목은 한국어 제목이 열쇠다. 언어마다 달라지면 안 된다.
     id: str(r.id, 40) || title,
-    title,
-    description: str(r.description, 200),
-    categoryLabel: CATEGORY_LABEL[category],
-    dateLabel: dateLabel(r.date),
+    title: localized(r, locale, 'title', 80) || title,
+    description: localized(r, locale, 'description', 200) || str(r.description, 200),
+    categoryLabel: t.categories[category],
+    dateLabel: dateLabel(r.date, t.date),
     vertical: r.vertical === true,
     youtubeId: '',
     start: 0,
@@ -158,8 +168,9 @@ function toVideo(raw: unknown): AboutVideo | null {
 /**
  * 공개 영상 목록. 구역이 꺼져 있거나, 문서가 없거나, 읽기에 실패하면 빈 배열 —
  * 회사소개는 영상 구역 없이 지금처럼 그려진다. 영상 때문에 페이지가 깨지면 안 된다.
+ * 분류 이름·날짜는 locale 언어로 붙인다. 문서는 한 벌이라 언어가 달라도 같은 응답(캐시)을 쓴다.
  */
-export async function getAboutVideos(): Promise<AboutVideo[]> {
+export async function getAboutVideos(locale: Locale = DEFAULT_LOCALE): Promise<AboutVideo[]> {
   try {
     const res = await fetch(
       `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}` +
@@ -173,7 +184,10 @@ export async function getAboutVideos(): Promise<AboutVideo[]> {
     if (decode(doc.fields?.enabled) === false) return [];
     const items = decode(doc.fields?.items);
     if (!Array.isArray(items)) return [];
-    return items.map(toVideo).filter((v): v is AboutVideo => v !== null).slice(0, MAX_ITEMS);
+    return items
+      .map((it) => toVideo(it, locale))
+      .filter((v): v is AboutVideo => v !== null)
+      .slice(0, MAX_ITEMS);
   } catch {
     return [];
   }

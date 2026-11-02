@@ -6,7 +6,16 @@
  *
  * 답은 첫 문장이 곧 답이 되게 쓴다(AI 답변 엔진은 첫 문장을 그대로 인용하는 경우가 많다).
  * 회사가 공개한 사실만 쓴다 — 지어낸 수치·기간·가격·고객사는 넣지 않는다.
+ *
+ * 영어·중국어·일본어 판은 i18n/messages/faq/{en,zh,ja}.ts에 있고 faqFor(locale)가 꺼낸다. 질문을 고치면
+ * 그 셋도 함께 고친다 — 묶음·질문 수가 어긋나면 i18n/messages/faq/index.ts가 빌드를 멈춘다.
+ * FAQ_GROUPS · FAQ_ALL은 한국어 그대로 둔다(llms-full.txt·챗봇이 읽는다).
  */
+
+import type { ForeignLocale, Locale } from '@/i18n/config';
+import { en } from '@/i18n/messages/faq/en';
+import { zh } from '@/i18n/messages/faq/zh';
+import { ja } from '@/i18n/messages/faq/ja';
 
 export type FaqItem = { q: string; a: string };
 export type FaqGroup = { id: string; title: string; items: readonly FaqItem[] };
@@ -121,3 +130,10 @@ export const FAQ_GROUPS: readonly FaqGroup[] = [
 ];
 
 export const FAQ_ALL: readonly FaqItem[] = FAQ_GROUPS.flatMap((g) => g.items);
+
+const TRANSLATED: Record<ForeignLocale, readonly FaqGroup[]> = { en: en.groups, zh: zh.groups, ja: ja.groups };
+
+/** 그 언어의 질문 묶음. 한국어는 FAQ_GROUPS 자체다. */
+export function faqFor(locale: Locale): readonly FaqGroup[] {
+  return locale === 'ko' ? FAQ_GROUPS : TRANSLATED[locale];
+}

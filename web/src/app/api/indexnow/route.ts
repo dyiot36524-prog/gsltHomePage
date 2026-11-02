@@ -41,6 +41,8 @@ export async function POST(request: Request) {
 
   // 1) 캐시 비우기 — 모든 페이지와, 그 페이지들이 읽은 Firestore 응답 캐시까지 함께 무효가 된다.
   revalidatePath('/', 'layout');
+  // 영어·중국어·일본어 판(/en · /zh · /ja)은 루트 레이아웃이 따로라 한 번 더 비운다.
+  revalidatePath('/[lang]', 'layout');
 
   after(async () => {
     // 2) 새 페이지를 먼저 한 번 만들어 둔다(지운 글은 이때 404가 된다).
