@@ -8,12 +8,23 @@
  *
  * **배포본 URL로 돌린다.** 빌드 산출물이 아니라 실제로 나가는 HTML을 본다.
  *
- *   node scripts/seo-check.mjs https://www.gslt.kr
+ *   SEO_DELAY=250 node scripts/seo-check.mjs https://www.gslt.kr
  */
 
 import LIMITS from '../src/lib/seo-limits.json' with { type: 'json' };
 
 const BASE = (process.argv[2] || 'https://www.gslt.kr').replace(/\/$/, '');
+
+// 외국어 판이 생겨 운영에 보내는 요청이 200건을 넘는다. 몰아서 보내면 Vercel 방화벽이 이 IP에 잠시 403을 낸다
+// (2026-11 실측). SEO_DELAY=밀리초 를 주면 요청마다 그만큼 쉰다 — 운영을 볼 때는 250 정도를 준다.
+const DELAY = Number(process.env.SEO_DELAY || 0);
+if (DELAY) {
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async (...args) => {
+    await new Promise((r) => setTimeout(r, DELAY));
+    return realFetch(...args);
+  };
+}
 
 // 상한은 src/lib/seo.ts와 같은 파일에서 읽는다. 두 곳에 숫자를 따로 적으면 한쪽만 고쳐진다.
 const { TITLE_MAX, DESC_MIN, DESC_MAX } = LIMITS; // 제목 30자 = 한글 기준 구글 표시 폭
@@ -274,6 +285,7 @@ console.log('\n══ 외국어 판 ══');
   const { body: sitemapXml } = await text(`${BASE}/sitemap.xml`);
   const locs = new Set([...sitemapXml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]));
   const own = (u) => u.replace(/^https:\/\/www\.gslt\.kr/, BASE);
+  const ogSeen = new Map();
 
   /** 화면에 보이는 글자의 한글 — 스크립트·스타일·주석·언어 고르기의 '한국어'는 뺀다. */
   function hangulLeak(html) {
@@ -304,7 +316,8 @@ console.log('\n══ 외국어 판 ══');
       const { status, body } = await text(BASE + path);
       if (status !== 200) { bad(`${path} HTTP ${status}`); continue; }
       const notes = [];
-      if (pick(body, /<html lang="([^"]*)"/) !== htmlLang) notes.push(`<html lang> ≠ ${htmlLang}`);
+      // 배포본은 <html>에 data-dpl-id가 lang 앞에 붙는다.
+      if (pick(body, /<html[^>]*\slang="([^"]*)"/) !== htmlLang) notes.push(`<html lang> ≠ ${htmlLang}`);
       const title = unescapeHtml(pick(body, /<title>([^<]*)<\/title>/));
       if (route === '/' ? title !== 'GSLT' : !title.endsWith(' | GSLT')) notes.push(`제목 '${title}'`);
       if (/[가-힣]/.test(title)) notes.push('제목에 한글');
@@ -321,9 +334,13 @@ console.log('\n══ 외국어 판 ══');
       const og = unescapeHtml(pick(body, /<meta property="og:image" content="([^"]*)"/));
       if (!og) notes.push('og:image 없음');
       else {
-        const res = await fetch(own(og), { redirect: 'follow' });
-        await res.arrayBuffer();
-        if (res.status !== 200 || !(res.headers.get('content-type') || '').startsWith('image/')) notes.push(`og:image ${res.status}`);
+        // 외국어 판은 거의 모두 같은 로고 그림이다 — 주소마다 한 번만 받는다(같은 그림을 수십 번 받으면 방화벽이 403을 낸다).
+        if (!ogSeen.has(og)) {
+          const res = await fetch(own(og), { redirect: 'follow' });
+          await res.arrayBuffer();
+          ogSeen.set(og, res.status === 200 && (res.headers.get('content-type') || '').startsWith('image/') ? '' : `og:image ${res.status}`);
+        }
+        if (ogSeen.get(og)) notes.push(ogSeen.get(og));
       }
       const leak = hangulLeak(body);
       if (leak.length) notes.push(`한글 남음 ${leak.length}곳: ${leak.slice(0, 4).map((w) => `'${w}'`).join(', ')}`);
